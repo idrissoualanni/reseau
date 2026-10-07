@@ -1,0 +1,7 @@
+- Le serveur de signalisation n'échange que les offres/réponses et les candidats ICE.
+- Prévoir un serveur TURN pour les réseaux restrictifs (fréquents en mobile).
+- Les flux audio/vidéo sont chiffrés par WebRTC (DTLS-SRTP) ; ne pas désactiver.
+- Authentifier chaque participant avant de relayer la signalisation.
+- Gérer proprement la reconnexion et la fin d'appel (libérer caméra et micro).
+- Tester sur connexion lente : le contexte d'usage inclut des réseaux instables.
+- Les identifiants TURN restent côté serveur ; distribuer des identifiants temporaires aux clients.

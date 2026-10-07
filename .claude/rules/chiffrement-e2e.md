@@ -1,0 +1,7 @@
+- Le chiffrement se fait côté client. Le serveur stocke uniquement des données chiffrées.
+- Les clés privées ne quittent jamais l'appareil et ne sont jamais loguées.
+- Ne jamais écrire sa propre cryptographie : utiliser une bibliothèque éprouvée.
+- Aucune donnée en clair dans les logs, les erreurs ou les outils d'analyse.
+- Toute modification de ce domaine passe par l'agent `securite` avant fusion.
+- Les métadonnées (qui parle à qui, quand) sont aussi sensibles : en stocker le minimum.
+- Si un point du chiffrement est incertain, s'arrêter et poser la question.

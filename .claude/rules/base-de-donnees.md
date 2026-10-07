@@ -1,0 +1,7 @@
+- Les agents de développement travaillent uniquement sur la branche Neon de développement(dev).
+- Toute modification de schéma passe par un fichier de migration versionné, jamais par du SQL lancé à la main.
+- Une migration est relue par moi avant d'être appliquée ailleurs qu'en développement.
+- Jamais de suppression de colonne, de table ou de données sans demande explicite.
+- Pas de DATABASE_URL de production dans le code, les logs, les commits ou les conversations.
+- Les messages privés sont chiffrés côté client : la base ne contient que du chiffré.
+- Application : URL poolée. Migrations : URL directe.

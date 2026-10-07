@@ -1,0 +1,8 @@
+# À ajouter à ton .gitignore
+.env
+.env.*
+!.env.example
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/worktrees/
+.opencode/node_modules/

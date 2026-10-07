@@ -1,0 +1,13 @@
+.neon
+node_modules/
+
+# Secrets — jamais versionnés
+.env
+.env.*
+!.env.example
+
+# Local
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/worktrees/
+.opencode/node_modules/
