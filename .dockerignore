@@ -1,0 +1,34 @@
+# ---- Secrets : jamais dans l'image ----------------------------------
+.env
+.env.*
+!.env.example
+.secrets/
+
+# ---- Dépendances et artefacts de build -------------------------------
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+*.tsbuildinfo
+
+# ---- Git et outillage ------------------------------------------------
+.git/
+.gitignore
+.claude/
+.opencode/
+.mcp.json
+.worktreeinclude
+Dockerfile
+.dockerignore
+
+# ---- Documentation et notes (inutiles à l'exécution) -----------------
+docs/
+AGENTS.md
+CLAUDE.md
+
+# ---- Logs ------------------------------------------------------------
+*.log
+npm-debug.log*
+yarn-error.log*

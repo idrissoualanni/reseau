@@ -3,16 +3,12 @@
   "instructions": [".claude/rules/*.md"],
   "mcp": {
     "servers": {
-      "neon": {
-        "type": "remote",
-        "url": "https://mcp.neon.tech/mcp"
-      },
       "render": {
         "type": "remote",
         "url": "https://mcp.render.com/mcp",
         "oauth": false,
         "headers": {
-          "Authorization": "Bearer {env:RENDER_API_KEY}"
+          "Authorization": "Bearer {file:.secrets/render-api-key}"
         }
       }
     }
