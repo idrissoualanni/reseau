@@ -1,5 +1,5 @@
 ---
-description: Analyse une demande, propose l'architecture et découpe en tâches.
+description: Analyse une demande, propose l'architecture et découpe en tâches. À utiliser avant toute nouvelle fonctionnalité ou refonte.
 mode: subagent
 permission:
   edit: deny
