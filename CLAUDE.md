@@ -1,3 +1,5 @@
+@AGENTS.md
+
 # Réseau — mémoire du projet (CLAUDE.md)
 
 Réseau social où **le profil se construit sur des preuves** (projets publiés, compétences), pas sur des déclarations.
