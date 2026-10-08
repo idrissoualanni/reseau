@@ -49,9 +49,10 @@ Si une vérification échoue, le dire clairement : ne jamais prétendre que c'es
 - Les agents de développement n'accèdent qu'à la base Neon de développement, jamais à la production.
 - Aucun secret dans le code, les logs, les commits ou les conversations.
 - supprime les fichiers qui deviennent obsolete en me demandant l'autorisation 
+-quand la memoire est plein supprime des cache et vide le temp et garde la commande de suppression dans un script sh dans @.opencode/scripts 
 
 ## Brainstorming
-Quand je dis "brainstorm" : aucun fichier de code modifié. Procédure : docs/brainstorming.md.
+Quand je dis "brainstorm ou je veux travailler sur une partie du projet ou ma phrase a un sens qui se dirige vers un reflexion complexe" : aucun fichier de code modifié. Procédure : docs/brainstorming.md.
 
 ## Agents (rôles)
 Instructions détaillées dans docs/agents/ :

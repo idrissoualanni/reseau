@@ -11,3 +11,10 @@ CLAUDE.local.md
 .claude/settings.local.json
 .claude/worktrees/
 .opencode/node_modules/
+
+# Ajouté depuis reseau-step (repromotion build/tests)
+.next/
+dist/
+coverage/
+.DS_Store
+*.log

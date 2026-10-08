@@ -1,0 +1,49 @@
+# Blueprint Render — À VALIDER avec : render blueprints validate
+# Un projet "reseau", deux environnements. Les noms de services doivent être uniques dans le workspace (suffixes -dev / -prod).
+# V1 = un seul service web. `apps/realtime` (WebSocket) sera ajouté en V2.
+projects:
+  - name: reseau
+    environments:
+      - name: dev
+        services:
+          - type: web
+            name: reseau-web-dev
+            runtime: node
+            repo: https://github.com/CHANGE_ME/reseau   # à renseigner
+            branch: dev
+            rootDir: .
+            buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter web build
+            startCommand: pnpm --filter web start
+            healthCheckPath: /api/health
+            autoDeploy: true
+            envVars:
+              - key: NODE_ENV
+                value: production
+              - key: NEXT_PUBLIC_APP_URL
+                value: https://dev.CHANGE_ME.com
+              # Secrets : saisis dans le dashboard (sync: false), branche Neon "dev"
+              - key: DATABASE_URL
+                sync: false
+              - key: NEON_AUTH_BASE_URL
+                sync: false
+      - name: production
+        services:
+          - type: web
+            name: reseau-web-prod
+            runtime: node
+            repo: https://github.com/CHANGE_ME/reseau
+            branch: main
+            rootDir: .
+            buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter web build
+            startCommand: pnpm --filter web start
+            healthCheckPath: /api/health
+            autoDeploy: true   # le déploiement prod ne part que d'un merge validé dev → main
+            envVars:
+              - key: NODE_ENV
+                value: production
+              - key: NEXT_PUBLIC_APP_URL
+                value: https://app.CHANGE_ME.com
+              - key: DATABASE_URL
+                sync: false
+              - key: NEON_AUTH_BASE_URL
+                sync: false
