@@ -1,14 +1,23 @@
 # Réseau — réseau social de l'apprentissage et de la preuve
 
-Ce dossier contient la **configuration d'agents et la documentation** du projet, prêtes à copier à la racine du dépôt.
+Projet Next.js · GraphQL · Neon (Postgres) · Render · WebRTC · chiffrement de bout en bout.
+Premier profil ciblé : étudiant ; le cœur reste générique (docs/architecture.md).
 
-## Installation
-1. Copier tout le contenu à la racine du dépôt Git (`CLAUDE.md`, `.claude/`, `docs/`, `render.yaml`, `CHANGELOG.md`, `.env.example`).
-2. Installer `jq` (utilisé par les hooks) : `sudo apt install jq` ou `brew install jq`.
-3. Créer les branches `main` et `dev`.
-4. Remplacer les `CHANGE_ME` de `render.yaml` (dépôt, domaines) puis `render blueprints validate`.
-5. Installer les skills externes : voir `docs/skills-to-install.md`.
-6. Lancer Claude Code à la racine ; première commande : `/plan F01`.
+## Démarrage (dev)
+
+```bash
+npm install
+npm run dev
+```
+
+Tests : `npm test` · Lint : `npm run lint` · Build : `npm run build`.
+
+## Documentation
+
+- `CLAUDE.md` — mémoire du projet (règles, stack, workflow git).
+- `docs/` — architecture, base de données, vision, roadmap, phases, features (F01–F10).
+- `.claude/rules/` — règles détaillées par domaine (GraphQL, E2E, WebRTC, profils).
+- `docs/skills-to-install.md` — skills externes requis.
 
 ## Ordre de construction V1 recommandé
 F03 (profil, base) en parallèle de F01/F02 (auth) → F04 → F05 → F06 → F07 → F08 → F10 → F09.
