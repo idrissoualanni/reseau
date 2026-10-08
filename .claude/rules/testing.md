@@ -4,7 +4,7 @@ paths: ["**/*.test.ts", "**/*.test.tsx", "vitest.*"]
 ---
 # Tests
 
-- **Vitest** pour unitaires et intégration ; **Vitest UI** : `pnpm test:ui` (développement). CI : `pnpm test` (sans UI) avec couverture.
+- **Vitest** pour unitaires et intégration ; **Vitest UI** : `npm run test:ui` (développement). CI : `npm test` (sans UI) avec couverture.
 - Fichiers `*.test.ts(x)` à côté du code testé. Un test = un comportement, nom en phrase (`it("refuse la publication sans titre")`).
 - **Pyramide** : beaucoup de tests unitaires sur `application/` (repositories simulés, `ctx` explicite), quelques tests d'intégration sur `data/` (base Neon de test dédiée ou branche éphémère), un E2E par fonctionnalité clé (Playwright, ajouté quand le premier parcours complet existe).
 - Chaque règle métier et chaque cas d'erreur de la fiche a un test. Critères d'acceptation → tests.

@@ -311,7 +311,7 @@ Fichiers de test à côté du code : `route.test.ts`, `mappers/*.test.ts`, `sche
 Règles :
 - Le cas d'usage est **simulé (mock)** dans les tests de handler : on teste l'adaptateur HTTP, pas la logique métier.
 - La logique métier se teste dans les tests du cas d'usage (voir `.claude/rules/testing.md`).
-- Commandes : `pnpm test` (exécution), `pnpm test:ui` (Vitest UI). Aucune route fusionnée sans tests verts.
+- Commandes : `npm test` (exécution), `npm run test:ui` (Vitest UI). Aucune route fusionnée sans tests verts.
 
 ---
 
@@ -355,7 +355,7 @@ Règles :
 - [ ] Liste ? Pagination par curseur, `limit` ≤ 50.
 - [ ] Tests Vitest : 401, 400, nominal, 403/404, 409/422, format d'erreur.
 - [ ] `Cache-Control: no-store` par défaut (ou exception justifiée).
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` passent.
+- [ ] `npm run lint`, `npm run typecheck`, `npm test` passent.
 - [ ] Entrée ajoutée à `CHANGELOG.md`.
 
 ---

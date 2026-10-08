@@ -16,9 +16,9 @@ Premier public : étudiants. Le réseau doit rester **modulable** (d'autres prof
 
 ## Stack (ne pas en changer sans ADR dans `docs/decisions/`)
 Next.js (App Router, TypeScript strict) · Tailwind + shadcn/ui · Neon (Postgres, **Neon Auth**, **Neon Storage**) · Drizzle ORM + drizzle-kit ·
-GraphQL (Yoga + Pothos) **uniquement pour les projets/posts**, REST (route handlers) pour tout le reste · Zod · Vitest + Vitest UI · pnpm · Render (dev puis production) · Cloudflare (DNS, CDN, WAF, Turnstile).
+GraphQL (Yoga + Pothos) **uniquement pour les projets/posts**, REST (route handlers) pour tout le reste · Zod · Vitest + Vitest UI · npm · Render (dev puis production) · Cloudflare (DNS, CDN, WAF, Turnstile).
 
-## Structure du dépôt (monorepo pnpm)
+## Structure du dépôt (monorepo npm)
 ```
 apps/web/            Next.js (UI + GraphQL + REST)        ← V1
 apps/realtime/       WebSocket (messagerie, signalisation) ← V2, ne pas créer avant
@@ -29,8 +29,8 @@ docs/  .claude/  render.yaml  CHANGELOG.md
 Architecture en couches dans chaque module : voir `.claude/rules/architecture.md`.
 
 ## Commandes
-`pnpm dev` · `pnpm build` · `pnpm lint` · `pnpm typecheck` · `pnpm test` · `pnpm test:ui` (Vitest UI) ·
-`pnpm db:generate` · `pnpm db:migrate` · `pnpm db:studio`
+`npm run dev` · `npm run build` · `npm run lint` · `npm run typecheck` · `npm test` · `npm run test:ui` (Vitest UI) ·
+`npm run db:generate` · `npm run db:migrate` · `npm run db:studio`
 Commandes slash : `/brainstorm` `/plan` `/build` `/new-feature` `/change-feature` `/test` `/db-migrate` `/changelog` `/deploy-dev` `/release`.
 
 ## Règles non négociables

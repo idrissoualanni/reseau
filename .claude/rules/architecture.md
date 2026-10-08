@@ -221,7 +221,7 @@ Il est construit par `buildContext(session)` dans la couche transport. Un cas d'
 - Les types de sortie (entités, DTO) sont **dérivés des schémas** quand c'est possible, pour éviter toute divergence.
 - N'importe **rien** d'autre du dépôt. Pas de dépendance à React, Next.js, Drizzle ni Node.
 - Organisation : `packages/shared/src/schemas/<ressource>.ts`, `types/`, `constants/`, `index.ts`.
-- Un changement dans `shared` peut casser plusieurs endroits : il passe `pnpm typecheck` sur tout le monorepo avant fusion.
+- Un changement dans `shared` peut casser plusieurs endroits : il passe `npm run typecheck` sur tout le monorepo avant fusion.
 
 ---
 
@@ -305,7 +305,7 @@ Ces règles ne doivent pas reposer sur la seule discipline : elles sont **vérif
 | Code serveur non importable côté client | paquet `server-only` | `import "server-only"` en tête de `application/`, `data/`, `lib/db.ts`, `lib/env.ts` (partie serveur) |
 | Types stricts | TypeScript | `"strict": true`, `noUncheckedIndexedAccess` |
 
-Commandes : `pnpm lint`, `pnpm typecheck`, `pnpm test`, toutes exécutées en CI. Une violation de règle d'architecture **fait échouer la CI**.
+Commandes : `npm run lint`, `npm run typecheck`, `npm test`, toutes exécutées en CI. Une violation de règle d'architecture **fait échouer la CI**.
 
 ---
 
@@ -335,7 +335,7 @@ Dans cet ordre, du bas vers le haut :
 - [ ] **Transport** : route REST (`rest.md`) ou champ GraphQL (`graphql.md`) ou page/action serveur, minces.
 - [ ] **Composants** : interface dans `components/`, qui consomme l'API sans importer le serveur.
 - [ ] Variables d'environnement éventuelles ajoutées (`env.ts`, `.env.example`, `docs/environment.md`).
-- [ ] `npm lint && pnpm typecheck && pnpm test` passent.
+- [ ] `npm run lint && npm run typecheck && npm test` passent.
 - [ ] Documentation et `CHANGELOG.md` mis à jour.
 
 ---

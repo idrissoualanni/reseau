@@ -4,7 +4,7 @@ Les **défauts** sont appliqués tant que tu ne les modifies pas ; chacun est r�
 
 | # | Sujet | Défaut retenu | Statut |
 |---|---|---|---|
-| 1 | Monorepo | pnpm workspaces : `apps/web`, `packages/db`, `packages/shared` | Défaut |
+| 1 | Monorepo | npm workspaces : `apps/web`, `packages/db`, `packages/shared` | Défaut |
 | 2 | Vérification e-mail | Code à 6 chiffres (OTP) via Neon Auth, SMTP partagé | Défaut |
 | 3 | Référentiel de compétences | Création libre normalisée (slug) ; liste de départ ~100 compétences à fournir | Ouvert |
 | 4 | Nom du produit | « Réseau » (provisoire) | **Ouvert** |

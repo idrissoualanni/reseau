@@ -7,7 +7,7 @@ Construction du plan : **$ARGUMENTS**
 
 1. Crée le worktree et la branche (`rules/git-workflow.md`) depuis `dev`.
 2. Exécute **dans l'ordre** : contrat partagé → schéma + migration → `data` → `application` → API (REST/GraphQL) → UI → tests. Délègue aux agents propriétaires (`.opencode/agents/`) ; parallélise backend/frontend seulement après le contrat.
-3. Après chaque couche : `pnpm typecheck && pnpm lint && pnpm test`. Commit conventionnel court.
+3. Après chaque couche : `npm run typecheck && npm run lint && npm test`. Commit conventionnel court.
 4. Reste dans le plan. Idée hors plan ou hors version ? Note-la dans « Questions ouvertes » du plan, ne la code pas.
 5. Auto-revue avec la Définition de « terminé » (`docs/workflow.md`) ; coche chaque ligne dans la description de la PR.
 6. Demande la revue croisée : `security` puis `qa` puis `docs`. Corrige.

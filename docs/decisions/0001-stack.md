@@ -6,7 +6,7 @@
 Le cadrage initial prévoyait React + Vite + Supabase. Le projet est passé à une base Neon, un hébergement Render et un développement par agents de codage.
 
 ## Décision
-Next.js (App Router, TypeScript) · Tailwind + shadcn/ui · Neon (Postgres, Auth, Storage) · Drizzle ORM · Zod · Vitest · pnpm (monorepo) · Render · Cloudflare.
+Next.js (App Router, TypeScript) · Tailwind + shadcn/ui · Neon (Postgres, Auth, Storage) · Drizzle ORM · Zod · Vitest · npm (monorepo) · Render · Cloudflare.
 
 ## Alternatives écartées
 Supabase (RLS, Realtime intégrés) — remplacé par Neon : les règles d'accès sont donc appliquées dans la couche `application`. React + Vite seul — pas de rendu serveur ni de route handlers.

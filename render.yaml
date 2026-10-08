@@ -1,6 +1,7 @@
-# Blueprint Render — À VALIDER avec : render blueprints validate
-# Un projet "reseau", deux environnements. Les noms de services doivent être uniques dans le workspace (suffixes -dev / -prod).
-# V1 = un seul service web. `apps/realtime` (WebSocket) sera ajouté en V2.
+# Blueprint Render — projet "reseau". Valider : render blueprints validate
+# État réel (vérifié MCP, 2026-10-08) : stack Next.js racine (npm) ;
+# base sur Neon (pas de Postgres Render) ; KV reseau-dev existant (WebRTC V2) ;
+# route /api/health à créer avant déploiement.
 projects:
   - name: reseau
     environments:
@@ -9,41 +10,86 @@ projects:
           - type: web
             name: reseau-web-dev
             runtime: node
-            repo: https://github.com/CHANGE_ME/reseau   # à renseigner
-            branch: dev
+            repo: https://github.com/idrissoualanni/reseau
+            branch: dev          # branche `dev` à créer (workflow : PR dev → main)
             rootDir: .
-            buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter web build
-            startCommand: pnpm --filter web start
+            buildCommand: npm ci && npm run build
+            startCommand: npm start
             healthCheckPath: /api/health
-            autoDeploy: true
+            autoDeployTrigger: commit
             envVars:
               - key: NODE_ENV
                 value: production
               - key: NEXT_PUBLIC_APP_URL
-                value: https://dev.CHANGE_ME.com
-              # Secrets : saisis dans le dashboard (sync: false), branche Neon "dev"
+                value: https://reseau-web-dev.onrender.com
+              - key: NEON_BRANCH
+                value: dev
+              # Secrets : dashboard (sync: false), jamais en clair ici
               - key: DATABASE_URL
                 sync: false
+              - key: DATABASE_URL_UNPOOLED
+                sync: false
               - key: NEON_AUTH_BASE_URL
+                sync: false
+              - key: NEON_AUTH_COOKIE_SECRET
+                sync: false
+              - key: NEON_AUTH_JWKS_URL
+                sync: false
+              - key: AUTH_SECRET
+                sync: false
+              - key: STORAGE_ACCESS_KEY_ID
+                sync: false
+              - key: STORAGE_SECRET_ACCESS_KEY
+                sync: false
+              - key: STORAGE_BUCKET
+                sync: false
+              - key: STORAGE_ENDPOINT
+                sync: false
+              - key: STORAGE_PUBLIC_BASE_URL
+                sync: false
+              - key: TURNSTILE_SECRET_KEY
                 sync: false
       - name: production
         services:
           - type: web
             name: reseau-web-prod
             runtime: node
-            repo: https://github.com/CHANGE_ME/reseau
+            repo: https://github.com/idrissoualanni/reseau
             branch: main
             rootDir: .
-            buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter web build
-            startCommand: pnpm --filter web start
+            buildCommand: npm ci && npm run build
+            startCommand: npm start
             healthCheckPath: /api/health
-            autoDeploy: true   # le déploiement prod ne part que d'un merge validé dev → main
+            autoDeployTrigger: commit
             envVars:
               - key: NODE_ENV
                 value: production
               - key: NEXT_PUBLIC_APP_URL
-                value: https://app.CHANGE_ME.com
+                value: https://reseau-web-prod.onrender.com
+              - key: NEON_BRANCH
+                value: main
+              # Secrets : dashboard (sync: false), jamais en clair ici
               - key: DATABASE_URL
                 sync: false
+              - key: DATABASE_URL_UNPOOLED
+                sync: false
               - key: NEON_AUTH_BASE_URL
+                sync: false
+              - key: NEON_AUTH_COOKIE_SECRET
+                sync: false
+              - key: NEON_AUTH_JWKS_URL
+                sync: false
+              - key: AUTH_SECRET
+                sync: false
+              - key: STORAGE_ACCESS_KEY_ID
+                sync: false
+              - key: STORAGE_SECRET_ACCESS_KEY
+                sync: false
+              - key: STORAGE_BUCKET
+                sync: false
+              - key: STORAGE_ENDPOINT
+                sync: false
+              - key: STORAGE_PUBLIC_BASE_URL
+                sync: false
+              - key: TURNSTILE_SECRET_KEY
                 sync: false

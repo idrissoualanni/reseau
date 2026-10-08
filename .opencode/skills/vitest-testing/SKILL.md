@@ -4,7 +4,7 @@ description: Écrire et organiser les tests Vitest (unitaires, intégration, Vit
 ---
 # Tests avec Vitest
 
-- Lancer : `pnpm test` (CI), `pnpm test:ui` (interface Vitest UI, dev), `pnpm test -- <chemin>` (ciblé).
+- Lancer : `npm test` (CI), `npm run test:ui` (interface Vitest UI, dev), `npm test -- <chemin>` (ciblé).
 - **Cas d'usage** : injecter `ctx` et un repository simulé ; tester le chemin nominal, chaque erreur de la fiche, et le refus d'autorisation.
 - **Zod** : cas valide, limites (min/max), champ inconnu rejeté (`.strict()`).
 - **Data** : tests d'intégration sur une base Neon de test (branche dédiée), données par fabriques, nettoyage après chaque test.

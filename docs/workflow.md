@@ -28,7 +28,7 @@ Applicable à toute tâche : nouvelle fonctionnalité, évolution, correction. L
 
 ## Définition de « terminé » (DoD)
 - [ ] Critères d'acceptation de la fiche tous cochés
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test` verts ; tests ajoutés pour chaque règle métier et chaque cas d'erreur
+- [ ] `npm run typecheck`, `npm run lint`, `npm test` verts ; tests ajoutés pour chaque règle métier et chaque cas d'erreur
 - [ ] Autorisation vérifiée dans `application/` ; entrées validées par Zod
 - [ ] États UI : chargement, vide, erreur, succès ; testé à 360 px de large
 - [ ] Migration générée, relue, rejouable ; aucune table hors version

@@ -40,7 +40,7 @@ apps/web/
 **Règles de rangement**
 - Un fichier par type métier dans `types/`. Il contient le type, ses champs, ses queries et ses mutations.
 - `route.ts` ne contient **aucune** logique de schéma. `builder.ts` ne contient **aucun** type métier.
-- `schema.graphql` est régénéré par `pnpm graphql:export` (script qui écrit `printSchema(schema)`).
+- `schema.graphql` est régénéré par `npm run graphql:export` (script qui écrit `printSchema(schema)`).
   **La CI échoue si le fichier committé diffère du schéma généré.** Après toute modification de type : relancer la commande et committer le résultat.
 
 ## 2. Serveur Yoga (`route.ts`)
@@ -164,7 +164,7 @@ Les cas d'usage lèvent des `AppError` typées. `errors.ts` les convertit en `Gr
 - Tests de schéma via `yoga.fetch` / exécution directe du schéma avec un contexte de test (Vitest). Pas de serveur réseau.
 - Pour chaque opération : cas nominal, non connecté, interdit, entrée invalide, ressource invisible.
 - Test N+1 (§6) et test du plafond de pagination (§7).
-- Vérification que le schéma committé est à jour (`pnpm graphql:check`).
+- Vérification que le schéma committé est à jour (`npm run graphql:check`).
 
 ## 15. Checklist : ajouter ou modifier une opération
 
@@ -173,7 +173,7 @@ Les cas d'usage lèvent des `AppError` typées. `errors.ts` les convertit en `Gr
 3. Schéma Zod partagé créé/réutilisé pour l'entrée.
 4. Type + opération dans `server/graphql/types/<domaine>.ts`, résolveur mince.
 5. Relations via DataLoader ; visibilité filtrée dans le SQL.
-6. `pnpm graphql:export` puis committer `schema.graphql`.
+6. `npm run graphql:export` puis committer `schema.graphql`.
 7. Tests : nominal, erreurs, N+1.
 8. Mettre à jour le changelog si l'API visible change.
 9. donne des explication de ce qui est fait avec graphql et propose une interface de visualisation de l'api graphql pour les developpeurs et les testeurs avec graphiql ou playground 

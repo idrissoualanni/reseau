@@ -4,7 +4,7 @@ paths: ["packages/db/**", "apps/web/src/modules/*/data/**"]
 ---
 # Base de données
 
-- Schéma dans `packages/db/src/schema/*.ts` ; migrations dans `packages/db/migrations/` (générées par `pnpm db:generate`, relues, committées).
+- Schéma dans `packages/db/src/schema/*.ts` ; migrations dans `packages/db/migrations/` (générées par `npm run db:generate`, relues, committées).
 - **Jamais** de modification manuelle de la base ni d'édition d'une migration déjà fusionnée dans `dev`. Corriger = nouvelle migration.
 - Migrations : *expand puis contract* (ajouter nullable → déployer → remplir → contraindre/supprimer plus tard). Une migration = un changement logique.
 - Extensions/index GIN/trigramme : migration SQL personnalisée (`drizzle-kit generate --custom`).

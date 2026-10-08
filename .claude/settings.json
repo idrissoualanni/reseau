@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
-      "Bash(pnpm *)",
+      "Bash(npm *)",
       "Bash(git status*)",
       "Bash(git diff*)",
       "Bash(git log*)",
@@ -21,9 +21,9 @@
     ],
     "ask": [
       "Bash(git push*)",
-      "Bash(pnpm db:migrate*)",
-      "Bash(pnpm add *)",
-      "Bash(pnpm remove *)",
+      "Bash(npm run db:migrate*)",
+      "Bash(npm install *)",
+      "Bash(npm uninstall *)",
       "Bash(npx drizzle-kit migrate*)",
       "Bash(gh pr *)"
     ],
