@@ -36,11 +36,11 @@ Table `profiles` (voir `data-model.md`).
 Le `user_id` vient de la session, **jamais** du corps de requête. Texte échappé à l'affichage (pas de HTML).
 
 ## Critères d'acceptation
-- [ ] Un nouveau membre remplit le formulaire et arrive sur son profil.
-- [ ] Un username déjà pris est refusé avec message clair.
-- [ ] Impossible de créer deux profils pour un compte.
-- [ ] Un membre sans profil ne peut accéder qu'à l'onboarding.
-- [ ] Un avatar est optionnel et s'affiche une fois envoyé.
+- [x] Un nouveau membre remplit le formulaire et arrive sur son profil.
+- [x] Un username déjà pris est refusé avec message clair.
+- [x] Impossible de créer deux profils pour un compte.
+- [x] Un membre sans profil ne peut accéder qu'à l'onboarding.
+- [ ] Un avatar est optionnel et s'affiche une fois envoyé. *Reporté : dépend du stockage (F06), non tranché (voir `docs/TODO.md`).*
 
 ## Tests attendus
 Unitaires : règles username, réservés, unicité (repository simulé). Intégration : contrainte unique. E2E : onboarding.

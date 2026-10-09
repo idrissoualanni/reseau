@@ -11,6 +11,12 @@ description: Pièges Next.js 16 / React 19 vérifiés sur ce projet
   paramètres côté client avec `useSearchParams()` et **envelopper le composant dans
   `<Suspense>`** (fournir un fallback visible), ou bloquer la route avec
   `export const instant = false`.
+- **Session / `cookies()` dans une page** : même contrainte. Une page qui lit la session
+  (via `requireSession()`) doit poser `export const instant = false` — route bloquante
+  assumée — sous peine d'échec de build « uncached or runtime data during prerendering ».
+  Vérifié le 2026-10-09 sur `/`, `/onboarding/profile` et `/me/profile`. Le SDK Neon Auth
+  journalise un `Cookie validation error` pendant la passe de prerender, mais le build
+  réussit une fois `instant = false` posé.
 - **`middleware.ts` est déprécié en Next 16** : le fichier s'appelle désormais
   `src/proxy.ts` (même signature `NextRequest` → `NextResponse`, même `config.matcher`).
   Un projet neuf ne doit pas utiliser `middleware.ts`.

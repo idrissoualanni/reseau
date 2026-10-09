@@ -12,17 +12,20 @@ export type ErrorCode =
 
 export class AppError extends Error {
   readonly code: ErrorCode;
+  /** Détail par champ, présent uniquement pour VALIDATION / RULE_VIOLATION. */
+  readonly fields?: Record<string, string>;
 
-  constructor(code: ErrorCode, message: string) {
+  constructor(code: ErrorCode, message: string, fields?: Record<string, string>) {
     super(message);
     this.name = new.target.name;
     this.code = code;
+    this.fields = fields;
   }
 }
 
 export class ValidationError extends AppError {
-  constructor(message = "Entrée invalide") {
-    super("VALIDATION", message);
+  constructor(message = "Entrée invalide", fields?: Record<string, string>) {
+    super("VALIDATION", message, fields);
   }
 }
 

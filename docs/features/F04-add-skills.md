@@ -32,11 +32,11 @@ REST : `GET /api/skills?q=react&limit=8` (autocomplétion, exact puis trigramme)
 | Nom invalide | VALIDATION | « Nom de compétence invalide. » |
 
 ## Critères d'acceptation
-- [ ] En tapant « reac », « React » est proposé.
-- [ ] Ajouter « Réact » et « react » ne crée qu'une seule compétence (même slug).
-- [ ] Impossible d'ajouter une 31ᵉ compétence.
-- [ ] Une compétence liée à un projet publié affiche le badge `demonstrated`.
-- [ ] Un membre ne peut pas modifier les compétences d'un autre.
+- [x] En tapant « reac », « React » est proposé.
+- [x] Ajouter « Réact » et « react » ne crée qu'une seule compétence (même slug).
+- [x] Impossible d'ajouter une 31ᵉ compétence.
+- [ ] Une compétence liée à un projet publié affiche le badge `demonstrated`. *Reporté : les projets arrivent au Lot 3 (F05/F06) ; la dérivation du niveau sera branchée à ce moment.*
+- [x] Un membre ne peut pas modifier les compétences d'un autre. *Structurel : `profile_id` vient de la session, jamais du corps.*
 
 ## Tests attendus
 Unitaires : normalisation du slug, limite, dérivation du niveau. Intégration : unicité du slug. E2E : ajout/suppression.

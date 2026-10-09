@@ -11,6 +11,14 @@ paths: ["apps/**", "packages/**"]
 
 ---
 
+> **Structure V1 réelle (résolu 2026-10-09)** : le dépôt est en **racine unique**, pas en
+> monorepo. Partout dans cette règle, `apps/web/src` ≡ `src` et `packages/*` n'existent
+> pas. Les couches vivent sous `src/` : `src/app` (transport), `src/lib` (domaine,
+> validation, repositories, actions), `src/db` (Drizzle), `src/components` (UI). Le
+> découpage par couches et le sens des dépendances décrits ci-dessous restent la référence.
+
+---
+
 ## 1. Principe directeur
 
 Le code est organisé en **couches** à l'intérieur de **modules** métier. Chaque couche a **une seule responsabilité** et ne peut dépendre que de la couche située en dessous.

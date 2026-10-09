@@ -25,6 +25,17 @@
 - [ ] **Fin de V1** : tests complets → déploiement Render dev + Neon dev → tester ce qui est
   réellement déployé (sondes de vérification), pas seulement le statut du build.
 
+## Profil (F03/F04/F10) — reporté du Lot 2
+- [ ] **Avatar** : affichage + upload présigné, une fois le stockage tranché (F06). En V1
+  le profil naît avec l'initiale du nom affiché (`Avatar`, repli initiales).
+- [ ] **Compétences pendant l'onboarding** : F04 prévoit une étape facultative à
+  l'onboarding ; en V1 les compétences se gèrent sur `/me/profile` (le profil doit exister
+  avant `user_skills`).
+- [ ] **Niveau `demonstrated`** : dérivation depuis les projets publiés, à brancher au
+  Lot 3 (F05/F06), dans le cas d'usage publier/dépublier/supprimer.
+- [ ] **REST — durcissement** : vérification de l'`Origin` sur les mutations et limitation
+  de débit sur `username-available` et `POST /api/me/skills` (voir `docs/api/rest.md`).
+
 ## Stockage / images (F06)
 - [ ] Réconcilier `.env.example` (`STORAGE_*`) et `.env.local` (`AWS_*`) : Neon Object Storage
   est S3-compatible, garder une seule convention.

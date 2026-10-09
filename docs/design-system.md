@@ -108,3 +108,20 @@ ici (section « Notes ») pour être visible.
   (`/sign-in`, `/verify-email`) — évite un écran vide pendant l'hydratation.
 - Écrans d'auth : carte `max-w-sm` centrée, titre `h1` (les `CardTitle` ne portent pas
   le titre de page), liens d'action en `text-primary`.
+
+#### Lot 2 — profil (F03/F04/F10) : composants ajoutés (2026-10-09)
+- `Textarea` (primitif) + `TextareaField` : champ multiligne accessible (label lié,
+  erreur `role="alert"`), pendant de `FormField` pour la bio et les textes longs.
+- `UsernameField` : champ username avec vérification de disponibilité débattue (350 ms)
+  via `GET /api/profiles/username-available`, normalisation en minuscules côté client,
+  message en `aria-live` (icône + texte, jamais la couleur seule).
+- `Avatar` : repli sur les initiales du nom affiché. **Aucune image distante** tant que
+  le bucket n'est pas tranché (F06) ; `props.src` prévu mais non alimenté en V1.
+- `SkillBadge` : pastille de compétence. `declared` = `secondary`, `demonstrated` =
+  `success` + icône `BadgeCheck` + libellé lecteur d'écran (« démontrée »/« déclarée »).
+  Suppression possible via un bouton nommé.
+- `SkillsField` : saisie avec autocomplétion (`GET /api/skills?q=`), compteur `n/30`,
+  ajout/retrait optimistes avec actions serveur, liste vide expliquée. Limite à 30
+  compétences rappelée à l'écran.
+- Pages : `/onboarding/profile` (carte unique) et `/me/profile` (en-tête + sections
+  « Informations » et « Compétences »).

@@ -18,14 +18,18 @@ publier, et voir son profil en production.*
 
 ## 2. État réel (constat au 2026-10-09)
 
-- **Code** : Lots 0–1 posés. Drizzle 0.45 + `drizzle-kit` 0.31, schéma V1
+- **Code** : Lots 0–2 posés. Drizzle 0.45 + `drizzle-kit` 0.31, schéma V1
   (`src/db/schema.ts`) et migrations `drizzle/0000`–`0002`. Design system amorcé
   (tokens clair/sombre, composants UI de base, `PageShell`, navigation). `/api/health`
   opérationnel. **Lot 1 — Auth (F01+F02)** : SDK `@neondatabase/auth` isolé
   (`src/lib/auth.ts`), handler `/api/auth/[...path]`, `src/proxy.ts` (protégé par
   défaut + liste blanche des routes publiques), actions serveur + validation Zod +
-  Turnstile, 4 pages publiques. Toujours absents : GraphQL, pages profil/projets
-  (F03–F10).
+  Turnstile, 4 pages publiques. **Lot 2 — Profil (F03+F04+F10)** : onboarding
+  `/onboarding/profile`, `/me/profile` (identité + compétences), cas d'usage et
+  repositories (`src/lib/{profile,skills}.ts`, `src/lib/repositories/`), REST
+  `/api/me/{profile,skills}`, `/api/skills`, `/api/profiles/username-available`,
+  garde-fou d'onboarding sur les pages protégées. Avatar différé (stockage, F06).
+  Toujours absents : GraphQL, pages projets, profil public, recherche (F05–F09).
 - **Divergences docs ↔ dépendances installées** (à trancher avant de coder) :
   | Sujet | Docs disent | package.json réel |
   |---|---|---|
@@ -35,9 +39,9 @@ publier, et voir son profil en production.*
 - **Infra (MCP)** : projet Neon `reseau` (us-east-2, PG18) avec branches `production`
   et `dev` ✅ · KV Render `reseau-dev` (frankfurt) ✅ · **aucun service Render
   `reseau-*`** → le blueprint `render.yaml` n'est pas appliqué.
-- **Schéma DB** : aucune migration. Le modèle V1 cible est précisé dans
-  `docs/data-model.md` (`profiles`, `skills`, `user_skills`, `projects`,
-  `project_skills` + trigram/GIN).
+- **Schéma DB** : migrations `drizzle/0000`–`0002` appliquées sur la branche Neon
+  **dev** (5 tables `profiles`, `skills`, `user_skills`, `projects`, `project_skills`
+  + index trigram ; production intacte).
 
 ## 3. Toutes les pages V1
 
@@ -129,9 +133,10 @@ Ordre des fiches UX : 11 fiches (`docs/ux/`) à écrire **avant** chaque écran 
 
 ## 6. Décisions à trancher (bloquants avant Lot 0)
 
-1. **Monorepo vs racine unique** : le défaut documenté est le monorepo npm workspaces ;
-   l'échafaudage réel est racine unique. → trancher (recommandation : racine unique pour V1,
-   migration monorepo non rentable avant V1.5).
+1. **Monorepo vs racine unique** : **RÉSOLU (2026-10-09) : racine unique** — `src/db`,
+   `src/app`, `src/components`, `src/lib`, `src/server` le jour venu. Le monorepo
+   `apps/web` + `packages/*` décrit dans `.claude/rules/architecture.md` n'est pas
+   appliqué ; les règles de couches s'y lisent avec `apps/web/src` ≡ `src`.
 2. **ORM** : Prisma 7 (installé) vs Drizzle (docs). → **RÉSOLU (2026-10-09) : Drizzle** — `drizzle-orm` 0.45 + `drizzle-kit` 0.31 + driver `@neondatabase/serverless`, schéma `src/db/schema.ts`, migrations `drizzle/`.
 3. **GraphQL** : `@graphql-tools/schema` (installé) vs Yoga + Pothos (ADR 0002).
    → recommandation : conserver l'installé, ne relire l'ADR que s'il change la décision.

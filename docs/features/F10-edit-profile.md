@@ -25,11 +25,11 @@ Mêmes règles que F03 (sans `username`). Champ inconnu (`username`, `user_id`�
 Validation par champ ; `FORBIDDEN` si profil d'un autre ; `NOT_FOUND` si pas de profil.
 
 ## Critères d'acceptation
-- [ ] Un membre modifie son nom et sa bio ; le changement est visible sur `/u/[username]`.
-- [ ] Une tentative d'envoyer `username` est rejetée.
-- [ ] Remplacer l'avatar supprime l'ancien fichier.
-- [ ] Un membre ne peut pas modifier le profil d'un autre (test explicite).
-- [ ] Les erreurs s'affichent sous les champs, la saisie est conservée.
+- [x] Un membre modifie son nom et sa bio ; le changement est persisté (la page publique `/u/[username]` arrive au Lot 4, F08).
+- [x] Une tentative d'envoyer `username` est rejetée.
+- [ ] Remplacer l'avatar supprime l'ancien fichier. *Reporté : dépend du stockage (F06), non tranché.*
+- [x] Un membre ne peut pas modifier le profil d'un autre. *Structurel : `user_id` vient de la session serveur, jamais du corps (`PATCH /api/me/profile` n'accepte aucun `user_id`).*
+- [x] Les erreurs s'affichent sous les champs, la saisie est conservée.
 
 ## Tests attendus
 Unitaires : mise à jour partielle, champs interdits, propriété. E2E : modifier et vérifier sur la page publique.

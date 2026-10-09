@@ -23,8 +23,11 @@ export default function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Exclus : assets, images, handler d'auth et sonde de santé.
+  // Les routes `/api/**` sont exclues : un handler REST doit répondre du JSON
+  // (401 compris), jamais une redirection HTML vers la connexion. Chaque
+  // handler protégé appelle `requireSession()` lui-même.
+  // Exclus aussi : assets, images et favicon.
   matcher: [
-    "/((?!api/auth|api/health|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|webp|ico)$).*)",
+    "/((?!api/|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|webp|ico)$).*)",
   ],
 };
