@@ -6,6 +6,7 @@ import { getOwnProject, getProjectSkills } from "@/lib/projects";
 import { NotFoundError } from "@/lib/errors";
 import { PageShell } from "@/components/page-shell";
 import { ProjectForm } from "@/components/projects/project-form";
+import type { Project, Skill } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Modifier le projet" };
 
@@ -25,18 +26,20 @@ export default async function EditProjectPage({ params }: EditProjectPageProps) 
   if (!profile) redirect("/onboarding/profile");
 
   const ctx = { userId: session.user.id, profileId: profile.id };
+  let project: Project;
+  let skills: Skill[];
   try {
-    const project = await getOwnProject(ctx, id);
-    const skills = await getProjectSkills(id);
-
-    return (
-      <PageShell>
-        <h1 className="mb-6 text-2xl font-semibold tracking-tight">Modifier le projet</h1>
-        <ProjectForm mode="edit" project={project} initialSkills={skills} />
-      </PageShell>
-    );
+    project = await getOwnProject(ctx, id);
+    skills = await getProjectSkills(id);
   } catch (error) {
     if (error instanceof NotFoundError) notFound();
     throw error;
   }
+
+  return (
+    <PageShell>
+      <h1 className="mb-6 text-2xl font-semibold tracking-tight">Modifier le projet</h1>
+      <ProjectForm mode="edit" project={project} initialSkills={skills} />
+    </PageShell>
+  );
 }
