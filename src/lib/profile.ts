@@ -7,8 +7,9 @@ import {
   updateProfileById,
   type ProfilePatch,
 } from "@/lib/repositories/profiles";
+import { listSkillsForProfile } from "@/lib/repositories/skills";
 import { RESERVED_USERNAMES, type CreateProfileInput } from "@/lib/validation/profile";
-import type { Profile } from "@/lib/types";
+import type { Profile, ProfileSkill } from "@/lib/types";
 
 // Cas d'usage du profil (F03/F10). L'identité vient toujours de la session :
 // ces fonctions reçoivent `userId`, jamais un identifiant lu dans la requête.
@@ -26,6 +27,17 @@ export async function requireOwnProfile(userId: string): Promise<Profile> {
 
 export async function getProfileByUsername(username: string): Promise<Profile | null> {
   return findProfileByUsername(username);
+}
+
+// Profil public (F08) : identité + compétences avec niveau de preuve. Aucun
+// identifiant d'authentification ni e-mail n'est inclus (voir mappers).
+export async function getPublicProfile(
+  username: string,
+): Promise<{ profile: Profile; skills: ProfileSkill[] } | null> {
+  const profile = await getProfileByUsername(username);
+  if (!profile) return null;
+  const skills = await listSkillsForProfile(profile.id);
+  return { profile, skills };
 }
 
 export async function isUsernameAvailable(username: string): Promise<boolean> {

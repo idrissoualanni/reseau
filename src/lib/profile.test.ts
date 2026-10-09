@@ -8,12 +8,24 @@ vi.mock("@/lib/repositories/profiles", () => ({
   updateProfileById: vi.fn(),
 }));
 
+vi.mock("@/lib/repositories/skills", () => ({
+  listSkillsForProfile: vi.fn(),
+}));
+
 import { ConflictError, NotFoundError } from "@/lib/errors";
 import * as repo from "@/lib/repositories/profiles";
-import { createProfile, isUsernameAvailable, requireOwnProfile, updateProfile } from "@/lib/profile";
-import type { Profile } from "@/lib/types";
+import * as skillsRepo from "@/lib/repositories/skills";
+import {
+  createProfile,
+  getPublicProfile,
+  isUsernameAvailable,
+  requireOwnProfile,
+  updateProfile,
+} from "@/lib/profile";
+import type { Profile, ProfileSkill } from "@/lib/types";
 
 const mocked = vi.mocked(repo);
+const mockedSkills = vi.mocked(skillsRepo);
 
 const existing: Profile = {
   id: "p1",
@@ -95,5 +107,30 @@ describe("requireOwnProfile", () => {
 
     mocked.findProfileByUserId.mockResolvedValue(null);
     await expect(requireOwnProfile("u2")).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+describe("getPublicProfile (F08)", () => {
+  it("renvoie null quand le username est inconnu, sans charger les compétences", async () => {
+    mocked.findProfileByUsername.mockResolvedValue(null);
+
+    await expect(getPublicProfile("inconnu")).resolves.toBeNull();
+    expect(mockedSkills.listSkillsForProfile).not.toHaveBeenCalled();
+  });
+
+  it("assemble le profil et ses compétences pour un membre existant", async () => {
+    const skill: ProfileSkill = {
+      id: "s1",
+      slug: "react",
+      name: "React",
+      proofLevel: "demonstrated",
+    };
+    mocked.findProfileByUsername.mockResolvedValue(existing);
+    mockedSkills.listSkillsForProfile.mockResolvedValue([skill]);
+
+    const result = await getPublicProfile("awa_diop");
+
+    expect(result).toEqual({ profile: existing, skills: [skill] });
+    expect(mockedSkills.listSkillsForProfile).toHaveBeenCalledWith("p1");
   });
 });

@@ -17,3 +17,12 @@ export function toOwnProfileDto(profile: Profile) {
 }
 
 export type OwnProfileDto = ReturnType<typeof toOwnProfileDto>;
+
+// Vue publique (F08) : mêmes champs sûrs — `userId` et e-mail jamais exposés.
+// Un membre ne voit jamais plus que ce que voit un autre, seule la gestion
+// diffère (boutons réservés au propriétaire, décidés par la page).
+export function toPublicProfileDto(profile: Profile) {
+  return toOwnProfileDto(profile);
+}
+
+export type PublicProfileDto = ReturnType<typeof toPublicProfileDto>;
