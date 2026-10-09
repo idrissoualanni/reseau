@@ -6,6 +6,7 @@ import { useActionState } from "react";
 import { signInAction, type FormState } from "@/lib/actions/auth";
 import { safeNextPath } from "@/lib/safe-next";
 import { FormField } from "@/components/form-field";
+import { PasswordField } from "@/components/password-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 
@@ -31,7 +32,7 @@ export function SignInForm() {
             </p>
           ) : null}
           {state.error ? (
-            <p role="alert" className="text-destructive text-sm">
+            <p role="alert" aria-live="polite" className="text-destructive text-sm">
               {state.error}
             </p>
           ) : null}
@@ -44,10 +45,9 @@ export function SignInForm() {
             required
             error={state.fieldErrors?.email}
           />
-          <FormField
+          <PasswordField
             label="Mot de passe"
             name="password"
-            type="password"
             autoComplete="current-password"
             required
             error={state.fieldErrors?.password}

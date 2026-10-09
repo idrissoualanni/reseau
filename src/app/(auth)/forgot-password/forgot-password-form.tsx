@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { forgotPasswordAction, resetPasswordAction, type FormState } from "@/lib/actions/auth";
 import { FormField } from "@/components/form-field";
+import { PasswordField } from "@/components/password-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 
@@ -66,10 +67,9 @@ export function ForgotPasswordForm() {
               required
               error={resetState.fieldErrors?.otp}
             />
-            <FormField
+            <PasswordField
               label="Nouveau mot de passe"
               name="password"
-              type="password"
               autoComplete="new-password"
               required
               hint="8 caractères minimum."

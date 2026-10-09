@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { signUpAction, type FormState } from "@/lib/actions/auth";
 import { FormField } from "@/components/form-field";
+import { PasswordField } from "@/components/password-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 
@@ -21,7 +22,7 @@ export function SignUpForm() {
       <CardContent>
         <form action={formAction} className="flex flex-col gap-4">
           {state.error ? (
-            <p role="alert" className="text-destructive text-sm">
+            <p role="alert" aria-live="polite" className="text-destructive text-sm">
               {state.error}
             </p>
           ) : null}
@@ -40,10 +41,9 @@ export function SignUpForm() {
             required
             error={state.fieldErrors?.email}
           />
-          <FormField
+          <PasswordField
             label="Mot de passe"
             name="password"
-            type="password"
             autoComplete="new-password"
             required
             hint="8 caractères minimum."

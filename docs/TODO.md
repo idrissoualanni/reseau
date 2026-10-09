@@ -15,12 +15,18 @@
 - [ ] **Domaines de confiance Neon Auth** : ajouter les origines staging + prod
   (console Neon ou `neon neon-auth domain add https://…`). `localhost` est pré-autorisé.
 - [ ] **SMTP dédié en production** avant d'envoyer de vrais e-mails (checklist prod Neon).
+  Le SMTP partagé (`auth@mail.myneon.app`) est **limité en débit** : les codes peuvent ne
+  pas partir en cas de tests répétés. En dev, vérifier aussi les **spams**.
+- [x] **Code OTP non envoyé après inscription** : **corrigé** — `signUp.email` n'envoie
+  rien (`verify_email_on_sign_up=false`), on appelle désormais explicitement
+  `emailOtp.sendVerificationOtp` **même si le compte existe déjà** (cause du bug : second
+  essai sur une adresse déjà créée → aucun code). Délai anti-spam de 60 s sur `/verify-email`.
 
 ## Render / déploiement
-- [ ] **`render.yaml`** : mettre à jour via le MCP Render (service `reseau-dev`).
-- [ ] **Service `reseau-dev`** : créer/configurer + variables d'environnement de dev.
-- [ ] **Branche de déploiement** : ne JAMAIS déployer depuis `main` ; déployer depuis `dev`
-  (créer une branche au moment du déploiement).
+- [ ] **`render.yaml`** : mettre à jour via le MCP Render (service `reseau`).
+- [ ] **Service `reseau`** (`srv-db4ek92jnfac73b4uij0`) : variables d'environnement de dev.
+- [ ] **Supprimer le service `srv-db46e4btqb8s73e8bsd0`** (ancien, hors `reseau`).
+- [ ] **Branche de déploiement** : ne JAMAIS déployer depuis `main` ; déployer depuis `dev`.
 - [ ] **Fin de V1** : tests complets → déploiement Render dev + Neon dev → tester ce qui est
   réellement déployé (sondes de vérification), pas seulement le statut du build.
 

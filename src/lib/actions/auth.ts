@@ -43,15 +43,29 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
 
   const auth = getAuth();
   const { error } = await auth.signUp.email(parsed.data);
-  if (error) {
-    // Message neutre : ne jamais révéler l'existence d'un compte (F01 règle 7).
-    return { error: "Si cette adresse est valide, tu vas recevoir un code." };
-  }
+  const alreadyExists = (error as { code?: string } | null)?.code === "USER_ALREADY_EXISTS";
 
-  await auth.emailOtp.sendVerificationOtp({
+  // Compte neuf OU compte existant non vérifié : on (re)envoie toujours le code.
+  // Sans ce renvoi, un second essai sur la même adresse n'envoyait aucun code.
+  const { error: otpError } = await auth.emailOtp.sendVerificationOtp({
     email: parsed.data.email,
     type: "email-verification",
   });
+
+  // Message neutre quand l'adresse existe déjà : ne jamais révéler l'existence
+  // d'un compte (F01 règle 7).
+  if (error && !alreadyExists) {
+    return otpError
+      ? { error: "L'inscription n'a pas pu aboutir. Réessaie dans un instant." }
+      : { error: "Si cette adresse est valide, tu vas recevoir un code." };
+  }
+
+  if (otpError && !alreadyExists) {
+    return {
+      error: "Ton compte est créé, mais l'envoi du code a échoué. Réessaie l'envoi.",
+      email: parsed.data.email,
+    };
+  }
 
   redirect(`/verify-email?email=${encodeURIComponent(parsed.data.email)}`);
 }
@@ -109,11 +123,17 @@ export async function resendVerificationAction(
     return { fieldErrors: fieldErrors(parsed.error) };
   }
 
-  await getAuth().emailOtp.sendVerificationOtp({
+  const { error } = await getAuth().emailOtp.sendVerificationOtp({
     email: parsed.data.email,
     type: "email-verification",
   });
-  return { success: "Nouveau code envoyé.", email: parsed.data.email };
+  if (error) {
+    return {
+      error: "L'envoi du code a échoué. Réessaie dans une minute.",
+      email: parsed.data.email,
+    };
+  }
+  return { success: "Nouveau code envoyé. Pense à vérifier tes spams.", email: parsed.data.email };
 }
 
 export async function forgotPasswordAction(

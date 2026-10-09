@@ -5,8 +5,8 @@
 - **User story** : En tant que membre, je veux me connecter pour retrouver mon espace.
 
 ## Règles métier
-1. Connexion par e-mail + mot de passe (`auth.signIn.email`).
-2. E-mail non vérifié → redirection vers `/verify-email` avec renvoi de code.
+1. Connexion par e-mail + mot de passe (`auth.signIn.email`). Le champ mot de passe propose un bouton **afficher/masquer** (`PasswordField`).
+2. E-mail non vérifié → redirection vers `/verify-email` avec renvoi de code (`sendVerificationOtp`).
 3. Session maintenue par le SDK ; **middleware** (`auth.middleware`) protège toutes les routes sauf `/sign-in`, `/sign-up`, `/verify-email`, `/forgot-password`, assets, `/api/health`.
 4. Utilisateur connecté sans profil → redirection `/onboarding/profile` (F03).
 5. Déconnexion : bouton dans le menu ; invalide la session.
