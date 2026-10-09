@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeSkillName } from "@/lib/validation/skills";
 
 // Schémas partagés du module projets (F05/F06). Les mêmes contraintes servent au
 // REST, au GraphQL et au formulaire client. `body` doit faire 1–5000 (contrainte
@@ -15,12 +16,16 @@ const uuidSchema = z
     "Identifiant invalide.",
   );
 
-// Slug du référentiel `skills` : minuscules, `[a-z0-9+#.-]`, 1–40.
+// Slug du référentiel `skills` : même normalisation que F04 (accents retirés,
+// `[a-z0-9+#.-]`, 1–40), pour que « Réact » et « react » convergent.
 const skillSlugSchema = z
   .string()
   .trim()
-  .toLowerCase()
-  .regex(/^[a-z0-9+#.-]{1,40}$/, "Compétence invalide.");
+  .transform((value) => normalizeSkillName(value).slug)
+  .refine(
+    (slug) => /^[a-z0-9+#.-]{1,40}$/.test(slug),
+    "Compétence invalide.",
+  );
 
 const skillSlugsSchema = z
   .array(skillSlugSchema)
