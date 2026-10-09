@@ -23,7 +23,7 @@ publier, et voir son profil en production.*
 - **Divergences docs ↔ dépendances installées** (à trancher avant de coder) :
   | Sujet | Docs disent | package.json réel |
   |---|---|---|
-  | ORM | Drizzle | **Prisma 7** |
+  | ORM | Drizzle | **Drizzle (décidé le 2026-10-09, Prisma retiré)** |
   | GraphQL | Yoga + Pothos | **@graphql-tools/schema** |
   | Structure | monorepo `apps/web` + `packages/*` | **racine unique** |
 - **Infra (MCP)** : projet Neon `reseau` (us-east-2, PG18) avec branches `production`
@@ -88,7 +88,8 @@ publier, et voir son profil en production.*
 ## 4. Structure cible du code (racine unique — à trancher, voir §6)
 
 ```
-prisma/schema.prisma                 # profiles, skills, user_skills, projects, project_skills
+src/db/{schema,client}.ts               # Drizzle : schéma V1 + client Neon (poolé, paresseux)
+drizzle/                                # migrations Drizzle (0000 tables, 0001 trigram, 0002 index auteur)
 src/app/(auth)/{sign-in,sign-up,verify-email,forgot-password}/
 src/app/onboarding/profile/
 src/app/(app)/{page,projects/[id],search,u/[username]}/
@@ -125,7 +126,7 @@ Ordre des fiches UX : 11 fiches (`docs/ux/`) à écrire **avant** chaque écran 
 1. **Monorepo vs racine unique** : le défaut documenté est le monorepo npm workspaces ;
    l'échafaudage réel est racine unique. → trancher (recommandation : racine unique pour V1,
    migration monorepo non rentable avant V1.5).
-2. **ORM** : Prisma 7 (installé) vs Drizzle (docs). → recommandation : **Prisma**.
+2. **ORM** : Prisma 7 (installé) vs Drizzle (docs). → **RÉSOLU (2026-10-09) : Drizzle** — `drizzle-orm` 0.45 + `drizzle-kit` 0.31 + driver `@neondatabase/serverless`, schéma `src/db/schema.ts`, migrations `drizzle/`.
 3. **GraphQL** : `@graphql-tools/schema` (installé) vs Yoga + Pothos (ADR 0002).
    → recommandation : conserver l'installé, ne relire l'ADR que s'il change la décision.
 4. **Storage** : ADR 0004 (bucket privé/public, Cloudflare devant) — nécessaire pour F06.
