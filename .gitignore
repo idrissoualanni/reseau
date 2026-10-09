@@ -52,6 +52,15 @@ AGENT.local.md
 .opencode/node_modules/
 .opencode/worktrees/
 
+# — boucle de prompts (jamais suivie par git/github) —
+docs/prompt-loop/
+.opencode/plugins/prompt-loop/
+.claude/rules/prompt-loop.md
+.claude/agents/prompt-loop.md
+.claude/commands/loop.md
+.opencode/agents/prompt-loop.md
+.opencode/commands/loop.md
+
 # Ajouté depuis reseau-step (repromotion build/tests)
 .next/
 dist/
