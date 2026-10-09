@@ -12,3 +12,7 @@ description: Branches, worktrees, PR, déploiement dev → main
 - Migration dans la PR : relue par `database` ; appliquée sur dev au déploiement ; production seulement après validation.
 - Hotfix : branche depuis `main`, PR vers `main`, puis fusion de `main` dans `dev`.
 - Un agent ne fusionne jamais sa propre PR vers `main`.
+- **Fichiers locaux à ignorer** : `AGENTS.local.md`, `.env.local` et instructions
+  personnalisées ne doivent jamais être trackés. Vérifier l'orthographe exacte du
+  pattern dans `.gitignore` (ex. `AGENTS.local.md` avec un `S`, pas `AGENT.local.md`)
+  et confirmer avec `git check-ignore -v <fichier>` avant de committer.

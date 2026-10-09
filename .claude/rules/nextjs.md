@@ -25,7 +25,10 @@ description: Pièges Next.js 16 / React 19 vérifiés sur ce projet
   n'en dépendent pas — schémas séparés dans `src/lib/env.ts`.
 - **Lint React 19** : `react-hooks/set-state-in-effect` refuse `setState` dans un
   `useEffect` (motif « mounted »). Pour un rendu dépendant du thème, utiliser la variante
-  CSS `dark:` ; sinon `useSyncExternalStore`.
+  CSS `dark:` ; sinon `useSyncExternalStore` (aussi pour `matchMedia` / store externe).
+- **`useMemo` doit être pur** : pas de `Math.random()` ni d'entrée non déterministe.
+  Pour un skeleton de largeur aléatoire, utiliser une largeur fixe ou une constante
+  prévisible — sinon le rendu est instable.
 - **MCP shadcn** : `view_items_in_registries` renvoie les métadonnées, **pas** le source.
   Écrire les composants depuis les dépendances déjà installées (`@radix-ui/react-slot`,
   `next-themes`), ne pas ajouter `radix-ui` sans nécessité.
