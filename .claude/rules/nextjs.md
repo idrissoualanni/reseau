@@ -6,6 +6,17 @@ description: Pièges Next.js 16 / React 19 vérifiés sur ce projet
 - **`cacheComponents` (activé dans `next.config.ts`)** : ne jamais exporter `dynamic`
   ni `revalidate` dans une page ou un route handler — le build échoue. Un route handler
   n'est pas mis en cache par défaut.
+- **`searchParams` dans une page** : lecture interdite pendant le prerender avec
+  `cacheComponents` (erreur « uncached or runtime data during prerendering »). Lire les
+  paramètres côté client avec `useSearchParams()` et **envelopper le composant dans
+  `<Suspense>`** (fournir un fallback visible), ou bloquer la route avec
+  `export const instant = false`.
+- **`middleware.ts` est déprécié en Next 16** : le fichier s'appelle désormais
+  `src/proxy.ts` (même signature `NextRequest` → `NextResponse`, même `config.matcher`).
+  Un projet neuf ne doit pas utiliser `middleware.ts`.
+- **Config serveur** : ne jamais regrouper des secrets d'usage différent dans un même
+  schéma (ex. auth + Turnstile). Un groupe manquant ne doit pas casser les routes qui
+  n'en dépendent pas — schémas séparés dans `src/lib/env.ts`.
 - **Lint React 19** : `react-hooks/set-state-in-effect` refuse `setState` dans un
   `useEffect` (motif « mounted »). Pour un rendu dépendant du thème, utiliser la variante
   CSS `dark:` ; sinon `useSyncExternalStore`.

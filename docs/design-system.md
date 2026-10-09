@@ -98,3 +98,13 @@ ici (section « Notes ») pour être visible.
 - **Nouveaux tokens** : `success` / `success-foreground`, alias `danger` = `destructive`.
 - **Navigation** : `Projets` (`/`), `Recherche` (`/search`), `Mon profil` (`/me/profile`),
   barre haute ≥ `md`, barre basse < `md`.
+
+#### Lot 1 — auth : composants ajoutés (2026-10-09)
+- `FormField` : label lié, `aria-invalid`, erreur `role="alert"`, aide contextuelle —
+  brique commune des formulaires (au-dessus d'`Input`).
+- `TurnstileWidget` : Cloudflare Turnstile rendu automatiquement (champ caché
+  `cf-turnstile-response` lu par l'action serveur) ; masqué si la clé publique est absente.
+- `AuthFormSkeleton` : coquille des écrans d'auth lisant `useSearchParams()`
+  (`/sign-in`, `/verify-email`) — évite un écran vide pendant l'hydratation.
+- Écrans d'auth : carte `max-w-sm` centrée, titre `h1` (les `CardTitle` ne portent pas
+  le titre de page), liens d'action en `text-primary`.

@@ -12,3 +12,9 @@ Mis à jour par `/changelog` à chaque fusion `dev` → `main`.
   thème commutable via `next-themes`.
 - Sonde `GET /api/health` (statut `ok`/`degraded` selon la base) et
   `checkDatabase()` dans `src/db/client.ts`.
+- Lot 1 — Auth (F01+F02) : SDK `@neondatabase/auth` isolé (`src/lib/auth.ts`),
+  handler `/api/auth/[...path]`, `src/proxy.ts` (protégé par défaut + liste blanche
+  des routes publiques), actions serveur (inscription, connexion, vérification,
+  mot de passe oublié, déconnexion), validation Zod, anti-robot Turnstile vérifié
+  côté serveur, 4 pages publiques `/sign-up`, `/verify-email`, `/sign-in`,
+  `/forgot-password` (fiches UX `docs/ux/`).

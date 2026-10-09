@@ -18,10 +18,14 @@ publier, et voir son profil en production.*
 
 ## 2. État réel (constat au 2026-10-09)
 
-- **Code** : fondations posées (Lot 0). Drizzle 0.45 + `drizzle-kit` 0.31, schéma V1
+- **Code** : Lots 0–1 posés. Drizzle 0.45 + `drizzle-kit` 0.31, schéma V1
   (`src/db/schema.ts`) et migrations `drizzle/0000`–`0002`. Design system amorcé
   (tokens clair/sombre, composants UI de base, `PageShell`, navigation). `/api/health`
-  opérationnel. Toujours absents : GraphQL, auth, pages métier (F01–F10).
+  opérationnel. **Lot 1 — Auth (F01+F02)** : SDK `@neondatabase/auth` isolé
+  (`src/lib/auth.ts`), handler `/api/auth/[...path]`, `src/proxy.ts` (protégé par
+  défaut + liste blanche des routes publiques), actions serveur + validation Zod +
+  Turnstile, 4 pages publiques. Toujours absents : GraphQL, pages profil/projets
+  (F03–F10).
 - **Divergences docs ↔ dépendances installées** (à trancher avant de coder) :
   | Sujet | Docs disent | package.json réel |
   |---|---|---|
@@ -97,9 +101,9 @@ src/app/onboarding/profile/
 src/app/(app)/{page,projects/[id],search,u/[username]}/
 src/app/me/{profile,projects,projects/new,projects/[id]/edit}/
 src/app/api/{auth/[...path],graphql,health,me/profile,me/skills,skills,search/students,uploads/presign}/
-src/middleware.ts                     # auth.middleware
+src/proxy.ts                          # auth.middleware (protégé par défaut + liste blanche)
 src/components/{ui/,PageShell,EmptyState,ErrorState,ProjectCard,ProfileHeader,SkillBadge,ImageUploader}
-src/lib/{auth,storage,errors,zod}     # SDK isolés (Neon Auth/Storage, décision ouverte n°11)
+src/lib/{auth,env,errors,validation,turnstile,safe-next,storage}  # SDK, config et règles pures isolés (décision ouverte n°11)
 src/server/graphql/                   # makeExecutableSchema (projets uniquement, ADR 0002)
 src/server/*/application/             # cas d'usage métier (propriété vérifiée ici)
 src/server/*/repositories/            # Drizzle (src/db/schema.ts)
