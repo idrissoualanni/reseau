@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Compass, Layers, LogOut, UserRound } from "lucide-react";
+import { Compass, FolderKanban, Layers, LogOut, UserRound } from "lucide-react";
 import { signOutAction } from "@/lib/actions/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar } from "@/components/avatar";
@@ -21,6 +21,7 @@ import {
 
 const NAV_ITEMS = [
   { href: "/", label: "Projets", icon: Layers },
+  { href: "/me/projects", label: "Mes projets", icon: FolderKanban },
   { href: "/search", label: "Recherche", icon: Compass },
   { href: "/me/profile", label: "Mon profil", icon: UserRound },
 ];
