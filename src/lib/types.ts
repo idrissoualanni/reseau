@@ -24,3 +24,23 @@ export type Skill = {
 };
 
 export type ProfileSkill = Skill & { proofLevel: ProofLevel };
+
+export type ProjectStatus = "draft" | "published";
+
+export type Project = {
+  id: string;
+  authorId: string;
+  title: string;
+  body: string;
+  coverKey: string | null;
+  status: ProjectStatus;
+  publishedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+// Page par curseur opaque ; `nextCursor` nul signifie « fin de liste ».
+export type ProjectPage = {
+  items: Project[];
+  nextCursor: string | null;
+};
