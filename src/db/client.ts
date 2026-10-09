@@ -1,4 +1,5 @@
 import { Pool } from "@neondatabase/serverless";
+import { sql } from "drizzle-orm";
 import { drizzle, type NeonDatabase } from "drizzle-orm/neon-serverless";
 import * as schema from "./schema";
 
@@ -29,3 +30,14 @@ export const db: Database = new Proxy({} as Database, {
     return Reflect.has(getClient(), property);
   },
 });
+
+// Sonde de disponibilité : exécute une requête triviale. Ne lève jamais —
+// renvoie `false` (URL absente, base injoignable) pour que /api/health réponde.
+export async function checkDatabase(): Promise<boolean> {
+  try {
+    await db.execute(sql`select 1`);
+    return true;
+  } catch {
+    return false;
+  }
+}
