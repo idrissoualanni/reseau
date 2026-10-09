@@ -28,18 +28,24 @@
 ## Profil (F03/F04/F10) — reporté du Lot 2
 - [ ] **Avatar** : affichage + upload présigné, une fois le stockage tranché (F06). En V1
   le profil naît avec l'initiale du nom affiché (`Avatar`, repli initiales).
-- [ ] **Compétences pendant l'onboarding** : F04 prévoit une étape facultative à
-  l'onboarding ; en V1 les compétences se gèrent sur `/me/profile` (le profil doit exister
-  avant `user_skills`).
+- [x] **Compétences pendant l'onboarding** : **décidé (2026-10-09)** — pas d'étape
+  compétences à l'onboarding. Les compétences se gèrent sur `/me/profile` (le profil doit
+  exister avant `user_skills`). L'étape « pendant l'onboarding » de F04 est différée.
 - [ ] **Niveau `demonstrated`** : dérivation depuis les projets publiés, à brancher au
   Lot 3 (F05/F06), dans le cas d'usage publier/dépublier/supprimer.
-- [ ] **REST — durcissement** : vérification de l'`Origin` sur les mutations et limitation
-  de débit sur `username-available` et `POST /api/me/skills` (voir `docs/api/rest.md`).
+- [x] **REST — durcissement** : **fait (2026-10-09)** — vérification de l'`Origin`
+  (403 si cross-origin) + rate limiting en mémoire sur `POST/PATCH/DELETE /api/me/*`
+  (10–30/min) et `GET /api/profiles/username-available` (20/min). Module
+  `src/lib/api/security.ts`, tests `security.test.ts`. En prod multi-instances,
+  remplacer par Redis (Render KV).
 
 ## Stockage / images (F06)
-- [ ] Réconcilier `.env.example` (`STORAGE_*`) et `.env.local` (`AWS_*`) : Neon Object Storage
-  est S3-compatible, garder une seule convention.
-- [ ] Trancher le bucket : privé `asset` vs public `images` (+ `STORAGE_PUBLIC_BASE_URL`).
+- [x] **Convention** : **décidé (2026-10-09)** — Neon Object Storage (S3-compatible).
+  Les variables `AWS_*` (`.env.local`) sont la convention réelle ; `.env.example`
+  doit être aligné (`STORAGE_*` → `AWS_*`). Voir `docs/api/rest.md` § uploads.
+- [ ] **Trancher le bucket** : recommandation — bucket **privé** `asset` avec URLs
+  présignées (`POST /api/uploads/presign`). Pas de bucket public : les images sont
+  personnelles (avatars, couvertures). Décision à confirmer au Lot 3 (F06).
 
 ## Clés encore vides (lots ultérieurs — non nécessaires à la V1)
 - `NEXT_PUBLIC_GRAPHQL_URL` — Lot 3+ : `${NEXT_PUBLIC_APP_URL}/api/graphql`.
@@ -47,7 +53,9 @@
   (messagerie / WebRTC) : fournisseur TURN (Metered, Twilio, Cloudflare Calls) ou coturn.
 
 ## Boucle de prompts / outillage
-- [ ] **Plugin de boucle** : ajouter une demande d'autorisation de lancement, activable par la
-  commande `/loop` (`.opencode/plugins/prompt-loop/`, gitignoré).
-- [ ] **Expliquer le fonctionnement des hooks** d'après la documentation OpenCode
-  (cycle de vie, où ils vivent, `PreToolUse`/`PostToolUse`/`SessionStart`).
+- [x] **Plugin de boucle** : **fait (2026-10-09)** — `.opencode/plugins/prompt-loop/index.ts`
+  modifié : demande d'autorisation de lancement (fichier `.enabled`), activable par la
+  commande `/loop` (`.opencode/commands/loop.md`). Gitignoré.
+- [x] **Expliquer le fonctionnement des hooks** : **fait (2026-10-09)** —
+  `.claude/rules/hooks.md` créé (cycle de vie, `ctx.session.hook`, `ctx.event.subscribe`,
+  bonnes pratiques).

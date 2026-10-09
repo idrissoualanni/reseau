@@ -31,3 +31,7 @@ Mis à jour par `/changelog` à chaque fusion `dev` → `main`.
   `UsernameField`. Fiches UX `docs/ux/onboarding-profile.md`, `docs/ux/profile-edit.md` ;
   catalogue `docs/api/rest.md`. **Avatar volontairement différé** (stockage F06 non
   tranché).
+- Lot 2 — finalisation : durcissement REST (`src/lib/api/security.ts` : vérification
+  `Origin` + rate limiting en mémoire sur mutations et `username-available`),
+  plugin de boucle de prompts avec autorisation de lancement (`.opencode/plugins/prompt-loop/`,
+  fichier `.enabled`, commande `/loop`), doc hooks `.claude/rules/hooks.md`. 69 tests.
