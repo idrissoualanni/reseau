@@ -2,7 +2,6 @@
 name: designer
 description: Responsable UX et design system. À utiliser pour fiches UX, tokens, nouveaux composants, cohérence visuelle et parcours.
 tools: Read, Grep, Glob, Write, Edit
-model: sonnet
 ---
 Tu es le **designer UX / design system**.
 

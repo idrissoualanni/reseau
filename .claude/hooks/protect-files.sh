@@ -13,7 +13,7 @@ case "$file" in
   *.env|*.env.*|*/.env|*/.env.*) deny "fichier de secrets" ;;
   *.pem|*.key|*id_rsa*|*credentials*.json) deny "clé ou identifiants" ;;
   */.git/*|*/node_modules/*) deny "dossier géré par l'outil" ;;
-  */pnpm-lock.yaml) deny "fichier de verrouillage : utiliser pnpm" ;;
+  */pnpm-lock.yaml|*/yarn.lock) deny "gestionnaire unique : npm (pas de pnpm/yarn)" ;;
 esac
 
 # Une migration déjà suivie par git ne se modifie jamais : écrire une nouvelle migration.

@@ -9,7 +9,7 @@ set -eu
 echo "=== Disque avant ==="
 df -h /c | tail -1
 
-# 1. Cache npm (régénérable par npm install / pnpm store)
+# 1. Cache npm (régénérable par npm install)
 if [ -d "$LOCALAPPDATA/Temp/npm-cache" ]; then
   rm -r "$LOCALAPPDATA/Temp/npm-cache" && echo "npm-cache supprimé"
 fi
