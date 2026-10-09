@@ -1,0 +1,79 @@
+input CreateProjectInput {
+  body: String!
+  coverKey: String
+  skillSlugs: [String!]
+  title: String!
+}
+
+scalar DateTime
+
+type Mutation {
+  createProject(input: CreateProjectInput!): Project
+  deleteProject(id: ID!): Boolean
+  publishProject(coverKey: String, id: ID!): Project
+  unpublishProject(id: ID!): Project
+  updateProject(id: ID!, input: UpdateProjectInput!): Project
+}
+
+"""État de pagination par curseur."""
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean
+}
+
+"""Résumé public d'un membre."""
+type ProfileSummary {
+  avatarUrl: String
+  displayName: String
+  id: ID
+  username: String
+}
+
+"""Projet d'un membre."""
+type Project {
+  author: ProfileSummary
+  body: String
+  coverUrl: String
+  createdAt: DateTime
+  id: ID
+  publishedAt: DateTime
+  skills: [Skill!]
+  status: ProjectStatus
+  title: String
+  updatedAt: DateTime
+}
+
+type ProjectConnection {
+  edges: [ProjectEdge!]
+  pageInfo: PageInfo
+}
+
+type ProjectEdge {
+  cursor: String
+  node: Project
+}
+
+enum ProjectStatus {
+  draft
+  published
+}
+
+type Query {
+  myProjects(after: String, first: Int): ProjectConnection
+  project(id: ID!): Project
+  projects(after: String, authorUsername: String, first: Int, skillSlug: String): ProjectConnection
+}
+
+"""Compétence du référentiel."""
+type Skill {
+  id: ID
+  name: String
+  slug: String
+}
+
+input UpdateProjectInput {
+  body: String
+  coverKey: String
+  skillSlugs: [String!]
+  title: String
+}
