@@ -1,10 +1,8 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth";
-import { verifyTurnstile } from "@/lib/turnstile";
 import { safeNextPath } from "@/lib/safe-next";
 import {
   forgotPasswordSchema,
@@ -30,16 +28,6 @@ function fieldErrors(error: z.ZodError): Record<string, string> {
   return result;
 }
 
-async function clientIp(): Promise<string | undefined> {
-  const store = await headers();
-  const forwarded = store.get("x-forwarded-for");
-  return forwarded?.split(",")[0]?.trim() || undefined;
-}
-
-function turnstileToken(formData: FormData): string {
-  return String(formData.get("cf-turnstile-response") ?? "");
-}
-
 export async function signUpAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = signUpSchema.safeParse({
     name: formData.get("name"),
@@ -50,10 +38,8 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
     return { fieldErrors: fieldErrors(parsed.error) };
   }
 
-  const token = turnstileToken(formData);
-  if (!token || !(await verifyTurnstile(token, await clientIp()))) {
-    return { error: "Vérification anti-robot échouée, réessaie." };
-  }
+  // Turnstile retiré temporairement (pas de domaine, pas de clés réelles).
+  // Le bloc de vérification anti-robot sera réintroduit avec F01 / au déploiement prod.
 
   const auth = getAuth();
   const { error } = await auth.signUp.email(parsed.data);

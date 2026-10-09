@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { signUpAction, type FormState } from "@/lib/actions/auth";
 import { FormField } from "@/components/form-field";
-import { TurnstileWidget } from "@/components/turnstile-widget";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 
@@ -50,7 +49,6 @@ export function SignUpForm() {
             hint="8 caractères minimum."
             error={state.fieldErrors?.password}
           />
-          <TurnstileWidget />
           <Button type="submit" disabled={pending} className="w-full">
             {pending ? "Création…" : "Créer mon compte"}
           </Button>

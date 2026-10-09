@@ -8,7 +8,7 @@ projects:
       - name: dev
         services:
           - type: web
-            name: reseau-web-dev
+            name: reseau-dev
             runtime: node
             repo: https://github.com/idrissoualanni/reseau
             branch: dev          # branche `dev` à créer (workflow : PR dev → main)
@@ -52,7 +52,7 @@ projects:
       - name: production
         services:
           - type: web
-            name: reseau-web-prod
+            name: reseau-prod
             runtime: node
             repo: https://github.com/idrissoualanni/reseau
             branch: main
