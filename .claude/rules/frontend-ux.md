@@ -4,7 +4,7 @@ paths: ["apps/web/src/app/**", "apps/web/src/components/**", "apps/web/src/modul
 ---
 # Frontend et UX
 
-1. **Fiche UX d'abord** (`docs/ux/<page>.md`) : utilisateur, parcours, états, mobile, accessibilité. Pas de page sans fiche.
+1. **Fiche UX d'abord** (`docs/ux/<page>.md`) : utilisateur, parcours, états, mobile, accessibilité, ecrit un peut la page. Pas de page sans fiche.
 2. Lire `docs/design-system.md`. **Uniquement** des composants de `components/ui` + composants maison listés ; tokens CSS (`bg-background`, `text-muted-foreground`…) ; **aucune couleur, taille ou espacement en dur**.
 3. Mobile d'abord (360 px), cibles tactiles ≥ 44 px, pas de défilement horizontal.
 4. Chaque page/liste gère : chargement (squelette), vide, erreur (avec « Réessayer »), succès, hors connexion.

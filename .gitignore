@@ -47,6 +47,7 @@ next-env.d.ts
 .secrets/
 CLAUDE.local.md
 AGENT.local.md
+AGENTS.local.md
 .claude/settings.local.json
 .claude/worktrees/
 .opencode/node_modules/

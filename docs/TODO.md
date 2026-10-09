@@ -5,14 +5,13 @@
 > `docs/prompt-loop/journal.md`.
 
 ## Auth & comptes (F01–F02)
-- [ ] **Turnstile — vraies clés.** Créer un widget Cloudflare Turnstile dès qu'un domaine
-  existe (Vercel staging + prod), puis renseigner dans chaque environnement
-  `NEXT_PUBLIC_TURNSTILE_SITE_KEY` et `TURNSTILE_SECRET_KEY`.
+- [ ] **Turnstile — EN ATTENTE.** Retiré temporairement (pas de domaine, pas de clés réelles).
+  Créer un widget Cloudflare Turnstile dès qu'un domaine existe (Vercel staging + prod), puis
+  renseigner `NEXT_PUBLIC_TURNSTILE_SITE_KEY` et `TURNSTILE_SECRET_KEY`.
   - Dev sans domaine : clés de test officielles (réussite forcée, **dev uniquement**) —
     site `1x00000000000000000000AA`, secret `1x0000000000000000000000000000000AA`.
   - ⚠️ Une vraie clé secrète rejette le token factice, et inversement.
-- [ ] **Parcours complet manuel** : inscription → code OTP (boîte mail) → connexion →
-  déconnexion, une fois Turnstile réel en place. Le socle et le proxy sont déjà vérifiés.
+  - Réintroduire : `src/lib/actions/auth.ts` (action serveur) + `sign-up-form.tsx` (widget).
 - [ ] **Domaines de confiance Neon Auth** : ajouter les origines staging + prod
   (console Neon ou `neon neon-auth domain add https://…`). `localhost` est pré-autorisé.
 - [ ] **SMTP dédié en production** avant d'envoyer de vrais e-mails (checklist prod Neon).
