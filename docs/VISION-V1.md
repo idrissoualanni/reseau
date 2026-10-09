@@ -100,7 +100,7 @@ src/components/{ui/,PageShell,EmptyState,ErrorState,ProjectCard,ProfileHeader,Sk
 src/lib/{auth,storage,errors,zod}     # SDK isolés (Neon Auth/Storage, décision ouverte n°11)
 src/server/graphql/                   # makeExecutableSchema (projets uniquement, ADR 0002)
 src/server/*/application/             # cas d'usage métier (propriété vérifiée ici)
-src/server/*/repositories/            # Prisma
+src/server/*/repositories/            # Drizzle (src/db/schema.ts)
 tests/ + vitest.config                # unitaires (Zod, cas d'usage) + intégration DB
 ```
 
@@ -111,7 +111,7 @@ verts. Agents par lot : `database`, `backend`, `frontend`, `designer`, `qa`, `se
 
 | Lot | Contenu | Critère de sortie |
 |---|---|---|
-| **0 — Fondations** | Trancher les divergences (§6) · `prisma init` + schéma V1 + migration sur branche Neon `dev` · `/api/health` · install shadcn/ui + tokens + thème · `PageShell`/nav | build+lint+tests verts, `/api/health` 200 en dev |
+| **0 — Fondations** | Trancher les divergences (§6) · schéma Drizzle V1 + migrations sur branche Neon `dev` · `/api/health` · install shadcn/ui + tokens + thème · `PageShell`/nav | build+lint+tests verts, `/api/health` 200 en dev |
 | **1 — Auth** | F01+F02 : handler Neon Auth, actions signUp/signIn/signOut, Turnstile, middleware, 4 pages publiques | parcours inscription → code → onboarding |
 | **2 — Profil** | F03+F04+F10 : `profiles`, onboarding, `/me/profile`, compétences (autocomplétion, badges, max 30), upload avatar présigné | profil créé et éditable, badges `declared` |
 | **3 — Projets** | F05+F06 : GraphQL (schéma, résolveurs, DataLoader), éditeur, publier/dépublier, recalcul des preuves, `ImageUploader` | brouillon publiable, `demonstrated` recalculé |
