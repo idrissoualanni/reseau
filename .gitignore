@@ -45,6 +45,8 @@ next-env.d.ts
 .env.*
 !.env.example
 .secrets/
+
+# Local
 CLAUDE.local.md
 AGENT.local.md
 AGENTS.local.md

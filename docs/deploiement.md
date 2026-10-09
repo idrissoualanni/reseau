@@ -22,5 +22,37 @@ Les noms sont dans `.env.example`. Les valeurs de production se saisissent dans 
 - Serveur de signalisation WebRTC (service web séparé). Une instance gratuite s'endort :
   prévoir une instance payante pour la signalisation afin d'éviter les démarrages à froid.
 
+## État vérifié le 07/10/2026 (MCP Render + CLI)
+
+| | |
+|---|---|
+| Projet | `reseau` — `prj-db2taffavr4c7391bp9g` |
+| Environnement | `dev` — `evm-db2taffavr4c7391bpa0` |
+| Services web | aucun |
+| Postgres | aucun |
+| Key Value | `reseau-dev` — `red-db2tm6t9fdbs7398hdmg` (frankfurt, free) |
+
+Le MCP Render (23 outils) ne possède **aucun endpoint projet/environnement** : les noms
+ci-dessus viennent de la CLI, le MCP ne confirme que l'`environmentId` de la Key Value.
+
+## Configuration cible du service web — rien n'est créé
+
+| Paramètre | Valeur cible | Pourquoi |
+|---|---|---|
+| `runtime` | `docker` | Seul chemin sans `buildCommand`/`startCommand` : il lit le `Dockerfile` racine |
+| `dockerfilePath` | `./Dockerfile` | |
+| `dockerContext` | `.` | |
+| `region` | `frankfurt` | Même région que `reseau-dev` |
+| `autoDeploy` | `yes` | Redéploiement à chaque push sur la branche liée |
+| `branch` | `main` | Interdit de déployer depuis un worktree de tâche |
+| `plan` | `free`, payant pour la signalisation | cf. « Services Render » ci-dessus |
+
+### Blocages avant création
+
+1. **Aucun remote git** — Render doit cloner le dépôt (`repo` requis en pratique).
+2. **Pas encore d'application** — `package.json` n'a ni `scripts` ni `next` : le build échouerait.
+3. **`create_web_service` n'a aucun paramètre projet/environnement** — le service créé
+   tomberait **hors** du projet `reseau` / env `dev`. À créer depuis le Dashboard, ou à déplacer ensuite.
+
 ## production
 -avant de passer en production il faut verifie qu'une validation de la version dev a ete fait et aprouver 
