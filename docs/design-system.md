@@ -86,3 +86,15 @@ ici (section « Notes ») pour être visible.
 
 ### Notes
 - (à compléter par l'agent frontend au fil des choix)
+
+#### Lot 0 — choix consignés (2026-10-09)
+- **Accent** : violet. Clair `--primary` violet-600, texte blanc (AA) ; sombre
+  `--primary` violet-400, texte sombre — le bouton primaire reste AA dans les deux thèmes.
+- **Neutres** : base `neutral` de shadcn/ui (surfaces, bordures, `muted`).
+- **Typographies** : Geist (UI) + Geist Mono (code), déjà câblées par le layout.
+- **Rayon** : `--radius` 0.625 rem, échelle `sm/md/lg/xl`.
+- **Largeurs de contenu** : `max-w-content` 40 rem (640 px), `max-w-wide` 60 rem (960 px).
+- **Cibles tactiles** : boutons et champ ≥ 44 px (`h-11`), y compris la nav mobile.
+- **Nouveaux tokens** : `success` / `success-foreground`, alias `danger` = `destructive`.
+- **Navigation** : `Projets` (`/`), `Recherche` (`/search`), `Mon profil` (`/me/profile`),
+  barre haute ≥ `md`, barre basse < `md`.

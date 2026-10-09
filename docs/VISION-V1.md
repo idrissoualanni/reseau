@@ -18,8 +18,10 @@ publier, et voir son profil en production.*
 
 ## 2. État réel (constat au 2026-10-09)
 
-- **Code** : échafaudage `create-next-app` vierge. Aucune feature codée : pas de
-  `schema.prisma`, pas de GraphQL, pas d'auth, pas de composants, pas de tests.
+- **Code** : fondations posées (Lot 0). Drizzle 0.45 + `drizzle-kit` 0.31, schéma V1
+  (`src/db/schema.ts`) et migrations `drizzle/0000`–`0002`. Design system amorcé
+  (tokens clair/sombre, composants UI de base, `PageShell`, navigation). `/api/health`
+  opérationnel. Toujours absents : GraphQL, auth, pages métier (F01–F10).
 - **Divergences docs ↔ dépendances installées** (à trancher avant de coder) :
   | Sujet | Docs disent | package.json réel |
   |---|---|---|
