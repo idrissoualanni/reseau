@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { inArray, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { profiles, userSkills } from "@/db/schema";
 import { toConflict } from "@/lib/repositories/shared";
@@ -89,4 +89,28 @@ export async function countProfileSkills(profileId: string): Promise<number> {
     .from(userSkills)
     .where(sql`${userSkills.profileId} = ${profileId}`);
   return row?.count ?? 0;
+}
+
+// Résumé public d'un profil, utilisé par les DataLoaders GraphQL (F07) : jamais
+// d'e-mail ni de `user_id` exposé.
+export type ProfileSummaryRow = {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarKey: string | null;
+};
+
+export async function findProfileSummariesByIds(
+  ids: string[],
+): Promise<ProfileSummaryRow[]> {
+  if (ids.length === 0) return [];
+  return db
+    .select({
+      id: profiles.id,
+      username: profiles.username,
+      displayName: profiles.displayName,
+      avatarKey: profiles.avatarKey,
+    })
+    .from(profiles)
+    .where(inArray(profiles.id, ids));
 }
