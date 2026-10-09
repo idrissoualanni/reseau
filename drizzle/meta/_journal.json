@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791509372711,
+      "tag": "0000_charming_hobgoblin",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791509398075,
+      "tag": "0001_skills_name_trgm",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791509626257,
+      "tag": "0002_mean_thundra",
+      "breakpoints": true
+    }
+  ]
+}

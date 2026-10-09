@@ -1,0 +1,1 @@
+CREATE INDEX "projects_author_idx" ON "projects" USING btree ("author_id","published_at" DESC NULLS LAST,"id" DESC NULLS LAST) WHERE "projects"."status" = 'published';
