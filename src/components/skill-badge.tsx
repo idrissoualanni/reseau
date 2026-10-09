@@ -1,9 +1,9 @@
 import { BadgeCheck, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { ProfileSkill } from "@/lib/types";
+import type { ProofLevel, Skill } from "@/lib/types";
 
 type SkillBadgeProps = {
-  skill: ProfileSkill;
+  skill: Skill & { proofLevel?: ProofLevel };
   onRemove?: () => void;
 };
 
