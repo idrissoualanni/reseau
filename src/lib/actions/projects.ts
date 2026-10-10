@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requireSession } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
 import { getOwnProfile } from "@/lib/profile";
+import { loadProjectsFeed, type FeedPage } from "@/lib/feed";
 import {
   createProject,
   deleteProject,
@@ -161,4 +162,29 @@ export async function unpublishProjectAction(formData: FormData): Promise<Projec
 
   revalidatePath("/me/projects");
   return { success: "Projet repassé en brouillon." };
+}
+
+const feedCursorSchema = z.object({
+  after: z.string().optional(),
+  skillSlug: z.string().optional(),
+});
+
+// « Voir plus » du fil (F07) : renvoie la page suivante, sérialisée (dates en
+// ISO), avec les auteurs et compétences préchargés par lots — aucune clé ni
+// identité interne ne quitte le serveur.
+export async function loadPublishedProjectsPage(input: {
+  after?: string;
+  skillSlug?: string;
+}): Promise<FeedPage> {
+  const parsed = feedCursorSchema.safeParse(input);
+  if (!parsed.success) return { edges: [], hasNextPage: false, endCursor: null };
+
+  const session = await requireSession();
+  const profile = await getOwnProfile(session.user.id);
+  if (!profile) redirect("/onboarding/profile");
+
+  return loadProjectsFeed(
+    { userId: session.user.id, profileId: profile.id },
+    { limit: 20, after: parsed.data.after, skillSlug: parsed.data.skillSlug },
+  );
 }

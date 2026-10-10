@@ -12,7 +12,9 @@
     "db:generate": "drizzle-kit generate",
     "db:generate:custom": "drizzle-kit generate --custom",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "graphql:export": "node scripts/graphql-export.mjs",
+    "graphql:check": "vitest run src/server/graphql/schema-export.test.ts"
   },
   "dependencies": {
     "@graphql-tools/schema": "^10.0.31",

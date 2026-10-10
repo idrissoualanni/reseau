@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toOwnProfileDto } from "./profile";
+import { toOwnProfileDto, toPublicProfileDto } from "./profile";
 import { toProfileSkillDto, toSkillDto } from "./skills";
 import type { Profile, ProfileSkill } from "@/lib/types";
 
@@ -46,6 +46,25 @@ describe("mappers de compétences", () => {
       slug: "react",
       name: "React",
       proofLevel: "demonstrated",
+    });
+  });
+});
+
+describe("toPublicProfileDto (F08)", () => {
+  it("n'expose jamais user_id ni e-mail", () => {
+    const dto = toPublicProfileDto(profile);
+    expect(dto).not.toHaveProperty("userId");
+    expect(dto).not.toHaveProperty("email");
+    expect(dto).toEqual({
+      id: "p1",
+      username: "awa_diop",
+      displayName: "Awa Diop",
+      bio: null,
+      schoolName: "UCAD",
+      fieldOfStudy: null,
+      avatarKey: null,
+      createdAt: "2026-01-01T10:00:00.000Z",
+      updatedAt: "2026-01-02T10:00:00.000Z",
     });
   });
 });
