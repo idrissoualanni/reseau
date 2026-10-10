@@ -28,7 +28,7 @@ export default async function PostDetailPage({
   );
   if (!detail) notFound();
 
-  const { post, author, comments } = detail;
+  const { post, imageUrl, author, comments } = detail;
 
   return (
     <PageShell width="feed" className="space-y-6">
@@ -60,6 +60,15 @@ export default async function PostDetailPage({
           </div>
 
           <p className="text-sm whitespace-pre-wrap">{post.body}</p>
+
+          {imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- bucket post public_read (F12)
+            <img
+              src={imageUrl}
+              alt="Image du post"
+              className="bg-surface max-h-[32rem] w-full rounded-[14px] object-cover"
+            />
+          ) : null}
         </CardContent>
       </Card>
 

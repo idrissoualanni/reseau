@@ -44,6 +44,18 @@ export function PostCard({ post, author }: PostCardProps) {
 
         <p className="text-sm whitespace-pre-wrap">{post.body}</p>
 
+        {post.imageUrl ? (
+          <Link href={`/posts/${post.id}`} className="block focus-visible:ring-ring rounded-md outline-none focus-visible:ring-2">
+            {/* eslint-disable-next-line @next/next/no-img-element -- bucket post public_read (F12) */}
+            <img
+              src={post.imageUrl}
+              alt="Image du post"
+              className="bg-surface max-h-96 w-full rounded-[14px] object-cover"
+              loading="lazy"
+            />
+          </Link>
+        ) : null}
+
         <div className="flex items-center gap-4 pt-1">
           <Link
             href={`/posts/${post.id}`}
