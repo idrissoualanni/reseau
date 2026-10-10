@@ -1,4 +1,4 @@
-import { ConflictError, NotFoundError } from "@/lib/errors";
+import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors";
 import {
   findProfileByUserId,
   findProfileByUsername,
@@ -8,6 +8,7 @@ import {
   type ProfilePatch,
 } from "@/lib/repositories/profiles";
 import { listSkillsForProfile } from "@/lib/repositories/skills";
+import { avatarPrefix } from "@/lib/storage";
 import { RESERVED_USERNAMES, type CreateProfileInput } from "@/lib/validation/profile";
 import type { Profile, ProfileSkill } from "@/lib/types";
 
@@ -61,7 +62,19 @@ export async function createProfile(userId: string, input: CreateProfileInput): 
   });
 }
 
+// Un avatar doit vivre sous `profiles/{profile.id}/` : le préfixe est dérivé
+// du profil chargé depuis la session, jamais fourni par le client (F13 règle 4).
+function assertAvatarOwnership(avatarKey: string, profileId: string): void {
+  if (!avatarKey.startsWith(avatarPrefix(profileId))) {
+    throw new ForbiddenError("Cette image ne t'appartient pas.");
+  }
+}
+
 export async function updateProfile(userId: string, patch: ProfilePatch): Promise<Profile> {
+  if (typeof patch.avatarKey === "string") {
+    const profile = await requireOwnProfile(userId);
+    assertAvatarOwnership(patch.avatarKey, profile.id);
+  }
   const updated = await updateProfileById(userId, patch);
   if (!updated) throw new NotFoundError("Profil introuvable.");
   return updated;

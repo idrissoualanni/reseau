@@ -88,6 +88,26 @@ export async function updateProfileAction(
   return { success: "Profil mis à jour." };
 }
 
+// Avatar (F13) : met à jour ou retire `avatarKey` (null = retirer). La clé est
+// validée et son appartenance vérifiée dans `updateProfile`. Le client a déjà
+// uploadé le fichier via l'URL présignée avant d'appeler cette action.
+export async function updateAvatarAction(
+  avatarKey: string | null,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const parsed = updateProfileSchema.safeParse({ avatarKey });
+  if (!parsed.success) return { ok: false, error: "Clé d'image invalide." };
+
+  try {
+    const session = await requireSession();
+    await updateProfile(session.user.id, parsed.data);
+  } catch (error) {
+    if (error instanceof AppError) return { ok: false, error: error.message };
+    return { ok: false, error: "Une erreur est survenue, réessaie." };
+  }
+
+  return { ok: true };
+}
+
 export async function addSkillAction(name: string): Promise<SkillActionResult> {
   try {
     const session = await requireSession();

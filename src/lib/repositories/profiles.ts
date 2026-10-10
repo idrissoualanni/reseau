@@ -68,6 +68,7 @@ export type ProfilePatch = {
   bio?: string | null;
   schoolName?: string | null;
   fieldOfStudy?: string | null;
+  avatarKey?: string | null;
 };
 
 export async function updateProfileById(
