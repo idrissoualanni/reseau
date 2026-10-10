@@ -57,7 +57,10 @@ export async function createPostAction(
   formData: FormData,
 ): Promise<PostFormState> {
   const ctx = await requireUseCaseContext();
-  const parsed = createPostSchema.safeParse({ body: String(formData.get("body") ?? "") });
+  const parsed = createPostSchema.safeParse({
+    body: String(formData.get("body") ?? ""),
+    imageKey: String(formData.get("imageKey") ?? "") || undefined,
+  });
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
 
   try {

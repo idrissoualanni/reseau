@@ -11,6 +11,7 @@ import {
   type ProfileSummaryRow,
 } from "@/lib/repositories/profiles";
 import type { Post } from "@/lib/types";
+import { getPublicUrl } from "@/lib/storage";
 
 // Assemblage du fil de posts (F11) : une page de posts + leurs auteurs et
 // commentaires, chargés par lots (jamais de N+1). Les widgets DTO sont créés
@@ -19,6 +20,7 @@ import type { Post } from "@/lib/types";
 export type FeedPost = {
   id: string;
   body: string;
+  imageUrl: string | null;
   createdAt: string;
   authorId: string;
   commentCount: number;
@@ -132,6 +134,7 @@ export async function loadPostsFeed(
       post: {
         id: post.id,
         body: post.body,
+        imageUrl: post.imageKey ? getPublicUrl(post.imageKey) : null,
         createdAt: post.createdAt.toISOString(),
         authorId: post.authorId,
         commentCount: counts.get(post.id) ?? 0,
@@ -153,7 +156,7 @@ export async function loadPostsFeed(
 export async function loadPostDetail(
   ctx: ViewerContext,
   postId: string,
-): Promise<{ post: Post; author: ProfileSummaryRow | null; comments: FeedComment[] } | null> {
+): Promise<{ post: Post; imageUrl: string | null; author: ProfileSummaryRow | null; comments: FeedComment[] } | null> {
   const post = await findPostById(postId);
   if (!post) return null;
 
@@ -167,6 +170,7 @@ export async function loadPostDetail(
 
   return {
     post,
+    imageUrl: post.imageKey ? getPublicUrl(post.imageKey) : null,
     author: authorById.get(post.authorId) ?? null,
     comments,
   };

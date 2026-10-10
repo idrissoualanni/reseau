@@ -11,6 +11,7 @@ import {
   listPosts,
 } from "@/lib/posts";
 import { listPostsQuerySchema, postIdSchema } from "@/lib/validation/post";
+import { getPublicUrl } from "@/lib/storage";
 import { requireProfile, run, validateInput } from "@/server/graphql/errors";
 import { PageInfoRef } from "./connection";
 import { ProfileSummaryRef } from "./profile";
@@ -23,6 +24,11 @@ export const PostRef = builder.objectRef<Post>("Post").implement({
   fields: (t) => ({
     id: t.exposeID("id"),
     body: t.exposeString("body"),
+    imageUrl: t.string({
+      nullable: true,
+      description: "URL publique de l'image du post, quand elle existe.",
+      resolve: (post) => (post.imageKey ? getPublicUrl(post.imageKey) : null),
+    }),
     createdAt: t.field({ type: "DateTime", resolve: (post) => post.createdAt }),
     updatedAt: t.field({ type: "DateTime", resolve: (post) => post.updatedAt }),
     author: t.field({
@@ -86,6 +92,7 @@ const PostConnectionRef = builder
 const CreatePostInput = builder.inputType("CreatePostInput", {
   fields: (t) => ({
     body: t.string({ required: true }),
+    imageKey: t.string(),
   }),
 });
 
@@ -130,7 +137,10 @@ builder.mutationFields((t) => ({
     args: { input: t.arg({ type: CreatePostInput, required: true }) },
     resolve: (_root, args, ctx) =>
       run(async () => {
-        const input = validateInput(createPostSchema, { body: args.input.body });
+        const input = validateInput(createPostSchema, {
+          body: args.input.body,
+          imageKey: args.input.imageKey ?? undefined,
+        });
         return createPost(requireProfile(ctx), input);
       }),
   }),

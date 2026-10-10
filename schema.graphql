@@ -6,6 +6,7 @@ input CreateCommentInput {
 
 input CreatePostInput {
   body: String!
+  imageKey: String
 }
 
 input CreateProjectInput {
@@ -42,6 +43,9 @@ type Post {
   comments: [PostComment!]
   createdAt: DateTime
   id: ID
+
+  """URL publique de l'image du post, quand elle existe."""
+  imageUrl: String
   updatedAt: DateTime
 }
 

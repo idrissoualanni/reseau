@@ -7,8 +7,8 @@ import type { Post, PostComment } from "@/lib/types";
 // (post → commentaires, commentaire → réponses) sont gérées par les FK
 // `ON DELETE CASCADE` en base, pas ici.
 
-export async function insertPost(authorId: string, body: string): Promise<Post> {
-  const [row] = await db.insert(posts).values({ authorId, body }).returning();
+export async function insertPost(authorId: string, body: string, imageKey: string | null): Promise<Post> {
+  const [row] = await db.insert(posts).values({ authorId, body, imageKey }).returning();
   return row;
 }
 

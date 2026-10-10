@@ -43,6 +43,7 @@ export type Post = {
   id: string;
   authorId: string;
   body: string;
+  imageKey: string | null;
   createdAt: Date;
   updatedAt: Date;
 };

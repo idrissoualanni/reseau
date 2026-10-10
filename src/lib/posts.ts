@@ -13,6 +13,8 @@ import {
   type PostsCursor,
 } from "@/lib/repositories/posts";
 import type { Post, PostComment } from "@/lib/types";
+import { postImageKeySchema } from "@/lib/validation/post";
+import { postImagePrefix } from "@/lib/storage";
 
 // Schémas partagés des posts et commentaires (F11). Les mêmes contraintes
 // servent au GraphQL et au formulaire client. Texte brut : pas de HTML.
@@ -41,7 +43,12 @@ const commentBodySchema = z
   .max(MAX_COMMENT_BODY, `Texte trop long (${MAX_COMMENT_BODY} caractères maximum).`)
   .refine((value) => !/[<>]/.test(value), "Le texte contient des caractères interdits.");
 
-export const createPostSchema = z.object({ body: postBodySchema }).strict();
+export const createPostSchema = z
+  .object({
+    body: postBodySchema,
+    imageKey: postImageKeySchema.nullable().optional(),
+  })
+  .strict();
 export const createCommentSchema = z
   .object({
     postId: uuidSchema,
@@ -58,7 +65,13 @@ export type CreateCommentInput = z.infer<typeof createCommentSchema>;
 // vérifiée ici, pas dans le transport.
 
 export async function createPost(ctx: UseCaseContext, input: CreatePostInput): Promise<Post> {
-  return insertPost(ctx.profileId, input.body);
+  // Appartenance de l'image : la clé doit porter le profileId du membre
+  // (F12) — sinon un membre pourrait référencer le fichier d'un autre.
+  const imageKey = input.imageKey ?? null;
+  if (imageKey && !imageKey.startsWith(postImagePrefix(ctx.profileId))) {
+    throw new ValidationError("Clé d'image invalide.");
+  }
+  return insertPost(ctx.profileId, input.body, imageKey);
 }
 
 export async function deletePost(ctx: UseCaseContext, id: string): Promise<void> {
