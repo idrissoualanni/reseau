@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  avatarKeySchema,
   createProfileSchema,
+  presignAvatarSchema,
   RESERVED_USERNAMES,
   updateProfileSchema,
   usernameQuerySchema,
@@ -76,6 +78,51 @@ describe("updateProfileSchema (F10)", () => {
   it("refuse le username (non modifiable)", () => {
     const result = updateProfileSchema.safeParse({ username: "autre_nom" });
     expect(result.success).toBe(false);
+  });
+
+  it("accepte une clé d'avatar ou son retrait (F13)", () => {
+    const key = "profiles/11111111-1111-1111-1111-111111111111/photo.png";
+    expect(updateProfileSchema.safeParse({ avatarKey: key }).success).toBe(true);
+    expect(updateProfileSchema.safeParse({ avatarKey: null }).success).toBe(true);
+  });
+});
+
+describe("avatarKeySchema (F13)", () => {
+  const valid = "profiles/11111111-1111-1111-1111-111111111111/photo.webp";
+
+  it("accepte une clé au bon format", () => {
+    expect(avatarKeySchema.safeParse(valid).success).toBe(true);
+  });
+
+  it("refuse un mauvais préfixe ou un chemin hors profil", () => {
+    expect(avatarKeySchema.safeParse("posts/11111111-1111-1111-1111-111111111111/x.png").success).toBe(false);
+    expect(avatarKeySchema.safeParse("profiles/photo.png").success).toBe(false);
+  });
+});
+
+describe("presignAvatarSchema (F13)", () => {
+  it("accepte un type d'image connu dans la limite", () => {
+    const result = presignAvatarSchema.safeParse({
+      kind: "profile-avatar",
+      contentType: "image/webp",
+      size: 1024,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("refuse un type inconnu, un fichier vide ou trop lourd", () => {
+    expect(
+      presignAvatarSchema.safeParse({ kind: "profile-avatar", contentType: "image/svg+xml", size: 1024 })
+        .success,
+    ).toBe(false);
+    expect(
+      presignAvatarSchema.safeParse({ kind: "profile-avatar", contentType: "image/png", size: 0 })
+        .success,
+    ).toBe(false);
+    expect(
+      presignAvatarSchema.safeParse({ kind: "profile-avatar", contentType: "image/png", size: 6 * 1024 * 1024 })
+        .success,
+    ).toBe(false);
   });
 });
 

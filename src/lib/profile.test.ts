@@ -12,7 +12,12 @@ vi.mock("@/lib/repositories/skills", () => ({
   listSkillsForProfile: vi.fn(),
 }));
 
-import { ConflictError, NotFoundError } from "@/lib/errors";
+vi.mock("@/lib/storage", () => ({
+  avatarPrefix: (profileId: string) => `profiles/${profileId}/`,
+  getPublicUrl: () => null,
+}));
+
+import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors";
 import * as repo from "@/lib/repositories/profiles";
 import * as skillsRepo from "@/lib/repositories/skills";
 import {
@@ -96,6 +101,40 @@ describe("updateProfile (F10)", () => {
     mocked.updateProfileById.mockResolvedValue({ ...existing, displayName: "Awa D." });
     await expect(updateProfile("u1", { displayName: "Awa D." })).resolves.toMatchObject({
       displayName: "Awa D.",
+    });
+  });
+});
+
+describe("updateProfile — appartenance avatar (F13)", () => {
+  it("accepte une clé d'avatar préfixée par l'id du profil", async () => {
+    mocked.findProfileByUserId.mockResolvedValue(existing);
+    mocked.updateProfileById.mockResolvedValue({
+      ...existing,
+      avatarKey: "profiles/p1/photo.png",
+    });
+
+    await expect(
+      updateProfile("u1", { avatarKey: "profiles/p1/photo.png" }),
+    ).resolves.toMatchObject({ avatarKey: "profiles/p1/photo.png" });
+    expect(mocked.updateProfileById).toHaveBeenCalledWith("u1", {
+      avatarKey: "profiles/p1/photo.png",
+    });
+  });
+
+  it("refuse une clé d'avatar d'un autre profil", async () => {
+    mocked.findProfileByUserId.mockResolvedValue(existing);
+
+    await expect(
+      updateProfile("u1", { avatarKey: "profiles/p2/photo.png" }),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+    expect(mocked.updateProfileById).not.toHaveBeenCalled();
+  });
+
+  it("retire l'avatar (null) sans vérifier le préfixe", async () => {
+    mocked.updateProfileById.mockResolvedValue({ ...existing, avatarKey: null });
+
+    await expect(updateProfile("u1", { avatarKey: null })).resolves.toMatchObject({
+      avatarKey: null,
     });
   });
 });

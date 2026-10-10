@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toOwnProfileDto, toPublicProfileDto } from "./profile";
+import { toAuthorSummary, toOwnProfileDto, toPublicProfileDto } from "./profile";
 import { toProfileSkillDto, toSkillDto } from "./skills";
 import type { Profile, ProfileSkill } from "@/lib/types";
 
@@ -22,6 +22,12 @@ describe("toOwnProfileDto", () => {
     expect(dto).not.toHaveProperty("userId");
     expect(dto.username).toBe("awa_diop");
     expect(dto.createdAt).toBe("2026-01-01T10:00:00.000Z");
+  });
+
+  it("expose avatarUrl (jamais la clé de stockage) — F13", () => {
+    const dto = toOwnProfileDto(profile);
+    expect(dto).not.toHaveProperty("avatarKey");
+    expect(dto.avatarUrl).toBeNull();
   });
 });
 
@@ -62,9 +68,31 @@ describe("toPublicProfileDto (F08)", () => {
       bio: null,
       schoolName: "UCAD",
       fieldOfStudy: null,
-      avatarKey: null,
+      avatarUrl: null,
       createdAt: "2026-01-01T10:00:00.000Z",
       updatedAt: "2026-01-02T10:00:00.000Z",
     });
+  });
+});
+
+describe("toAuthorSummary (F13)", () => {
+  it("projette un auteur sans clé de stockage", () => {
+    const summary = toAuthorSummary({
+      id: "p1",
+      username: "awa_diop",
+      displayName: "Awa Diop",
+      avatarKey: null,
+    });
+    expect(summary).toEqual({
+      id: "p1",
+      username: "awa_diop",
+      displayName: "Awa Diop",
+      avatarUrl: null,
+    });
+    expect(summary).not.toHaveProperty("avatarKey");
+  });
+
+  it("renvoie null pour un auteur absent", () => {
+    expect(toAuthorSummary(null)).toBeNull();
   });
 });

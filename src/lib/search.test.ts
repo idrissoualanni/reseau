@@ -58,6 +58,8 @@ describe("searchStudents (F09)", () => {
     expect(result.items).toHaveLength(1);
     expect(result.items[0]).not.toHaveProperty("userId");
     expect(result.items[0]).not.toHaveProperty("email");
+    expect(result.items[0]).not.toHaveProperty("avatarKey");
+    expect(result.items[0]).toHaveProperty("avatarUrl");
     expect(result.skill).toEqual(react);
   });
 
