@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { imageContentTypeSchema, MAX_AVATAR_IMAGE_BYTES } from "@/lib/validation/image";
 
 // Noms réservés : ils entrent en collision avec des routes ou des espaces
 // d'administration (F03 règle 3). Comparés en minuscules.
@@ -58,23 +59,48 @@ export const createProfileSchema = z
   })
   .strict();
 
+// Clé de stockage d'un avatar (F13) : `profiles/{profileId}/{fichier}`.
+// L'appartenance (préfixe = id du profil) est vérifiée par le cas d'usage.
+export const avatarKeySchema = z
+  .string()
+  .trim()
+  .max(300, "Clé d'image invalide.")
+  .regex(/^profiles\/[0-9a-f-]{36}\/[A-Za-z0-9._-]+$/i, "Clé d'image invalide.");
+
 export const updateProfileSchema = z
   .object({
-    displayName: z
-      .string()
-      .trim()
-      .min(2, "Indique ton nom (2 caractères minimum).")
-      .max(60, "Nom trop long (60 caractères maximum).")
-      .optional(),
+    displayName: z.optional(
+      z
+        .string()
+        .trim()
+        .min(2, "Indique ton nom (2 caractères minimum).")
+        .max(60, "Nom trop long (60 caractères maximum)."),
+    ),
     bio: optionalText(500, "500 caractères maximum."),
     schoolName: optionalText(100, "100 caractères maximum."),
     fieldOfStudy: optionalText(100, "100 caractères maximum."),
+    avatarKey: avatarKeySchema.nullable().optional(),
   })
   .strict()
   .refine(
     (value) => Object.values(value).some((field) => field !== undefined),
     "Aucun champ à mettre à jour.",
   );
+
+// Demande d'URL présignée d'upload d'un avatar (F13). Identité = session.
+export const presignAvatarSchema = z
+  .object({
+    kind: z.literal("profile-avatar"),
+    contentType: imageContentTypeSchema,
+    size: z
+      .number()
+      .int()
+      .min(1, "Fichier vide.")
+      .max(MAX_AVATAR_IMAGE_BYTES, "Image trop lourde (5 Mo maximum)."),
+  })
+  .strict();
+
+export type PresignAvatarInput = z.infer<typeof presignAvatarSchema>;
 
 export const usernameQuerySchema = z.object({
   u: z.string().trim().toLowerCase().min(1, "Nom manquant.").max(30, "Nom trop long."),
