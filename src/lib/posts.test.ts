@@ -25,17 +25,27 @@ import {
   getPost,
   listPosts,
 } from "@/lib/posts";
+import {
+  MAX_POST_IMAGE_BYTES,
+  postImageKeySchema,
+  presignPostImageSchema,
+} from "@/lib/validation/post";
 import type { Post, PostComment } from "@/lib/types";
 
 const repo = vi.mocked(postsRepo);
 
 const ctx = { userId: "u1", profileId: "p1" };
 
+// ProfileId réaliste (UUID) pour les clés d'image F12.
+const uuidProfile = "00000000-0000-0000-0000-000000000001";
+const f12Ctx = { userId: "u1", profileId: uuidProfile };
+
 function post(overrides: Partial<Post> = {}): Post {
   return {
     id: "post-1",
     authorId: "p1",
     body: "J'ai terminé mon POC React.",
+    imageKey: null,
     createdAt: new Date("2026-01-01T00:00:00Z"),
     updatedAt: new Date("2026-01-01T00:00:00Z"),
     ...overrides,
@@ -68,8 +78,37 @@ describe("createPost (F11)", () => {
     expect(repo.insertPost).toHaveBeenCalledWith(
       "p1",
       "J'ai terminé mon POC React.",
+      null,
     );
     expect(created.id).toBe("post-1");
+  });
+
+  it("transmet l'imageKey quand le préfixe appartient au membre (F12)", async () => {
+    repo.insertPost.mockResolvedValue(
+      post({ imageKey: `posts/${uuidProfile}/img.jpg` }),
+    );
+
+    const created = await createPost(f12Ctx, {
+      body: "Mon POC React.",
+      imageKey: `posts/${uuidProfile}/img.jpg`,
+    });
+
+    expect(repo.insertPost).toHaveBeenCalledWith(
+      uuidProfile,
+      "Mon POC React.",
+      `posts/${uuidProfile}/img.jpg`,
+    );
+    expect(created.imageKey).toBe(`posts/${uuidProfile}/img.jpg`);
+  });
+
+  it("refuse une imageKey hors du préfixe du membre (F12)", async () => {
+    await expect(
+      createPost(f12Ctx, {
+        body: "Mon POC React.",
+        imageKey: "posts/00000000-0000-0000-0000-000000000002/img.jpg",
+      }),
+    ).rejects.toThrow(ValidationError);
+    expect(repo.insertPost).not.toHaveBeenCalled();
   });
 });
 
@@ -100,6 +139,62 @@ describe("validation des posts (F11 règle 4)", () => {
     expect(
       createCommentSchema.safeParse({ ...base, body: "a".repeat(MAX_COMMENT_BODY) }).success,
     ).toBe(true);
+  });
+
+  it("accepte une imageKey bien formée dans le préfixe du membre (F12)", () => {
+    const result = createPostSchema.safeParse({
+      body: "Mon POC React.",
+      imageKey: `posts/${uuidProfile}/ab12cd.jpg`,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejette une imageKey hors du préfixe `posts/{profileId}/` (F12)", () => {
+    for (const key of ["projects/p1/a.jpg", "posts/../../a.jpg", "posts/p1/../x", "posts/p1"]) {
+      expect(postImageKeySchema.safeParse(key).success).toBe(false);
+    }
+  });
+
+  it("accepte un post sans imageKey (F12)", () => {
+    expect(createPostSchema.safeParse({ body: "Juste du texte." }).success).toBe(true);
+  });
+});
+
+describe("presignPostImageSchema (F12)", () => {
+  it("accepte une image ≤ 10 Mo", () => {
+    const result = presignPostImageSchema.safeParse({
+      kind: "post-image",
+      contentType: "image/jpeg",
+      size: MAX_POST_IMAGE_BYTES,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejette une image > 10 Mo", () => {
+    const result = presignPostImageSchema.safeParse({
+      kind: "post-image",
+      contentType: "image/jpeg",
+      size: MAX_POST_IMAGE_BYTES + 1,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejette un type MIME non-image", () => {
+    const result = presignPostImageSchema.safeParse({
+      kind: "post-image",
+      contentType: "application/pdf",
+      size: 100,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejette un kind inconnu", () => {
+    const result = presignPostImageSchema.safeParse({
+      kind: "avatar",
+      contentType: "image/jpeg",
+      size: 100,
+    });
+    expect(result.success).toBe(false);
   });
 });
 
