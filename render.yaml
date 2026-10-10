@@ -1,7 +1,7 @@
 # Blueprint Render — projet "reseau". Valider : render blueprints validate
-# État réel (vérifié MCP, 2026-10-08) : stack Next.js racine (npm) ;
-# base sur Neon (pas de Postgres Render) ; KV reseau-dev existant (WebRTC V2) ;
-# route /api/health à créer avant déploiement.
+# État MCP (2026-10-09) : stack Next.js racine (npm) ; base Neon (dev branch) ;
+# pas de Postgres Render ; Key-Value reseau-dev pour WebRTC V2 / stockage avatars.
+# Voir docs/deploiement.md pour le workflow PR dev → main.
 projects:
   - name: reseau
     environments:
@@ -19,12 +19,12 @@ projects:
             autoDeployTrigger: commit
             envVars:
               - key: NODE_ENV
-                value: production
+                value: development
               - key: NEXT_PUBLIC_APP_URL
-                value: https://reseau-web-dev.onrender.com
+                fromService: [{"name": "reseau-dev", "property": "publicUrl"}]
               - key: NEON_BRANCH
                 value: dev
-              # Secrets : dashboard (sync: false), jamais en clair ici
+              # Secrets — jamais en clair, gérés via Dashboard Render (sync: false)
               - key: DATABASE_URL
                 sync: false
               - key: DATABASE_URL_UNPOOLED
@@ -37,6 +37,7 @@ projects:
                 sync: false
               - key: AUTH_SECRET
                 sync: false
+              # Stockage S3-compatible Neon Object Storage (variables lues côté code)
               - key: STORAGE_ACCESS_KEY_ID
                 sync: false
               - key: STORAGE_SECRET_ACCESS_KEY
@@ -47,7 +48,15 @@ projects:
                 sync: false
               - key: STORAGE_PUBLIC_BASE_URL
                 sync: false
+              # Turnstile — clé secrète gérée dashboard (sync: false), désactivé V1
               - key: TURNSTILE_SECRET_KEY
+                sync: false
+              # TURN WebRTC — à renseigner via MCP Render ou .env.local (Lot 3+)
+              - key: TURN_URL
+                sync: false
+              - key: TURN_USERNAME
+                sync: false
+              - key: TURN_CREDENTIAL
                 sync: false
       - name: production
         services:

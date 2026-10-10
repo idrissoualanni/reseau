@@ -70,3 +70,5 @@ dist/
 coverage/
 .DS_Store
 *.log
+AGENT.local.md
+AGENT.md
