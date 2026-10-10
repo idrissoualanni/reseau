@@ -39,7 +39,7 @@ export async function listPosts(limit: number, cursor?: PostsCursor): Promise<Po
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(posts.createdAt), desc(posts.id))
     .limit(limit + 1);
-  return rows.slice(0, limit);
+  return rows;
 }
 
 export async function deletePostById(id: string, authorId: string): Promise<boolean> {

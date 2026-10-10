@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requireSession } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
 import { getOwnProfile } from "@/lib/profile";
+import { loadPostsFeed, type PostFeedPage } from "@/lib/posts-feed";
 import {
   addComment,
   createCommentSchema,
@@ -121,4 +122,24 @@ export async function deleteCommentAction(formData: FormData): Promise<PostFormS
 
   revalidatePath("/posts");
   return { success: "Commentaire supprimé." };
+}
+
+const feedCursorSchema = z.object({
+  after: z.string().optional(),
+});
+
+// « Voir plus » du fil de posts (F11) : renvoie la page suivante, sérialisée
+// (dates en ISO), avec les auteurs et commentaires préchargés par lots.
+export async function loadPostsPage(input: { after?: string }): Promise<PostFeedPage> {
+  const parsed = feedCursorSchema.safeParse(input);
+  if (!parsed.success) return { edges: [], hasNextPage: false, endCursor: null };
+
+  const session = await requireSession();
+  const profile = await getOwnProfile(session.user.id);
+  if (!profile) redirect("/onboarding/profile");
+
+  return loadPostsFeed(
+    { userId: session.user.id, profileId: profile.id },
+    { limit: 20, after: parsed.data.after },
+  );
 }

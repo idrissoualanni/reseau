@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { NotFoundError, ForbiddenError, ValidationError } from "@/lib/errors";
+import { NotFoundError, ValidationError } from "@/lib/errors";
 import { decodeCursor, encodeCursor } from "@/lib/pagination";
-import type { UseCaseContext } from "@/lib/context";
+import type { UseCaseContext, ViewerContext } from "@/lib/context";
 import {
   deleteCommentById,
   deletePostById,
@@ -77,13 +77,13 @@ export async function getPost(ctx: UseCaseContext, id: string): Promise<Post> {
 }
 
 export async function listPosts(
-  ctx: UseCaseContext,
+  ctx: ViewerContext,
   options: { limit: number; after?: string },
 ): Promise<{ edges: { cursor: string; node: Post }[]; hasNextPage: boolean; endCursor: string | null }> {
   const cursor = options.after ? decodePostsCursor(options.after) : undefined;
   const rows = await repoListPosts(options.limit, cursor);
-  const hasNextPage = rows.length === options.limit;
-  const pageRows = hasNextPage ? rows : rows;
+  const hasNextPage = rows.length > options.limit;
+  const pageRows = hasNextPage ? rows.slice(0, options.limit) : rows;
   const edges = pageRows.map((node) => ({
     cursor: encodeCursor({ sortAt: node.createdAt, id: node.id }),
     node,
