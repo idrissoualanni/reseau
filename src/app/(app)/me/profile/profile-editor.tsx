@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { updateProfileAction, type ProfileFormState } from "@/lib/actions/profile";
 import type { OwnProfileDto } from "@/lib/api/mappers/profile";
+import { AvatarUploader } from "@/components/avatar-uploader";
 import { FormField } from "@/components/form-field";
 import { TextareaField } from "@/components/textarea-field";
 import { Button } from "@/components/ui/button";
@@ -14,10 +15,13 @@ export function ProfileEditor({ profile }: { profile: OwnProfileDto }) {
   const [state, formAction, pending] = useActionState(updateProfileAction, initialState);
 
   return (
-    <section aria-labelledby="profile-heading" className="flex flex-col gap-4">
-      <h2 id="profile-heading" className="text-lg font-semibold">
-        Informations
-      </h2>
+    <div className="flex flex-col gap-8">
+      <AvatarUploader displayName={profile.displayName} avatarUrl={profile.avatarUrl} />
+
+      <section aria-labelledby="profile-heading" className="flex flex-col gap-4">
+        <h2 id="profile-heading" className="text-lg font-semibold">
+          Informations
+        </h2>
 
       <Card>
         <CardContent>
@@ -82,5 +86,6 @@ export function ProfileEditor({ profile }: { profile: OwnProfileDto }) {
         </CardContent>
       </Card>
     </section>
+    </div>
   );
 }

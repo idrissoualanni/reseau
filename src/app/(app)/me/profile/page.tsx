@@ -26,7 +26,7 @@ export default async function MyProfilePage() {
   return (
     <PageShell>
       <div className="mb-6 flex items-center gap-4">
-        <Avatar name={dto.displayName} size="lg" />
+        <Avatar name={dto.displayName} src={dto.avatarUrl} size="lg" />
         <div className="min-w-0">
           <h1 className="truncate text-2xl font-semibold tracking-tight">{dto.displayName}</h1>
           <p className="text-muted-foreground text-sm">@{dto.username}</p>

@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
-// Avatar avec repli sur les initiales : l'upload arrive avec F06 (stockage non
-// tranché). Aucune image distante n'est affichée tant que le bucket n'existe pas.
+// Avatar avec repli sur les initiales (F13) : image si `src` est fourni
+// (URL publique d'un bucket public_read), sinon initiales du nom affiché.
 type AvatarProps = {
   name: string;
   src?: string | null;
@@ -29,7 +29,7 @@ export function Avatar({ name, src, size = "md", className }: AvatarProps) {
       aria-hidden={src ? undefined : true}
     >
       {src ? (
-        // eslint-disable-next-line @next/next/no-img-element -- bucket non configuré (F06)
+        // eslint-disable-next-line @next/next/no-img-element -- bucket public_read (F13)
         <img src={src} alt={`Avatar de ${name}`} className="size-full object-cover" />
       ) : (
         initials(name)

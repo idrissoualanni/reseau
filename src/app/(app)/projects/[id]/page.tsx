@@ -4,6 +4,7 @@ import { requireSession } from "@/lib/auth";
 import { getOwnProfile } from "@/lib/profile";
 import { getVisibleProject, getProjectSkills } from "@/lib/projects";
 import { findProfileSummariesByIds } from "@/lib/repositories/profiles";
+import { toAuthorSummary } from "@/lib/api/mappers/profile";
 import { PageShell } from "@/components/page-shell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/avatar";
@@ -37,7 +38,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     );
     skills = await getProjectSkills(project.id);
     const authors = await findProfileSummariesByIds([project.authorId]);
-    author = authors[0] ?? null;
+    author = toAuthorSummary(authors[0] ?? null);
   } catch (error) {
     if (error instanceof NotFoundError) notFound();
     throw error;
@@ -65,7 +66,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                 href={`/u/${author.username}`}
                 className="hover:underline focus-visible:ring-ring inline-flex items-center gap-2 rounded-sm outline-none focus-visible:ring-2"
               >
-                <Avatar name={author.displayName} src={null} />
+                <Avatar name={author.displayName} src={author.avatarUrl} />
                 <div className="flex flex-col">
                   <span className="text-sm font-medium">{author.displayName}</span>
                   <span className="text-muted-foreground text-xs">@{author.username}</span>

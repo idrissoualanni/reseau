@@ -40,7 +40,7 @@ export default async function PostDetailPage({
                 href={`/u/${author.username}`}
                 className="hover:underline focus-visible:ring-ring inline-flex items-center gap-2 rounded-sm outline-none focus-visible:ring-2"
               >
-                <Avatar name={author.displayName} src={null} size="md" className="size-7 text-xs" />
+                <Avatar name={author.displayName} src={author.avatarUrl} size="md" className="size-7 text-xs" />
                 <span className="text-sm font-medium">{author.displayName}</span>
               </Link>
             ) : (

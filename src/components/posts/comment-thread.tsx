@@ -52,7 +52,7 @@ function CommentItem({
       <div className="flex items-start gap-2">
         <Avatar
           name={comment.author?.displayName ?? "?"}
-          src={null}
+          src={comment.author?.avatarUrl ?? null}
           size="md"
           className="mt-0.5 size-7 text-xs"
         />

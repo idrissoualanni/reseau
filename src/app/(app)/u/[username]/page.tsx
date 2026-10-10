@@ -5,6 +5,8 @@ import { getOwnProfile, getPublicProfile } from "@/lib/profile";
 import { listProjects } from "@/lib/projects";
 import { listProjectSkillsForProjects } from "@/lib/repositories/projects";
 import { findProfileSummariesByIds } from "@/lib/repositories/profiles";
+import { toAuthorSummary, type AuthorSummary } from "@/lib/api/mappers/profile";
+import { getPublicUrl } from "@/lib/storage";
 import { PageShell } from "@/components/page-shell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/avatar";
@@ -12,13 +14,12 @@ import { SkillBadge } from "@/components/skill-badge";
 import { Button } from "@/components/ui/button";
 import { ProjectCard } from "@/components/projects/project-card";
 import type { Skill } from "@/lib/types";
-import type { ProfileSummaryRow } from "@/lib/repositories/profiles";
 
 type ProjectEdge = {
   cursor: string;
   node: Awaited<ReturnType<typeof listProjects>>["edges"][number]["node"];
   skills: Skill[];
-  author: ProfileSummaryRow | null;
+  author: AuthorSummary | null;
 };
 
 const toFeedProject = (project: ProjectEdge["node"]) => ({
@@ -70,7 +71,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
       cursor: edge.cursor,
       node: edge.node,
       skills: skillsByProject.get(edge.node.id) ?? [],
-      author,
+      author: toAuthorSummary(author),
     }));
   }
 
@@ -80,7 +81,11 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         <CardContent className="space-y-4 p-6">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <Avatar name={profile.displayName} src={null} size="lg" />
+              <Avatar
+                name={profile.displayName}
+                src={profile.avatarKey ? getPublicUrl(profile.avatarKey) : null}
+                size="lg"
+              />
               <div>
                 <h1 className="text-2xl font-semibold">{profile.displayName}</h1>
                 <p className="text-muted-foreground">@{profile.username}</p>

@@ -51,7 +51,7 @@ export function SearchResults({ initialItems, initialNextCursor, skill }: Search
                   href={`/u/${item.username}`}
                   className="hover:underline focus-visible:ring-ring inline-flex items-center gap-3 rounded-sm outline-none focus-visible:ring-2"
                 >
-                  <Avatar name={item.displayName} src={null} />
+                  <Avatar name={item.displayName} src={item.avatarUrl} />
                   <div>
                     <p className="font-medium">{item.displayName}</p>
                     <p className="text-muted-foreground text-sm">@{item.username}</p>

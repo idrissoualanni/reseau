@@ -4,13 +4,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/avatar";
 import { SkillBadge } from "@/components/skill-badge";
 import type { FeedProject } from "@/lib/feed";
-import type { ProfileSummaryRow } from "@/lib/repositories/profiles";
+import type { AuthorSummary } from "@/lib/api/mappers/profile";
 import type { Skill } from "@/lib/types";
 
 type ProjectCardProps = {
   project: FeedProject;
   skills: Skill[];
-  author: ProfileSummaryRow | null;
+  author: AuthorSummary | null;
 };
 
 const MAX_SKILLS_SHOWN = 3;
@@ -62,7 +62,7 @@ export function ProjectCard({ project, skills, author }: ProjectCardProps) {
               href={`/u/${author.username}`}
               className="hover:underline focus-visible:ring-ring inline-flex items-center gap-2 rounded-sm outline-none focus-visible:ring-2"
             >
-              <Avatar name={author.displayName} src={null} size="md" className="size-6 text-xs" />
+              <Avatar name={author.displayName} src={author.avatarUrl} size="md" className="size-6 text-xs" />
               <span className="text-muted-foreground text-sm">{author.displayName}</span>
             </Link>
           ) : (
