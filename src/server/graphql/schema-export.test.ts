@@ -12,9 +12,10 @@ const { printSchema } = require("graphql") as typeof import("graphql");
 
 // Golden file (api-graphql §1/§14) : le schema.graphql committé doit être
 // identique au schéma exécutable. `npm run graphql:export` écrit le fichier ;
-// `npm run graphql:check` (CI) le compare.
+// `npm run graphql:check` (CI) le compare. Les sauts de ligne sont normalisés
+// (git/Windows peut committer du CRLF ; le schéma généré utilise des LF).
 const schemaPath = join(process.cwd(), "schema.graphql");
-const generated = `${printSchema(schema)}\n`;
+const generated = `${printSchema(schema).replace(/\r\n/g, "\n")}\n`;
 
 describe("schema.graphql", () => {
   it("est synchronisé avec le schéma exécutable", () => {
@@ -22,7 +23,7 @@ describe("schema.graphql", () => {
       writeFileSync(schemaPath, generated);
     } else {
       expect(existsSync(schemaPath)).toBe(true);
-      expect(readFileSync(schemaPath, "utf8")).toBe(generated);
+      expect(readFileSync(schemaPath, "utf8").replace(/\r\n/g, "\n")).toBe(generated);
     }
   });
 });

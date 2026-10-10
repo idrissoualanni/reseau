@@ -1,0 +1,3 @@
+# Fichiers générés : sauts de ligne LF stables, quelle que soit la plateforme
+# (le golden test schema-export compare le contenu byte à byte).
+schema.graphql text eol=lf
