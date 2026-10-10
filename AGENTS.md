@@ -446,4 +446,3 @@ npm i @aws-sdk/client-s3 @aws-sdk/s3-request-presigner dotenv
 - ne touche pas encore a la V1.5
 - explique moi ca et corrige l'erreur creer un rules WIP utilisateur
 - utilise le bucket profile pour les images de profile , et le bucket projet pour les images de projet 
-- corrige les fichiers qui dise de surpprime la branche du worktree, il faut juste supprimer le worketree creer pas la branche 
