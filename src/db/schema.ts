@@ -145,6 +145,9 @@ export const posts = pgTable(
       .notNull()
       .references(() => profiles.id, { onDelete: "cascade" }),
     body: text("body").notNull(),
+    // Clé de l'image du post (F12) : `posts/{profileId}/{uuid}.{ext}`, NULL si
+    // le post n'a pas d'image. Le schéma GraphQL expose `imageUrl`, jamais la clé.
+    imageKey: text("image_key"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
