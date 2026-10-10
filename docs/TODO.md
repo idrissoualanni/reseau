@@ -14,9 +14,10 @@
   - Réintroduire : `src/lib/actions/auth.ts` (action serveur) + `sign-up-form.tsx` (widget).
 - [ ] **Domaines de confiance Neon Auth** : ajouter les origines staging + prod
   (console Neon ou `neon neon-auth domain add https://…`). `localhost` est pré-autorisé.
-- [ ] **SMTP dédié en production** avant d'envoyer de vrais e-mails (checklist prod Neon).
-  Le SMTP partagé (`auth@mail.myneon.app`) est **limité en débit** : les codes peuvent ne
-  pas partir en cas de tests répétés. En dev, vérifier aussi les **spams**.
+- [ ] **SMTP : utiliser `auth@mail.myneon.app` de Neon (développé uniquement)**
+  Le SMTP partagé Neon est **rate-limited** : les codes OTP peuvent ne pas partir
+  en cas de tests répétés. En dev vérifier les spams. Pour la production, prévoir
+  un SMTP dédié (SendGrid, Mailgun, AWS SES) avant le déploiement V1.
 - [x] **Code OTP non envoyé après inscription** : **corrigé** — `signUp.email` n'envoie
   rien (`verify_email_on_sign_up=false`), on appelle désormais explicitement
   `emailOtp.sendVerificationOtp` **même si le compte existe déjà** (cause du bug : second
@@ -65,13 +66,34 @@
 
 ## Clés encore vides (lots ultérieurs — non nécessaires à la V1)
 - `NEXT_PUBLIC_GRAPHQL_URL` — Lot 3+ : `${NEXT_PUBLIC_APP_URL}/api/graphql`.
-- `NEXT_PUBLIC_SIGNALING_URL`, `NEXT_PUBLIC_STUN_URL`, `TURN_URL`, `TURN_CREDENTIAL` — V1.5+
-  (messagerie / WebRTC) : fournisseur TURN (Metered, Twilio, Cloudflare Calls) ou coturn.
+- `NEXT_PUBLIC_SIGNALING_URL`, `NEXT_PUBLIC_STUN_URL`, `TURN_URL`, `TURN_CREDENTIAL` — EN ATTENTE
+  (WebRTC V1.5+) : à obtenir fournisseur TURN (Twilio, Cloudflare Calls ou coturn) et
+  configurer dans `.env.local`. Non critique pour V1 ; reporter au Lot 3+.
 
-## Boucle de prompts / outillage
-- [x] **Plugin de boucle** : **fait (2026-10-09)** — `.opencode/plugins/prompt-loop/index.ts`
-  modifié : demande d'autorisation de lancement (fichier `.enabled`), activable par la
-  commande `/loop` (`.opencode/commands/loop.md`). Gitignoré.
-- [x] **Expliquer le fonctionnement des hooks** : **fait (2026-10-09)** —
-  `.claude/rules/hooks.md` créé (cycle de vie, `ctx.session.hook`, `ctx.event.subscribe`,
-  bonnes pratiques).
+## Outillage (fait)
+- [x] **`drizzle-kit studio`** : **fait (2026-10-10)** — `drizzle.config.ts` charge
+  `.env.local` via `process.loadEnvFile` (drizzle-kit ne le fait pas tout seul).
+  `npx drizzle-kit studio` démarre Drizzle Studio (https://local.drizzle.studio).
+- [x] **`schema.graphql`** : **fait (2026-10-10)** — export committé + scripts
+  `graphql:export` / `graphql:check` (golden test, CI compare).
+- [x] **Fusion F05/F06 → dev** : **fait (2026-10-10)** — `f05-f06-projects` mergé,
+  worktree supprimé. Stubs cassés `projects/page.tsx` / `posts/page.tsx` supprimés.
+- [x] **Fusion F07/F08 → dev** : **fait (2026-10-10)** — feed `/`, détail
+  `/projects/[id]`, profil `/u/[username]`, domaine F08 public, 98 tests verts.
+
+## Lots restants
+- [x] **F09 — Recherche d'étudiants** (`/search`) : **fait (2026-10-10)** — worktree
+  `f09-f10-search-edit` mergé dans `dev`. Repository (jointure + comptage + tri tuple),
+  cas d'usage (normalisation, suggestions trigramme), API REST, page `/search` avec
+  autocomplétion, curseur tuple, 109 tests verts.
+- [x] **F11 — Posts et commentaires** : **fait (2026-10-10)** — worktree
+  `f11-posts-comments`. Tables `posts` + `post_comments` (migrations 0003/0004
+  appliquées sur Neon dev), GraphQL `posts/post(id)/createPost/deletePost/
+  addComment/deleteComment`, actions serveur, pages `/posts` + `/posts/[id]`,
+  commentaires imbriqués (indentation max 3 niveaux), suppressions en cascade,
+  126 tests verts.
+
+## À faire par l'utilisateur (nécessite son intervention)
+- **Turnstile** : décider si clés de test dev ou attente domaine.
+- **Bucket stockage** : nommer le bucket Neon Object Storage (ADR 0004 « proposé »).
+- **TURN** : choisir le fournisseur pour WebRTC (V1.5+).

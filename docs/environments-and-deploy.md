@@ -9,8 +9,8 @@
 | Git | Render | Neon | Domaine |
 |---|---|---|---|
 | `feat/*` (worktree local) | — | branche Neon éphémère ou `dev` | localhost |
-| `dev` | `reseau-web-dev` | branche `dev` | `dev.<domaine>` |
-| `main` | `reseau-web-prod` | branche `main` | `app.<domaine>` |
+| `dev` | `reseau-dev` | branche `dev` | `dev.<domaine>` |
+| `main` | `reseau-prod` | branche `main` | `app.<domaine>` |
 
 ## Flux de livraison
 1. Branche `feat/Fxx-slug` (worktree) → PR vers `dev` → CI (lint, typecheck, tests).
