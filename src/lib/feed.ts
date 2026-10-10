@@ -1,11 +1,9 @@
 import { getPublicUrl } from "@/lib/storage";
 import type { ViewerContext } from "@/lib/context";
 import { listProjects } from "@/lib/projects";
-import {
-  findProfileSummariesByIds,
-  type ProfileSummaryRow,
-} from "@/lib/repositories/profiles";
+import { findProfileSummariesByIds } from "@/lib/repositories/profiles";
 import { listProjectSkillsForProjects } from "@/lib/repositories/projects";
+import { toAuthorSummary, type AuthorSummary } from "@/lib/api/mappers/profile";
 import type { Project, Skill } from "@/lib/types";
 
 // Assemblage du fil (F07) : une page de projets publiés + leurs compétences et
@@ -26,7 +24,7 @@ export type FeedEdge = {
   cursor: string;
   project: FeedProject;
   skills: Skill[];
-  author: ProfileSummaryRow | null;
+  author: AuthorSummary | null;
 };
 
 export type FeedPage = {
@@ -88,7 +86,7 @@ export async function loadProjectsFeed(
     cursor: edge.cursor,
     project: toFeedProject(edge.node),
     skills: skillsByProject.get(edge.node.id) ?? [],
-    author: authorById.get(edge.node.authorId) ?? null,
+    author: toAuthorSummary(authorById.get(edge.node.authorId) ?? null),
   }));
 
   return {

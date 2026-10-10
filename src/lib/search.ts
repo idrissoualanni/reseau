@@ -2,6 +2,7 @@ import { normalizeSkillName } from "@/lib/validation/skills";
 import { decodeTupleCursor, encodeTupleCursor } from "@/lib/pagination";
 import type { ViewerContext } from "@/lib/context";
 import { searchSkills } from "@/lib/repositories/skills";
+import { getPublicUrl } from "@/lib/storage";
 import {
   findSkillBySlugForSearch,
   searchStudentsBySkill,
@@ -22,7 +23,7 @@ export type StudentResult = {
   displayName: string;
   schoolName: string | null;
   fieldOfStudy: string | null;
-  avatarKey: string | null;
+  avatarUrl: string | null;
   createdAt: string;
   proofLevel: StudentSearchResult["proofLevel"];
   projectCount: number;
@@ -48,7 +49,7 @@ function toResult(row: StudentSearchResult): StudentResult {
     displayName: row.displayName,
     schoolName: row.schoolName,
     fieldOfStudy: row.fieldOfStudy,
-    avatarKey: row.avatarKey,
+    avatarUrl: row.avatarKey ? getPublicUrl(row.avatarKey) : null,
     createdAt: row.createdAt.toISOString(),
     proofLevel: row.proofLevel,
     projectCount: row.projectCount,

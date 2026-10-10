@@ -10,6 +10,7 @@ import {
   findProfileSummariesByIds,
   type ProfileSummaryRow,
 } from "@/lib/repositories/profiles";
+import { toAuthorSummary, type AuthorSummary } from "@/lib/api/mappers/profile";
 import type { Post } from "@/lib/types";
 import { getPublicUrl } from "@/lib/storage";
 
@@ -32,14 +33,14 @@ export type FeedComment = {
   parentId: string | null;
   body: string;
   createdAt: string;
-  author: ProfileSummaryRow | null;
+  author: AuthorSummary | null;
   depth: number;
 };
 
 export type PostFeedEdge = {
   cursor: string;
   post: FeedPost;
-  author: ProfileSummaryRow | null;
+  author: AuthorSummary | null;
   comments: FeedComment[];
 };
 
@@ -86,7 +87,7 @@ function buildCommentTrees(
         parentId: child.parentId,
         body: child.body,
         createdAt: child.createdAt.toISOString(),
-        author: authors.get(child.authorId) ?? null,
+        author: toAuthorSummary(authors.get(child.authorId) ?? null),
         depth,
       });
       // On n'affiche que 3 niveaux de profondeur.
@@ -139,7 +140,7 @@ export async function loadPostsFeed(
         authorId: post.authorId,
         commentCount: counts.get(post.id) ?? 0,
       },
-      author: authorById.get(post.authorId) ?? null,
+      author: toAuthorSummary(authorById.get(post.authorId) ?? null),
       comments,
     };
   });
@@ -156,7 +157,7 @@ export async function loadPostsFeed(
 export async function loadPostDetail(
   ctx: ViewerContext,
   postId: string,
-): Promise<{ post: Post; imageUrl: string | null; author: ProfileSummaryRow | null; comments: FeedComment[] } | null> {
+): Promise<{ post: Post; imageUrl: string | null; author: AuthorSummary | null; comments: FeedComment[] } | null> {
   const post = await findPostById(postId);
   if (!post) return null;
 
@@ -171,7 +172,7 @@ export async function loadPostDetail(
   return {
     post,
     imageUrl: post.imageKey ? getPublicUrl(post.imageKey) : null,
-    author: authorById.get(post.authorId) ?? null,
+    author: toAuthorSummary(authorById.get(post.authorId) ?? null),
     comments,
   };
 }
