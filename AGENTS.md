@@ -52,6 +52,7 @@ Si une vérification échoue, le dire clairement : ne jamais prétendre que c'es
 - Quand la mémoire est pleine : supprimer les caches et vider le temp, garder la commande
   de suppression dans un script sh dans `.opencode/scripts/`. Ne rien nettoyer d'autre.
 - N'écrire pas de commentaires longs, juste des commentaires courts et concis.
+- respecte les rules de @.claude/rules 
 
 ## Brainstorming
 Quand je dis "brainstorm ou je veux travailler sur une partie du projet ou ma phrase a un sens
@@ -59,7 +60,7 @@ qui se dirige vers une réflexion complexe" : aucun fichier de code modifié.
 Procédure : docs/brainstorming.md.
 
 ## Agents (rôles)
-Instructions détaillées dans docs/agents/ :
+Instructions détaillées dans docs/agents/ et dans @.claude/agents et @.opencode/agent:
 architecte, backend, frontend, securite, devops.
 
 ## Instructions à vérifier et prompts à exécuter
@@ -82,7 +83,7 @@ architecte, backend, frontend, securite, devops.
 - Supprimer le service `srv-db46e4btqb8s73e8bsd0` — c'est sur `srv-db4ek92jnfac73b4uij0` qu'on déploie le dev.
 - Retirer la vérification anti-robot (Turnstile) — la mettre en attente dans la TODO.
 - À chaque fois que tu lis ce fichier : dire « je viens de lire @AGENT.md » et ajouter un emoji sourire.
-
+- met a jour le fichier @AGENT.md tu doit mettre toute les instructuon d'utilisation des rules et des skills et des plugins et script et de la docs 
 ## Paramètres Neon Auth
 
 | Champ | Valeur |
@@ -210,22 +211,58 @@ Quand je dis "brainstorm ou je veux travailler sur une partie du projet ou ma ph
 Instructions détaillées dans docs/agents/ :
 architecte, backend, frontend, securite, devops.
 
-## instruction a verifier et les prompt a excecuter  
-- met a jour le @render.yaml en utilisant le mcp de render tu as la clès et protege cette clès 
-- met a jour le env local et tu peux utilise le mcp de neon et de render 
-- retire la section model qui utilise les model de claude juste la section de modele 
-- creer un hook ou une boucle ou tu ecrit les prompt que tu doit respecter dans ce prompt du doit annonce ce que tu veux faire pourquoi et quelle ressource donc tu dispose tu veut utiliser cette boucle tu doit definir un objectif a atteindre et tous faire pour y arriger et tu doit utiliser les agents que tu disposte et chaque agent doit etre améliore tu doit aussi améliorer les rule a chaque fois que tu rencontre un problème met les dans un fichier ou tu ecrira les problème rencontrer si tu le resous tu creer un rules si c'est un problème tres compliqué que tu a rencontrer a chaque prompt tu doit d'amémiorer dans la prédiction des erreur et des reussite pour mieux ecrire tes prompt 
-- corrige les fichier qui on du pnpm et met le npm 
-- met a jour le gitignore 
-- uitlise les subagent au bon moment pour tes prompt 
-- donne moi un reponse avec un emogie  dans le chat
-- tous le qui concerne le hook de prompt ne doit par est suivie par git et github 
-- donne moi des detail sur comment les hook fonction d'apres la docs 
--  si tu termi,e la V1 tu doit, faire des test et tous verifie puis tu deploie sur render dev , et neon dev et tu fera les test de ce qui est deploier 
-- si tu termine un session utilise le plugin de prompt 
-- le fichier env est a jour tu peux le lire tu peux faire la migration et verifie avec le mcp si tu as un probleme fait moi signe et passe en prompt loop 
-- il faut configurer le service reseau dev sur render il faut deploy render.yaml quand tu aura terminer la V1; 
+## instruction a verifier et les prompt a excecuter
+- Met à jour le `render.yaml` via le MCP Render (protéger la clé API dans `{file:.secrets/render-api-key}` ou `{env:RENDER_API_KEY}`).
+- Met à jour `.env.local` et utilise les MCP Neon et Render pour obtenir les variables d'environnement manquantes.
+- Retire la section model qui utilise les modèles de Claude (garde seulement la section modèle).
+- Crée un hook/boucle de prompts : annonce le but, la raison, les ressources ; définis un objectif mesurable ; utilise les agents ; améliore les règles à chaque problème ; note les prédictions d'erreurs/réussites.
+- Corrige les fichiers qui utilisent `pnpm` → `npm` (utiliser `npm install`, `npm run`, `npm test`, `npm run build`).
+- Met à jour `.gitignore` régulièrement — jamais de secrets dans les fichiers suivis.
+- Utilise les subagents au bon moment (backend, frontend, database, designer, devops, securite selon la tâche).
+- Donne une réponse avec un emoji dans le chat.
+- Tout ce qui concerne le hook de prompts ne doit pas être suivi par git/github.
+- Donne des détails sur le fonctionnement des hooks d'après la doc (voir la procédure dans docs/brainstorming.md).
+- Si V1 terminée : tests complets → déploiement Render dev + Neon dev → tester le déployé.
+- Si session terminée : utilise le plugin de prompts.
+- Le fichier `.env.local` est à jour, le lire, faire la migration et vérifier avec le MCP.
+- Configure le service `reseau` sur Render, déploie `render.yaml` quand V1 terminée.
+- Never deploy on `main` — déploie depuis `dev`.
+- Supprime le service `srv-db46e4btqb8s73e8bsd0` — le dev se déploie sur `srv-db4ek92jnfac73b4uij0`.
+- Retire la vérification anti-robot (Turnstile) — mets-la en attente dans la TODO.
+- À chaque fois que tu lis ce fichier : dis « je viens de lire @AGENT.md » et ajoute un emoji sourire 😊.
+
+### Utilisation des rules (.claude/rules et .opencode/rules)
+- Chaque règle lue doit être appliquée concrètement ; ne jamais prétendre qu'une tâche est finie si une règle est violée.
+- Avant toute intervention, lire le fichier de rules concerné (voir la liste en tête de AGENTS.md).
+- Les règles sont opposables : un changement qui les enfreint n'est pas terminé, même si le code « fonctionne ».
+- Les nouveaux fichiers de rules sont placés dans `.claude/rules/` (pour Claude) et `.opencode/rules/` (pour OpenCode).
+- Vérifier la cohérence entre `.claude/rules/` et `.opencode/rules/` lors de toute refonte.
+
+### Compétences (skills) : chargement et utilisation
+- Les skills se chargent via l'outil `skill` avec l'id correspondant (ex: `skill { id: "database" }`).
+- Une tâche donnée à un subagent doit toujours commencer par un appel `skill` pour activer le contexte adéquat.
+- Si plusieurs skills sont pertinentes, les charger dans l'ordre : d'abord l'agent général, puis le skill spécialisé.
+- Ne jamais invoquer de skill sans nécessité avérée ; préférer l'agent général lorsqu'un seul skill suffit.
+- Après utilisation, vérifier que le contexte skill est toujours requis ; si non, le contexte redevient général.
+- Les nouveaux skills sont découverts via `find-skills` et installés avec `npx shadcn@latest add <component>` ou via le MCP approprié.
+- Les skills existants ne doivent pas être doublonnés ; vérifier la liste des skills disponibles avant d'en créer un nouveau.
+
+### Plugins et scripts
+- Les plugins sont installés via le MCP Render/Neon ou le CLI dédié (ex: `render deploys`, `neon auth`).
+- Les scripts de projet vivent dans `.opencode/scripts/` et s'exécutent avec `sh .opencode/scripts/<nom>.sh`.
+- Ne jamais modifier `package.json` pour passer de `pnpm` à `npm` sans vérification — utiliser `npm install`, `npm run`, `npm test` et `npm run build`.
+- Les scripts de nettoyage disque/mémoire sont dans `.opencode/scripts/cleanup-disk.sh` ; exécuter lorsque la RAM < 2 Go ou le disque < 5 Go libres.
+- Tout script qui devient obsolète doit être supprimé en demandant l'autorisation, en suivant la règle « supprimer les fichiers qui deviennent obsolètes en demandant l'autorisation ».
+
+### Documentation (docs/)
+- La source unique des règles du projet est `AGENTS.md` (lu par OpenCode) et `CLAUDE.md` (importé pour Claude Code).
+- Tous les fichiers `docs/` doivent rester synchronisés avec le code livré : tout nouveau parcours utilisateur s'accompagne d'une fiche dans `docs/features/` ou `docs/ux/` et d'une mise à jour de `docs/TODO.md`.
+- La TODO (`docs/TODO.md`) doit toujours être à jour : y mettre les tâches à prendre en charge par l'utilisateur et celles qui nécessitent son intervention.
+- Les décisions architecturales sont consignées dans `docs/history/` (ARCHITECTURE.md, API.md, DECISIONS.md).
+- Les tokens designer et les règles de style sont définies dans `AGENTS.md` et doivent être appliquées dans tous les composants UI.
+- Ne pas créer de nouvelles pages ou composants sans avoir au préalable créé la fiche UX correspondante (`ux-brief` skill). 
 voici les parametre de neon auth '
+- il faut que tous les worktree que tu creer se place ici @.opencode/worktrees
 General
 Postgres
 Networking
@@ -343,16 +380,6 @@ shadow.card = douce, diffuse
 motion
 180ms ease-out
 
-
----
-title: Sidebar
-description: A composable, themeable and customizable sidebar component.
-base: base
-component: true
----
-
-import { ExternalLinkIcon } from "lucide-react"
-
 <figure className="flex flex-col gap-4">
   <ComponentPreview
     styleName="base-nova"
@@ -370,637 +397,52 @@ to any application and often contain a lot of moving parts.
 
 We now have a solid foundation to build on top of. Composable. Themeable.
 Customizable.
-
+- pour la side bare ajoute une icone de replie et un dropdown 
 [Browse the Blocks Library](/blocks).
-
-## Installation
-
-<CodeTabs>
-
-<TabsList>
-  <TabsTrigger value="cli">Command</TabsTrigger>
-  <TabsTrigger value="manual">Manual</TabsTrigger>
-</TabsList>
-<TabsContent value="cli">
-
-```bash
-npx shadcn@latest add sidebar
-```
-
-</TabsContent>
-
-<TabsContent value="manual">
-
-<ComponentSource
-  name="sidebar"
-  title="components/ui/sidebar.tsx"
-  styleName="base-nova"
-/>
-
-</TabsContent>
-
-</CodeTabs>
-
-## Usage
-
-```tsx showLineNumbers title="app/layout.tsx"
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-
-export default function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <SidebarProvider>
-      <AppSidebar />
-      <main>
-        <SidebarTrigger />
-        {children}
-      </main>
-    </SidebarProvider>
-  )
-}
-```
-
-```tsx showLineNumbers title="components/app-sidebar.tsx"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarHeader,
-} from "@/components/ui/sidebar"
-
-export function AppSidebar() {
-  return (
-    <Sidebar>
-      <SidebarHeader />
-      <SidebarContent>
-        <SidebarGroup />
-        <SidebarGroup />
-      </SidebarContent>
-      <SidebarFooter />
-    </Sidebar>
-  )
-}
-```
-
-## Composition
-
-Use the following composition to build a `Sidebar` layout:
-
-```text
-SidebarProvider
-├── Sidebar
-│   ├── SidebarHeader
-│   ├── SidebarContent
-│   │   ├── SidebarGroup
-│   │   │   ├── SidebarGroupLabel
-│   │   │   ├── SidebarGroupAction
-│   │   │   ├── SidebarGroupContent
-│   │   │   └── SidebarMenu
-│   │   │       ├── SidebarMenuItem
-│   │   │       │   ├── SidebarMenuButton
-│   │   │       │   ├── SidebarMenuAction
-│   │   │       │   └── SidebarMenuBadge
-│   │   │       └── SidebarMenuItem
-│   │   │           ├── SidebarMenuButton
-│   │   │           └── SidebarMenuSub
-│   │   │               ├── SidebarMenuSubItem
-│   │   │               └── SidebarMenuSubItem
-│   │   └── SidebarGroup
-│   │       └── SidebarMenu
-│   │           ├── SidebarMenuItem
-│   │           └── SidebarMenuItem
-│   ├── SidebarFooter
-│   └── SidebarRail
-├── SidebarInset
-└── SidebarTrigger
-```
-
-## Structure
-
-- **SidebarProvider** — Handles collapsible state and provides sidebar context to child components.
-- **Sidebar** — The main collapsible sidebar panel.
-- **SidebarHeader** — Sticky at the top; use for branding, titles, or workspace switchers.
-- **SidebarFooter** — Sticky at the bottom; use for user menus, settings, or actions.
-- **SidebarContent** — Scrollable region between the header and footer.
-- **SidebarGroup** — Groups related navigation with optional label, action, and content areas.
-- **SidebarMenu** / **SidebarMenuItem** — Menu structure for links, badges, actions, and nested submenus.
-- **SidebarRail** — Resize handle for adjusting sidebar width when applicable.
-- **SidebarInset** — Wraps main content when using the `inset` variant.
-- **SidebarTrigger** — Control that toggles the sidebar open or collapsed.
-
-<Image
-  src="/images/sidebar-structure.png"
-  width="716"
-  height="420"
-  alt="Sidebar Structure"
-  className="mt-6 w-full overflow-hidden rounded-2xl border dark:hidden"
-/>
-<Image
-  src="/images/sidebar-structure-dark.png"
-  width="716"
-  height="420"
-  alt="Sidebar Structure"
-  className="mt-6 hidden w-full overflow-hidden rounded-2xl border dark:block"
-/>
-
-## SidebarProvider
-
-The `SidebarProvider` component is used to provide the sidebar context to the `Sidebar` component. You should always wrap your application in a `SidebarProvider` component.
-
-### Props
-
-| Name           | Type                      | Description                                  |
-| -------------- | ------------------------- | -------------------------------------------- |
-| `defaultOpen`  | `boolean`                 | Default open state of the sidebar.           |
-| `open`         | `boolean`                 | Open state of the sidebar (controlled).      |
-| `onOpenChange` | `(open: boolean) => void` | Sets open state of the sidebar (controlled). |
-
-### Width
-
-If you have a single sidebar in your application, you can use the `SIDEBAR_WIDTH` and `SIDEBAR_WIDTH_MOBILE` variables in `sidebar.tsx` to set the width of the sidebar.
-
-```tsx showLineNumbers title="components/ui/sidebar.tsx"
-const SIDEBAR_WIDTH = "16rem"
-const SIDEBAR_WIDTH_MOBILE = "18rem"
-```
-
-For multiple sidebars in your application, you can use the `--sidebar-width` and `--sidebar-width-mobile` CSS variables in the `style` prop.
-
-```tsx showLineNumbers
-<SidebarProvider
-  style={
-    {
-      "--sidebar-width": "20rem",
-      "--sidebar-width-mobile": "20rem",
-    } as React.CSSProperties
-  }
->
-  <Sidebar />
-</SidebarProvider>
-```
-
-### Keyboard Shortcut
-
-To trigger the sidebar, you use the `cmd+b` keyboard shortcut on Mac and `ctrl+b` on Windows.
-
-```tsx showLineNumbers title="components/ui/sidebar.tsx"
-const SIDEBAR_KEYBOARD_SHORTCUT = "b"
-```
-
-## Sidebar
-
-The main `Sidebar` component used to render a collapsible sidebar.
-
-### Props
-
-| Property      | Type                              | Description                       |
-| ------------- | --------------------------------- | --------------------------------- |
-| `side`        | `left` or `right`                 | The side of the sidebar.          |
-| `variant`     | `sidebar`, `floating`, or `inset` | The variant of the sidebar.       |
-| `collapsible` | `offcanvas`, `icon`, or `none`    | Collapsible state of the sidebar. |
-
-| Prop        | Description                                                  |
-| ----------- | ------------------------------------------------------------ |
-| `offcanvas` | A collapsible sidebar that slides in from the left or right. |
-| `icon`      | A sidebar that collapses to icons.                           |
-| `none`      | A non-collapsible sidebar.                                   |
-
-<Callout>
-  **Note:** If you use the `inset` variant, remember to wrap your main content
-  in a `SidebarInset` component.
-</Callout>
-
-```tsx showLineNumbers
-<SidebarProvider>
-  <Sidebar variant="inset" />
-  <SidebarInset>
-    <main>{children}</main>
-  </SidebarInset>
-</SidebarProvider>
-```
-
-## useSidebar
-
-The `useSidebar` hook is used to control the sidebar.
-
-```tsx showLineNumbers
-import { useSidebar } from "@/components/ui/sidebar"
-
-export function AppSidebar() {
-  const {
-    state,
-    open,
-    setOpen,
-    openMobile,
-    setOpenMobile,
-    isMobile,
-    toggleSidebar,
-  } = useSidebar()
-}
-```
-
-| Property        | Type                      | Description                                   |
-| --------------- | ------------------------- | --------------------------------------------- |
-| `state`         | `expanded` or `collapsed` | The current state of the sidebar.             |
-| `open`          | `boolean`                 | Whether the sidebar is open.                  |
-| `setOpen`       | `(open: boolean) => void` | Sets the open state of the sidebar.           |
-| `openMobile`    | `boolean`                 | Whether the sidebar is open on mobile.        |
-| `setOpenMobile` | `(open: boolean) => void` | Sets the open state of the sidebar on mobile. |
-| `isMobile`      | `boolean`                 | Whether the sidebar is on mobile.             |
-| `toggleSidebar` | `() => void`              | Toggles the sidebar. Desktop and mobile.      |
-
-## SidebarHeader
-
-Use the `SidebarHeader` component to add a sticky header to the sidebar.
-
-```tsx showLineNumbers title="components/app-sidebar.tsx"
-<Sidebar>
-  <SidebarHeader>
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger render={<SidebarMenuButton />}>
-            Select Workspace
-            <ChevronDown className="ml-auto" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem>
-              <span>Acme Inc</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
-  </SidebarHeader>
-</Sidebar>
-```
-
-## SidebarFooter
-
-Use the `SidebarFooter` component to add a sticky footer to the sidebar.
-
-```tsx showLineNumbers
-<Sidebar>
-  <SidebarFooter>
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <SidebarMenuButton>
-          <User2 /> Username
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    </SidebarMenu>
-  </SidebarFooter>
-</Sidebar>
-```
-
-## SidebarContent
-
-The `SidebarContent` component is used to wrap the content of the sidebar. This is where you add your `SidebarGroup` components. It is scrollable.
-
-```tsx showLineNumbers
-<Sidebar>
-  <SidebarContent>
-    <SidebarGroup />
-    <SidebarGroup />
-  </SidebarContent>
-</Sidebar>
-```
-
-## SidebarGroup
-
-Use the `SidebarGroup` component to create a section within the sidebar.
-
-A `SidebarGroup` has a `SidebarGroupLabel`, a `SidebarGroupContent` and an optional `SidebarGroupAction`.
-
-```tsx showLineNumbers
-<SidebarGroup>
-  <SidebarGroupLabel>Application</SidebarGroupLabel>
-  <SidebarGroupAction>
-    <Plus /> <span className="sr-only">Add Project</span>
-  </SidebarGroupAction>
-  <SidebarGroupContent></SidebarGroupContent>
-</SidebarGroup>
-```
-
-To make a `SidebarGroup` collapsible, wrap it in a `Collapsible`.
-
-```tsx showLineNumbers
-<Collapsible defaultOpen className="group/collapsible">
-  <SidebarGroup>
-    <SidebarGroupLabel render={<CollapsibleTrigger />}>
-      Help
-      <ChevronDown className="ml-auto transition-transform group-data-open/collapsible:rotate-180" />
-    </SidebarGroupLabel>
-    <CollapsibleContent>
-      <SidebarGroupContent />
-    </CollapsibleContent>
-  </SidebarGroup>
-</Collapsible>
-```
-
-## SidebarMenu
-
-The `SidebarMenu` component is used for building a menu within a `SidebarGroup`.
-
-<Image
-  src="/images/sidebar-menu.png"
-  width="716"
-  height="420"
-  alt="Sidebar Menu"
-  className="mt-6 w-full overflow-hidden rounded-2xl border dark:hidden"
-/>
-<Image
-  src="/images/sidebar-menu-dark.png"
-  width="716"
-  height="420"
-  alt="Sidebar Menu"
-  className="mt-6 hidden w-full overflow-hidden rounded-2xl border dark:block"
-/>
-
-```tsx showLineNumbers
-<SidebarMenu>
-  {projects.map((project) => (
-    <SidebarMenuItem key={project.name}>
-      <SidebarMenuButton render={<a href={project.url} />}>
-        <project.icon />
-        <span>{project.name}</span>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  ))}
-</SidebarMenu>
-```
-
-## SidebarMenuButton
-
-The `SidebarMenuButton` component is used to render a menu button within a `SidebarMenuItem`.
-
-By default, the `SidebarMenuButton` renders a button but you can use the `render` prop to render a different component such as a `Link` or an `a` tag.
-
-Use the `isActive` prop to mark a menu item as active.
-
-```tsx showLineNumbers
-<SidebarMenuButton render={<a href="#" />} isActive>
-  Home
-</SidebarMenuButton>
-```
-
-## SidebarMenuAction
-
-The `SidebarMenuAction` component is used to render a menu action within a `SidebarMenuItem`.
-
-```tsx showLineNumbers
-<SidebarMenuItem>
-  <SidebarMenuButton render={<a href="#" />}>
-    <Home />
-    <span>Home</span>
-  </SidebarMenuButton>
-  <SidebarMenuAction>
-    <Plus /> <span className="sr-only">Add Project</span>
-  </SidebarMenuAction>
-</SidebarMenuItem>
-```
-
-## SidebarMenuSub
-
-The `SidebarMenuSub` component is used to render a submenu within a `SidebarMenu`.
-
-```tsx showLineNumbers
-<SidebarMenuItem>
-  <SidebarMenuButton />
-  <SidebarMenuSub>
-    <SidebarMenuSubItem>
-      <SidebarMenuSubButton />
-    </SidebarMenuSubItem>
-  </SidebarMenuSub>
-</SidebarMenuItem>
-```
-
-## SidebarMenuBadge
-
-The `SidebarMenuBadge` component is used to render a badge within a `SidebarMenuItem`.
-
-```tsx showLineNumbers
-<SidebarMenuItem>
-  <SidebarMenuButton />
-  <SidebarMenuBadge>24</SidebarMenuBadge>
-</SidebarMenuItem>
-```
-
-## SidebarMenuSkeleton
-
-The `SidebarMenuSkeleton` component is used to render a skeleton for a `SidebarMenu`.
-
-```tsx showLineNumbers
-<SidebarMenu>
-  {Array.from({ length: 5 }).map((_, index) => (
-    <SidebarMenuItem key={index}>
-      <SidebarMenuSkeleton />
-    </SidebarMenuItem>
-  ))}
-</SidebarMenu>
-```
-
-## SidebarTrigger
-
-Use the `SidebarTrigger` component to render a button that toggles the sidebar.
-
-```tsx showLineNumbers
-import { useSidebar } from "@/components/ui/sidebar"
-
-export function CustomTrigger() {
-  const { toggleSidebar } = useSidebar()
-
-  return <button onClick={toggleSidebar}>Toggle Sidebar</button>
-}
-```
-
-## SidebarRail
-
-The `SidebarRail` component is used to render a rail within a `Sidebar`. This rail can be used to toggle the sidebar.
-
-```tsx showLineNumbers
-<Sidebar>
-  <SidebarHeader />
-  <SidebarContent>
-    <SidebarGroup />
-  </SidebarContent>
-  <SidebarFooter />
-  <SidebarRail />
-</Sidebar>
-```
-
-## Controlled Sidebar
-
-Use the `open` and `onOpenChange` props to control the sidebar.
-
-```tsx showLineNumbers
-export function AppSidebar() {
-  const [open, setOpen] = React.useState(false)
-
-  return (
-    <SidebarProvider open={open} onOpenChange={setOpen}>
-      <Sidebar />
-    </SidebarProvider>
-  )
-}
-```
-
-## Theming
-
-We use the following CSS variables to theme the sidebar.
-
-```css
-@layer base {
-  :root {
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 0 0% 98%;
-    --sidebar-primary-foreground: 240 5.9% 10%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-}
-```
-
-## Styling
-
-Here are some tips for styling the sidebar based on different states.
-
-```tsx
-<Sidebar collapsible="icon">
-  <SidebarContent>
-    <SidebarGroup className="group-data-[collapsible=icon]:hidden" />
-  </SidebarContent>
-</Sidebar>
-```
-
-```tsx
-<SidebarMenuItem>
-  <SidebarMenuButton />
-  <SidebarMenuAction className="peer-data-[active=true]/menu-button:opacity-100" />
-</SidebarMenuItem>
-```
-
-## RTL
-
-To enable RTL support in shadcn/ui, see the [RTL configuration guide](/docs/rtl).
-
-{/* prettier-ignore */}
-<Button asChild size="sm" className="mt-6">
-  <a href="/view/base-nova/sidebar-rtl" target="_blank">View RTL Sidebar <ExternalLinkIcon /></a>
-</Button>
-
-## Changelog
-
-### RTL Support
-
-If you're upgrading from a previous version of the `Sidebar` component, you'll need to apply the following updates to add RTL support:
-
-<Steps>
-
-<Step>Add `dir` prop to Sidebar component.</Step>
-
-Add `dir` to the destructured props and pass it to `SheetContent` for mobile:
-
-```diff
-  function Sidebar({
-    side = "left",
-    variant = "sidebar",
-    collapsible = "offcanvas",
-    className,
-    children,
-+   dir,
-    ...props
-  }: React.ComponentProps<"div"> & {
-    side?: "left" | "right"
-    variant?: "sidebar" | "floating" | "inset"
-    collapsible?: "offcanvas" | "icon" | "none"
-  }) {
-```
-
-Then pass it to `SheetContent` in the mobile view:
-
-```diff
-  <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
-    <SheetContent
-+     dir={dir}
-      data-sidebar="sidebar"
-      data-slot="sidebar"
-      data-mobile="true"
-```
-
-<Step>Add `data-side` attribute to sidebar container.</Step>
-
-Add `data-side={side}` to the sidebar container element:
-
-```diff
-  <div
-    data-slot="sidebar-container"
-+   data-side={side}
-    className={cn(
-```
-
-<Step>Update sidebar container positioning classes.</Step>
-
-Replace JavaScript ternary conditional classes with CSS data attribute selectors:
-
-```diff
-  className={cn(
--   "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
--   side === "left"
--     ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
--     : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
-+   "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex data-[side=left]:left-0 data-[side=right]:right-0 data-[side=left]:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] data-[side=right]:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
-```
-
-<Step>Update SidebarRail positioning classes.</Step>
-
-Update the `SidebarRail` component to use physical positioning for the rail:
-
-```diff
-  className={cn(
--   "hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-end-4 group-data-[side=right]:start-0 after:absolute after:inset-y-0 after:start-1/2 after:w-[2px] sm:flex",
-+   "hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 ltr:-translate-x-1/2 rtl:-translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:start-1/2 after:w-[2px] sm:flex",
-```
-
-<Step>Add RTL flip to SidebarTrigger icon.</Step>
-
-Add `className="rtl:rotate-180"` to the icon in `SidebarTrigger` to flip it in RTL mode:
-
-```diff
-  <Button ...>
--   <PanelLeftIcon />
-+   <PanelLeftIcon className="rtl:rotate-180" />
-    <span className="sr-only">Toggle Sidebar</span>
-  </Button>
-```
-
-</Steps>
-
-After applying these changes, you can use the `dir` prop to set the direction:
-
-```tsx
-<Sidebar dir="rtl" side="right">
-  {/* ... */}
-</Sidebar>
-```
-
-The sidebar will correctly position itself and handle interactions in both LTR and RTL layouts.
 
 - travaille dans le worktree de V1-vision et fait appele au agent pour le developper ment il doivent travailler dans leur worktree 
 - quant tu lie une rules mentionne la rule que tu as lu et tu doit utilise agent pour les tache si - tu remarque qu'une tache correspons a l'intervention d'in agent fait appel a lui
 - installe le skill de schadcn que le disgner utilisera npx skills add shadcn/ui
+- le layout ne doit pas etre sur la page de connection retire le et verifie le parcour d'inscription 
+- verifie les diff et analise le worktree de render et supprime le puise merger sa branche a dev 
+- l'authentification ne fonctionne pas encore correctement les , ajout un eyes dans l'ecriture de mot de passe et met a jour les rules et docs authentification 
+creer un worktree pour ces correction
+- assuse toi que la verification de mail se fait avec le mail de neon pour le moment meme pour le dev 
+termine avec les taches de la v1 
+- respecte le token design 
+- si tu pense qu'une rules doit etre creer creer la 
+- fait des petit commit de chaque worktree
+- utilise les skill dans chaque worktree et pour shadcn 
+- merge chaque branche de chaque worktree sur le dev 
+- configure npx drizzle-kit studio
+- mettre a jour la todo 
+- assure toi qu'aucun cles est du cote client 
+- pour les post assure toi de pouvoir ajouter des commentaire et de pouvoir ajouter un commentaire a un commentaire met ajoure les fichier de feature dans la docs 
+- tout les fontionnalité qui ne sont pas preciser dans le dossier de @docs/features doivent etre dans le @docs/backlog.md pour etre examiner apres 
+- utilise le mcp de neon pour verifie le storage verifie l'upload des images de projet et dit moi ou en sont les les fontionnaliter de publication et le feed 
+- donne moi la commande pour lancer drizzle studion 
+- utilise ce fichier pour la suite des fonctionnalite @docs/engineering-principles.md
+- pour les posts au format video @open-decisions.md lie la partie de fil libre 
+- assure toi que graphql est utiliser pour les posts 
+- assure toi que le fil libre est developper si tu as des question pose le moi 
+- dit moi comment avoir le env restant 
+- voici le code de configuration du storage neon : import "dotenv/config";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+const s3 = new S3Client({ forcePathStyle: true });
+const bucket = "assets";
+const key = "uploads/file.txt";
+
+await s3.send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: "Hello World!" }));
+
+const url = await getSignedUrl(s3, new GetObjectCommand({ Bucket: bucket, Key: key }), { expiresIn: 3600 });
+console.log(`[view] ${url}`);
+
+
+npm i @aws-sdk/client-s3 @aws-sdk/s3-request-presigner dotenv
+
+- termine avec la todo de storage 
+- ne touche pas encore a la V1.5
+- explique moi ca et corrige l'erreur creer un rules WIP utilisateur
+- utilise le bucket profile pour les images de profile , et le bucket projet pour les images de projet 
