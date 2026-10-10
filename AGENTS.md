@@ -34,7 +34,7 @@ Détails : docs/architecture.md, docs/base-de-donnees.md, docs/deploiement.md.
 - Petits commits ; le projet doit fonctionner à chaque commit.
 - Ne jamais fusionner dans `main` sans mon accord. Ne jamais déployer depuis un worktree de tâche.
 - Créer un worktree à la main : `git worktree add ../reseau-social-<tache> -b <tache>`
-- Supprimer après fusion : `git worktree remove ../reseau-social-<tache>` puis `git branch -d <tache>`
+- Supprimer après fusion : `git worktree remove ../reseau-social-<tache>` — le **worktree seulement**, ne **pas** supprimer la branche.
 
 ## Définition de "terminé"
 Tests, lint et build passent, tout est commité, les règles de sécurité sont respectées.
@@ -149,7 +149,7 @@ Le sidebar remplace la top bar sur les pages d'auth et les pages protégées.
 - Travailler dans le worktree de `v1-vision`.
 - Les agents doivent travailler dans leur propre worktree.
 - Créer un worktree : `git worktree add ../reseau-social-<tache> -b <tache>`
-- Supprimer après fusion : `git worktree remove ../reseau-social-<tache>` puis `git branch -d <tache>`
+- Supprimer après fusion : `git worktree remove ../reseau-social-<tache>` — le **worktree seulement**, ne **pas** supprimer la branche.
 # Réseau social modulable
 
 Réseau social ouvert à une communauté curieuse. Premier profil ciblé : étudiant
@@ -186,7 +186,7 @@ Détails : docs/architecture.md, docs/base-de-donnees.md, docs/deploiement.md.
 - Petits commits ; le projet doit fonctionner à chaque commit.
 - Ne jamais fusionner dans `main` sans mon accord. Ne jamais déployer depuis un worktree de tâche.
 - Créer un worktree à la main : `git worktree add ../reseau-social-<tache> -b <tache>`
-- Supprimer après fusion : `git worktree remove ../reseau-social-<tache>` puis `git branch -d <tache>`
+- Supprimer après fusion : `git worktree remove ../reseau-social-<tache>` — le **worktree seulement**, ne **pas** supprimer la branche.
 
 ## Définition de "terminé"
 Tests, lint et build passent, tout est commité, les règles de sécurité sont respectées.
@@ -446,3 +446,4 @@ npm i @aws-sdk/client-s3 @aws-sdk/s3-request-presigner dotenv
 - ne touche pas encore a la V1.5
 - explique moi ca et corrige l'erreur creer un rules WIP utilisateur
 - utilise le bucket profile pour les images de profile , et le bucket projet pour les images de projet 
+- corrige les fichiers qui dise de surpprime la branche du worktree, il faut juste supprimer le worketree creer pas la branche 

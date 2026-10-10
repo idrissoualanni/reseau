@@ -9,4 +9,4 @@ Miroir concis de `.claude/rules/worktrees.md` (source autoritaire).
 - `.env.local` copié selon `.worktreeinclude`, jamais committé.
 - Typecheck dans un worktree vierge : `next typegen` PUIS `tsc --noEmit`.
 - Build local sur worktree jonctionné : `next build --webpack` (Turbopack refuse une jonction `node_modules`).
-- Suppression après fusion : `git worktree remove` puis `git branch -d`.
+- Suppression après fusion : `git worktree remove` — le worktree seulement, ne **pas** supprimer la branche.

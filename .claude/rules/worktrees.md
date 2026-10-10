@@ -20,4 +20,4 @@ description: Worktrees git + jonction node_modules sur Windows. À lire avant de
 - Typecheck dans un arbre vierge : `next typegen` PUIS `tsc --noEmit` (les types `.next/types` manquent sinon — voir `nextjs.md`).
 - Build : `next build` (Turbopack) échoue quand `node_modules` est une jonction (cible hors racine du worktree). En local : `next build --webpack`. En CI (Render) `node_modules` est réel → Turbopack OK.
 - Lint/test/build : autorisés depuis le worktree via le `node_modules` partagé.
-- Suppression après fusion : `git worktree remove <chemin>` puis `git branch -d <tache>`.
+- Suppression après fusion : `git worktree remove <chemin>` — le worktree seulement, ne **pas** supprimer la branche.
