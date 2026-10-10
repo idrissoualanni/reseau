@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Compass, FolderKanban, Layers, LogOut, UserRound } from "lucide-react";
+import { ChevronsUpDown, LogOut, UserRound } from "lucide-react";
+import { NAV_ITEMS } from "@/components/navigation";
 import { signOutAction } from "@/lib/actions/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar } from "@/components/avatar";
@@ -17,20 +18,29 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
 } from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-const NAV_ITEMS = [
-  { href: "/", label: "Projets", icon: Layers },
-  { href: "/me/projects", label: "Mes projets", icon: FolderKanban },
-  { href: "/search", label: "Recherche", icon: Compass },
-  { href: "/me/profile", label: "Mon profil", icon: UserRound },
-];
+export type SidebarUser = {
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  email?: string;
+};
 
-export function AppSidebar() {
+export function AppSidebar({ user }: { user: SidebarUser | null }) {
   const pathname = usePathname();
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2">
           <Link href="/" className="text-foreground text-base font-semibold tracking-tight">
@@ -53,6 +63,7 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       asChild
                       isActive={active}
+                      tooltip={label}
                       aria-current={active ? "page" : undefined}
                     >
                       <Link href={href}>
@@ -70,21 +81,42 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <form action={signOutAction}>
-                <button type="submit" className="flex w-full items-center gap-2">
-                  <LogOut />
-                  <span>Se déconnecter</span>
-                </button>
-              </form>
-            </SidebarMenuButton>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton tooltip={user?.displayName ?? "Membre"} className="data-[state=open]:bg-sidebar-accent">
+                  <Avatar name={user?.displayName ?? "Membre"} src={user?.avatarUrl ?? null} size="md" className="size-7 text-xs" />
+                  <span className="flex min-w-0 flex-1 flex-col text-left">
+                    <span className="truncate text-sm font-medium">{user?.displayName ?? "Membre"}</span>
+                    {user?.email ? (
+                      <span className="text-muted-foreground truncate text-xs">{user.email}</span>
+                    ) : null}
+                  </span>
+                  <ChevronsUpDown className="text-muted-foreground ml-auto size-4" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-(--radix-dropdown-menu-trigger-width) min-w-56">
+                <DropdownMenuLabel className="truncate">{user?.email ?? user?.displayName ?? "Membre"}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href={user ? `/u/${user.username}` : "/me/profile"}>
+                    <UserRound />
+                    Mon profil
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem variant="destructive" asChild>
+                  <form action={signOutAction}>
+                    <button type="submit" className="flex w-full items-center gap-2">
+                      <LogOut />
+                      Se déconnecter
+                    </button>
+                  </form>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
-        <div className="flex items-center gap-2 px-2 py-2">
-          <Avatar name="Membre" size="md" />
-          <span className="text-muted-foreground text-xs">Connecté</span>
-        </div>
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   );
 }

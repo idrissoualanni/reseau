@@ -1,12 +1,28 @@
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar, type SidebarUser } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { getSession } from "@/lib/auth";
+import { getOwnProfile } from "@/lib/profile";
+import { getPublicUrl } from "@/lib/storage";
 
 // Coquille de l'application connectée : sidebar persistante + contenu.
 // Les pages d'auth (groupe `(auth)`) n'en héritent pas.
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+// L'utilisateur est chargé côté serveur (cookies) et passé au sidebar.
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const session = await getSession();
+  const profile = session?.user ? await getOwnProfile(session.user.id) : null;
+
+  const user: SidebarUser | null = profile
+    ? {
+        username: profile.username,
+        displayName: profile.displayName,
+        avatarUrl: profile.avatarKey ? getPublicUrl(profile.avatarKey) : null,
+        email: session?.user?.email,
+      }
+    : null;
+
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar user={user} />
       <SidebarInset>
         <div className="border-border bg-background/80 sticky top-0 z-30 flex h-12 items-center border-b px-4 backdrop-blur md:hidden">
           <SidebarTrigger />
