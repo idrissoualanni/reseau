@@ -8,15 +8,21 @@
 
 ## Parcours
 1. Arrivée depuis la navigation (« Mon profil ») ou après l'onboarding → 2. en-tête du
-   profil (avatar/initiale, nom affiché, `@username`) → 3. formulaire d'identité →
+   profil (avatar/initiale, nom affiché, `@username`) → 3. formulaire d'identité → 
    4. section « Compétences » (ajout avec suggestions, liste de badges, suppression) →
    5. sortie : le profil public `/u/[username]` (F08, lot ultérieur).
 
+> **F13** — section « Photo de profil » (au-dessus d'« Informations ») : avatar affiché,
+> bouton « Changer » (choix d'image, upload présigné) et « Retirer » si une photo existe.
+> Une image choisie s'affiche immédiatement (aperçu local) puis est confirmée par
+> rafraîchissement de la page. Formats jpeg/png/webp/gif, ≤ 5 Mo.
+
 ## Contenu et hiérarchie
-1. En-tête : avatar (initiale), nom affiché (`h1`), `@username`.
-2. **Informations** — nom d'utilisateur en lecture seule (non modifiable), nom affiché,
+1. En-tête : avatar (image si présente, sinon initiale), nom affiché (`h1`), `@username`.
+2. **Photo de profil** (F13) — `AvatarUploader` : avatar, « Changer », « Retirer ».
+3. **Informations** — nom d'utilisateur en lecture seule (non modifiable), nom affiché,
    bio, école, filière ; bouton « Enregistrer » ; message de succès après enregistrement.
-3. **Compétences** — champ d'ajout avec autocomplétion sur le référentiel, compteur
+4. **Compétences** — champ d'ajout avec autocomplétion sur le référentiel, compteur
    `n/30`, liste de badges (niveau `declared` par défaut, `demonstrated` dès qu'un projet
    publié la porte — F06/F05, lot ultérieur), suppression par badge.
 
@@ -45,8 +51,8 @@ par un bouton nommé (« Retirer React »), niveau de preuve porté par une icô
 lu par le lecteur d'écran (jamais la couleur seule), focus visible, cibles ≥ 44 px.
 
 ## Composants utilisés
-`PageShell`, `Avatar`, `FormField`, `TextareaField`, `SkillBadge`, `SkillsField`,
-`Button`, `Card`, `CardContent`, `EmptyState` (liste vide).
+`PageShell`, `Avatar`, `AvatarUploader`, `FormField`, `TextareaField`, `SkillBadge`,
+`SkillsField`, `Button`, `Card`, `CardContent`, `EmptyState` (liste vide).
 **Ajoutés au design system (Lot 2)** : `Avatar`, `SkillBadge`, `SkillsField`,
 `Textarea`, `TextareaField`, `UsernameField`.
 

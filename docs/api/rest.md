@@ -35,14 +35,21 @@ jeton de session.
 | GET | `/api/skills` | `searchSkillCatalog` | `?q=&limit=` | `{items}` | 200 |
 | GET | `/api/profiles/username-available` | `isUsernameAvailable` | `?u=` | `{available}` | 200 |
 | ALL | `/api/auth/[...path]` | handler Neon Auth | — | — | — |
-| POST | `/api/uploads/presign` | `presignPostImageUpload` | `presignPostImageSchema` | `{uploadUrl,key,expiresIn}` | 200 |
+| POST | `/api/uploads/presign` | `presignPostImageUpload` / `presignAvatarUpload` | `presignPostImageSchema` \| `presignAvatarSchema` | `{uploadUrl,key,expiresIn}` | 200 |
 
-`POST /api/uploads/presign` (F12 — images de posts) : JSON
-`{kind:"post-image", contentType, size}` (image jpeg/png/webp/gif, ≤ 10 Mo).
-Réponse : URL S3 présignée (PUT 15 min) + `key` `posts/{profileId}/{uuid}.{ext}`.
-Le client PUT le binaire directement sur `uploadUrl` — le contenu ne transite
-jamais par l'API applicative ; `key` est ensuite transmis à `createPost`
-(imageKey) et exposé en lecture uniquement sous forme d'`imageUrl`.
+`POST /api/uploads/presign` (F12 posts, F13 avatar) : union discriminée sur `kind`.
+
+- `{kind:"post-image", contentType, size}` — image jpeg/png/webp/gif, ≤ 10 Mo.
+  Réponse : URL S3 présignée (PUT 15 min) + `key` `posts/{profileId}/{uuid}.{ext}`.
+  Le client PUT le binaire directement sur `uploadUrl` — le contenu ne transite
+  jamais par l'API applicative ; `key` est ensuite transmis à `createPost`
+  (imageKey) et exposé en lecture uniquement sous forme d'`imageUrl`.
+- `{kind:"profile-avatar", contentType, size}` — image jpeg/png/webp/gif, ≤ 5 Mo.
+  Réponse : `key` `profiles/{profileId}/{uuid}.{ext}` (bucket `profile`). La clé est
+  ensuite transmise à `updateAvatarAction` (F13) ; le profil n'expose que `avatarUrl`.
+
+`avatarKey` reste **interne au serveur** : seules les vues publiques (`avatarUrl`,
+`imageUrl`) sortent (règles api-rest §10, api-graphql §12).
 
 ## Reste à faire (lots ultérieurs)
 

@@ -1,6 +1,6 @@
 # TODO — actions différées à ne pas oublier
 
-> Fichier de rappel des actions volontairement reportées. Mis à jour le 2026-10-09.
+> Fichier de rappel des actions volontairement reportées. Mis à jour le 2026-10-10.
 > Quand une ligne est faite, la retirer d'ici ; l'historique reste dans `CHANGELOG.md` et
 > `docs/prompt-loop/journal.md`.
 
@@ -31,8 +31,10 @@
   réellement déployé (sondes de vérification), pas seulement le statut du build.
 
 ## Profil (F03/F04/F10) — reporté du Lot 2
-- [ ] **Avatar** : affichage + upload présigné, une fois le stockage tranché (F06). En V1
-  le profil naît avec l'initiale du nom affiché (`Avatar`, repli initiales).
+- [x] **Avatar** : **fait (2026-10-10)** — upload présigné (bucket `profile`, clé
+  `profiles/{profileId}/{uuid}.{ext}`, ≤ 5 Mo) + appartenance + `avatarUrl` exposé
+  partout (profil, fil, commentaires, recherche, cartes de projets). Voir
+  `docs/features/F13-avatar-profil.md`. (Repli initiales conservé.)
 - [x] **Compétences pendant l'onboarding** : **décidé (2026-10-09)** — pas d'étape
   compétences à l'onboarding. Les compétences se gèrent sur `/me/profile` (le profil doit
   exister avant `user_skills`). L'étape « pendant l'onboarding » de F04 est différée.
@@ -51,8 +53,11 @@
 - [x] **Bucket tranché** : **fait (2026-10-10)** — images de posts : bucket `post` en
   `public_read` ; clé `posts/{profileId}/{uuid}.{ext}` ; presign PUT 15 min ;
   `imageUrl` exposé (jamais `imageKey`). F12 terminé (voir `docs/features/F12-posts-images.md`).
-- [ ] **Avatars / couvertures** : brancher l'upload présigné une fois de plus (bucket
-  `profile`, même mécanisme que F12), Lot suivant (F14+).
+- [x] **Avatars** : **fait (2026-10-10)** — bucket `profile`, clé `profiles/{profileId}/{uuid}.{ext}`,
+  ≤ 5 Mo, F13 (voir `docs/features/F13-avatar-profil.md`).
+- [ ] **Couvertures de projets** : brancher l'upload présigné (bucket `projet`, décision
+  AGENTS.md 2026-10-10), Lot suivant. Le bucket `projet` reste **à créer** sur Neon
+  (`public_read`) ; `storage.ts` route déjà les clés `projects/` vers ce bucket.
 
 ## Designer / UI
 - [ ] **Sidebar** : ajouter une **icône de repli** (collapse) et un **dropdown** utilisateur
