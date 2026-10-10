@@ -17,6 +17,7 @@ description: Pièges Next.js 16 / React 19 vérifiés sur ce projet
   Vérifié le 2026-10-09 sur `/`, `/onboarding/profile` et `/me/profile`. Le SDK Neon Auth
   journalise un `Cookie validation error` pendant la passe de prerender, mais le build
   réussit une fois `instant = false` posé.
+- **Typecheck dans un arbre vierge (worktree)** : les types générés par Next (routes typées, `LayoutProps`) vivent dans `.next/types`. Sans build/typegen, `tsc` seul échoue. Toujours : `next typegen` PUIS `tsc --noEmit` (ou `next build`).
 - **`middleware.ts` est déprécié en Next 16** : le fichier s'appelle désormais
   `src/proxy.ts` (même signature `NextRequest` → `NextResponse`, même `config.matcher`).
   Un projet neuf ne doit pas utiliser `middleware.ts`.

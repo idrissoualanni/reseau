@@ -5,7 +5,14 @@ autoritaire reste `.claude/rules/` (également importée par `CLAUDE.md`).
 
 - `authentification.md` — parcours Neon Auth : envoi OTP, message neutre,
   bouton « œil », layout auth sans sidebar.
-- Le reste : `.claude/rules/` (`api-rest.md`, `api-graphql.md`, `architecture.md`,
+- `api-graphql.md` — GraphQL (Yoga + Pothos) : périmètre ADR 0002, scalars Pothos,
+  limites de sécurité, DataLoaders (miroir de `.claude/rules/api-graphql.md`).
+- `worktrees.md` — jonction node_modules via PowerShell, jamais `mklink /J` depuis
+  Git Bash, jamais `npm install` dans un worktree jonctionné
+  (miroir de `.claude/rules/worktrees.md`).
+- `wip-utilisateur.md` — merger sur `dev` avec du WIP non commité : stash -u, merge,
+  pop, ne jamais committer le WIP utilisateur (miroir de `.claude/rules/wip-utilisateur.md`).
+- Le reste : `.claude/rules/` (`api-rest.md`, `architecture.md`,
   `base-de-donnees.md`, `chiffrement-e2e.md`, `conventions.md`, `database.md`,
   `devops-render.md`, `donnees-personnelles.md`, `frontend-ux.md`, `git-workflow.md`,
   `hooks.md`, `nextjs.md`, `prompt-loop.md`, `securite`/`security.md`, `testing.md`,

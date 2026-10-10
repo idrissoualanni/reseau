@@ -1,7 +1,0 @@
-- Schéma d'abord : on définit le schéma avant les résolveurs.
-- Toute requête liste (fil, membres, messages) est paginée par curseur.
-- Pas de problème N+1 : batching (type DataLoader) dans les résolveurs.
-- Chaque résolveur vérifie l'autorisation, jamais seulement l'authentification.
-- Les erreurs sont typées et ne révèlent aucun détail interne.
-- Les subscriptions servent aux notifications temps réel ; le reste passe par queries/mutations.
-- Pas de REST sauf cas justifié et documenté (webhook externe, upload de fichiers).

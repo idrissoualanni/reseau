@@ -147,6 +147,7 @@ Les cas d'usage lèvent des `AppError` typées. `errors.ts` les convertit en `Gr
 - Une mutation prend **un seul argument** `input: XxxInput` (jamais d'arguments en vrac) et renvoie l'objet modifié (ou `{ id }` pour une suppression).
 - Types en PascalCase, champs en camelCase, enums en `SCREAMING_SNAKE_CASE`. Chaque champ non évident porte une `description`.
 - Dates en `DateTime` ISO 8601 UTC.
+- **Scalars Pothos** : tout scalar personnalisé (ex. `DateTime`) est déclaré AVANT usage dans le générique du `SchemaBuilder` (`Scalars: { DateTime: { Input: Date; Output: Date } }`). Sinon TS rejette `type: 'DateTime'` dans les champs et `instanceof Date` dans les résolveurs.
 
 ## 12. Images et fichiers
 

@@ -12,6 +12,7 @@ paths: ["packages/db/**", "apps/web/src/modules/*/data/**"]
 - Tables : `uuid` PK, `created_at`/`updated_at timestamptz`, clés étrangères avec `ON DELETE` explicite, contraintes `CHECK` pour les bornes (longueurs, énums).
 - Une table future n'est **pas** créée avant sa version (`docs/data-model.md`).
 - Requêtes : sélectionner les colonnes nécessaires, pagination **par curseur**, jamais `OFFSET` sur les listes publiques, jointures plutôt que boucles (pas de N+1).
+- Pagination par tuple curseur : comparer avec des génériques `TSort extends AnyColumn` / `TId extends AnyColumn` (pour `lt`/`eq`), jamais un type union du genre `SQL | PgColumn` dans la naissance du tuple.
 - Toute requête de recherche/liste livre son `EXPLAIN` dans la PR si elle manipule > 1 000 lignes en test.
 - Transactions pour toute opération multi-tables (publier + recalcul de preuve).
 - Neon : connexion poolée au runtime, directe pour les migrations ; branches Neon `dev` et `main` séparées.
