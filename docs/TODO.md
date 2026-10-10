@@ -44,13 +44,19 @@
   `src/lib/api/security.ts`, tests `security.test.ts`. En prod multi-instances,
   remplacer par Redis (Render KV).
 
-## Stockage / images (F06)
+## Stockage / images (F06/F12)
 - [x] **Convention** : **décidé (2026-10-09)** — Neon Object Storage (S3-compatible).
   Les variables `AWS_*` (`.env.local`) sont la convention réelle ; `.env.example`
   doit être aligné (`STORAGE_*` → `AWS_*`). Voir `docs/api/rest.md` § uploads.
-- [ ] **Trancher le bucket** : recommandation — bucket **privé** `asset` avec URLs
-  présignées (`POST /api/uploads/presign`). Pas de bucket public : les images sont
-  personnelles (avatars, couvertures). Décision à confirmer au Lot 3 (F06).
+- [x] **Bucket tranché** : **fait (2026-10-10)** — images de posts : bucket `post` en
+  `public_read` ; clé `posts/{profileId}/{uuid}.{ext}` ; presign PUT 15 min ;
+  `imageUrl` exposé (jamais `imageKey`). F12 terminé (voir `docs/features/F12-posts-images.md`).
+- [ ] **Avatars / couvertures** : brancher l'upload présigné une fois de plus (bucket
+  `profile`, même mécanisme que F12), Lot suivant (F14+).
+
+## Designer / UI
+- [ ] **Sidebar** : ajouter une **icône de repli** (collapse) et un **dropdown** utilisateur
+  dans le sidebar shadcn/ui (consigne AGENTS.md 2026-10-10).
 
 ## Clés encore vides (lots ultérieurs — non nécessaires à la V1)
 - `NEXT_PUBLIC_GRAPHQL_URL` — Lot 3+ : `${NEXT_PUBLIC_APP_URL}/api/graphql`.

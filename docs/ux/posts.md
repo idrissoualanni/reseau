@@ -1,7 +1,7 @@
 # Fiche UX — Posts et commentaires
 
-- **Route** : `/posts` (fil) · `/posts/[id]` (détail) · **Fonctionnalité(s)** : F11 · **Version** : V1
-- **Utilisateur et objectif** : un membre connecté publie une activité et en discute avec la communauté.
+- **Route** : `/posts` (fil) · `/posts/[id]` (détail) · **Fonctionnalité(s)** : F11 · F12 · **Version** : V1
+- **Utilisateur et objectif** : un membre connecté publie une activité (avec une image optionnelle) et en discute avec la communauté.
 - **Action principale** : publier un post (ou commenter un post existant).
 
 ## Parcours
@@ -9,9 +9,9 @@
 
 ## Contenu et hiérarchie
 1. **Titre** : « Posts » (h1).
-2. **Champ de publication** : textarea + bouton « Publier » (texte brut, max 1000 caractères).
-3. **Fil de posts** (plus récents d'abord) : auteur (avatar + nom, lien profil), texte, date, nombre de commentaires, lien vers le détail.
-4. **Détail d'un post** : texte complet + liste de commentaires.
+2. **Champ de publication** : textarea + bouton « Publier » (texte brut, max 1000 caractères) + bouton « Ajouter une image » (F12 : 1 image jpeg/png/webp/gif ≤ 10 Mo, aperçu avec retrait avant publication).
+3. **Fil de posts** (plus récents d'abord) : auteur (avatar + nom, lien profil), texte, image (F12, lien vers le détail), date, nombre de commentaires, lien vers le détail.
+4. **Détail d'un post** : texte complet + image (F12) + liste de commentaires.
 5. **Commentaires** : auteur, texte, date, bouton « Répondre ». Les réponses sont indentées (max 3 niveaux visuels, puis « voir plus »).
 6. **Actions** : l'auteur d'un post peut le supprimer ; l'auteur d'un commentaire peut le supprimer (ses réponses sont retirées en cascade).
 

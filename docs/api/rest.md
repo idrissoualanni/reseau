@@ -35,10 +35,17 @@ jeton de session.
 | GET | `/api/skills` | `searchSkillCatalog` | `?q=&limit=` | `{items}` | 200 |
 | GET | `/api/profiles/username-available` | `isUsernameAvailable` | `?u=` | `{available}` | 200 |
 | ALL | `/api/auth/[...path]` | handler Neon Auth | — | — | — |
+| POST | `/api/uploads/presign` | `presignPostImageUpload` | `presignPostImageSchema` | `{uploadUrl,key,expiresIn}` | 200 |
+
+`POST /api/uploads/presign` (F12 — images de posts) : JSON
+`{kind:"post-image", contentType, size}` (image jpeg/png/webp/gif, ≤ 10 Mo).
+Réponse : URL S3 présignée (PUT 15 min) + `key` `posts/{profileId}/{uuid}.{ext}`.
+Le client PUT le binaire directement sur `uploadUrl` — le contenu ne transite
+jamais par l'API applicative ; `key` est ensuite transmis à `createPost`
+(imageKey) et exposé en lecture uniquement sous forme d'`imageUrl`.
 
 ## Reste à faire (lots ultérieurs)
 
-- `POST /api/uploads/presign` — F06 (stockage non tranché).
 - `GET /api/profiles/{username}` et `GET /api/search/students` — F08/F09 (Lot 4).
 - **Anti-CSRF / limitation de débit** sur les mutations REST : le navigateur même-origine
   et les cookies `SameSite` couvrent une partie du risque ; vérifier l'en-tête `Origin`
