@@ -14,6 +14,9 @@ import Link from "next/link";
 // Fil des projets (F07) : page d'accueil accessible aux membres connectés.
 // Affiche uniquement les projets publiés (plus récents d'abord). Filtre
 // facultatif par compétence via `?skill=`. « Voir plus » côté client.
+// La session (cookies) est lue à chaque requête : on autorise explicitement
+// une route bloquante plutôt qu'un prerender partiel (cacheComponents).
+export const instant = false;
 export default async function Home({
   searchParams,
 }: {

@@ -11,7 +11,6 @@ import { Avatar } from "@/components/avatar";
 import { SkillBadge } from "@/components/skill-badge";
 import { Button } from "@/components/ui/button";
 import { ProjectCard } from "@/components/projects/project-card";
-import { NotFoundError } from "@/lib/errors";
 import type { Skill } from "@/lib/types";
 import type { ProfileSummaryRow } from "@/lib/repositories/profiles";
 
@@ -34,6 +33,7 @@ const toFeedProject = (project: ProjectEdge["node"]) => ({
 
 // Profil public F08 : affiche identité, compétences, projets publiés. Actions de
 // gestion uniquement sur le profil propre (@voir règle 4 F08).
+export const instant = false;
 export default async function PublicProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const session = await requireSession();
   const currentProfile = await getOwnProfile(session.user.id);
@@ -135,7 +135,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {projectEdges.map((edge) => (
-              <ProjectCard key={edge.cursor} project={toFeedProject(edge.node)} skills={edge.skills} author={author} />
+              <ProjectCard key={edge.cursor} project={toFeedProject(edge.node)} skills={edge.skills} author={edge.author} />
             ))}
           </div>
         )}

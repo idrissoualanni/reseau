@@ -14,6 +14,7 @@ import { NotFoundError } from "@/lib/errors";
 // Un brouillon non visible d'un tiers → 404. L'auteur voit le projet s'il
 // passe par la route visible (le cas d'usage filtre par visibilité). L'édition
 // utilise une route séparée (`/me/projects/[id]/edit`) pour les brouillons.
+export const instant = false;
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireSession();
   const profile = await getOwnProfile(session.user.id);

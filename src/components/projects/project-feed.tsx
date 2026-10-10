@@ -22,7 +22,7 @@ export function ProjectFeed({
   function handleMore() {
     if (pending || !page.hasNextPage || !page.endCursor) return;
     startTransition(async () => {
-      const next = await loadPublishedProjectsPage({ after: page.endCursor, skillSlug });
+      const next = await loadPublishedProjectsPage({ after: page.endCursor ?? undefined, skillSlug: skillSlug ?? undefined });
       setPage((prev) => ({
         edges: [...prev.edges, ...next.edges],
         hasNextPage: next.hasNextPage,
