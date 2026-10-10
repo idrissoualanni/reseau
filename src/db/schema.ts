@@ -9,6 +9,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
 // Modèle V1 — voir docs/data-model.md.
@@ -132,5 +133,54 @@ export const projectSkills = pgTable(
   (t) => [
     primaryKey({ columns: [t.projectId, t.skillId] }),
     index("project_skills_skill_idx").on(t.skillId),
+  ],
+);
+
+// Posts (activités) publiés par un membre (F11).
+export const posts = pgTable(
+  "posts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    index("posts_author_idx").on(t.authorId, t.createdAt.desc(), t.id.desc()),
+    check("posts_body_check", sql`char_length(${t.body}) between 1 and 5000`),
+  ],
+);
+
+// Commentaires et réponses (F11) : `parent_id` NULL = commentaire de post,
+// non-NULL = réponse à un commentaire (imbriquée, suppression en cascade).
+export const postComments = pgTable(
+  "post_comments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    postId: uuid("post_id")
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    parentId: uuid("parent_id").references((): AnyPgColumn => postComments.id, {
+      onDelete: "cascade",
+    }),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    primaryKey({ columns: [t.id] }),
+    index("post_comments_post_idx").on(t.postId, t.createdAt.desc(), t.id.desc()),
+    index("post_comments_parent_idx").on(t.parentId),
+    check("post_comments_body_check", sql`char_length(${t.body}) between 1 and 1000`),
   ],
 );
