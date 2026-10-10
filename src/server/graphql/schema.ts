@@ -4,6 +4,7 @@ import "@/server/graphql/types/connection";
 import "@/server/graphql/types/profile";
 import "@/server/graphql/types/skill";
 import "@/server/graphql/types/project";
+import "@/server/graphql/types/post";
 
 // Schéma exécutable construit à partir de tous les types enregistrés.
 export const schema = builder.toSchema();

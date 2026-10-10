@@ -39,6 +39,24 @@ export type Project = {
   updatedAt: Date;
 };
 
+export type Post = {
+  id: string;
+  authorId: string;
+  body: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type PostComment = {
+  id: string;
+  postId: string;
+  parentId: string | null;
+  authorId: string;
+  body: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 // Page par curseur opaque ; `nextCursor` nul signifie « fin de liste ».
 export type ProjectPage = {
   items: Project[];
