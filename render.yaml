@@ -1,6 +1,7 @@
 # Blueprint Render — projet "reseau". Valider : render blueprints validate
-# État MCP (2026-10-09) : stack Next.js racine (npm) ; base Neon (dev branch) ;
-# pas de Postgres Render ; Key-Value reseau-dev pour WebRTC V2 / stockage avatars.
+# État MCP (2026-10-10) : stack Next.js racine (npm) ; base Neon (branche dev) ;
+# pas de Postgres Render ; service web dev `reseau` (srv-db4ek92jnfac73b4uij0,
+# https://reseau-3tuk.onrender.com, région frankfurt) ; Key-Value pour WebRTC V2.
 # Voir docs/deploiement.md pour le workflow PR dev → main.
 projects:
   - name: reseau
@@ -8,10 +9,10 @@ projects:
       - name: dev
         services:
           - type: web
-            name: reseau-dev
+            name: reseau
             runtime: node
             repo: https://github.com/idrissoualanni/reseau
-            branch: dev          # branche `dev` à créer (workflow : PR dev → main)
+            branch: dev          # branche `dev` (workflow : PR dev → main)
             rootDir: .
             buildCommand: npm ci && npm run build
             startCommand: npm start
@@ -21,7 +22,7 @@ projects:
               - key: NODE_ENV
                 value: development
               - key: NEXT_PUBLIC_APP_URL
-                fromService: [{"name": "reseau-dev", "property": "publicUrl"}]
+                fromService: [{"name": "reseau", "property": "publicUrl"}]
               - key: NEON_BRANCH
                 value: dev
               # Secrets — jamais en clair, gérés via Dashboard Render (sync: false)
