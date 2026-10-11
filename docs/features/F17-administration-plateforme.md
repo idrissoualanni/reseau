@@ -18,6 +18,7 @@
 | `/admin/profiles` | **tout voir** : tous les profils (y compris sans contenu) |
 | `/admin/posts` | **tout voir** : tous les posts (auteur, date) |
 | `/admin/projects` | **tout voir** : tous les projets (brouillons inclus) |
+| `/admin/comptes` | comptes (e-mail, date, statut) + suppression — **dépend de l'API admin Neon Auth** |
 
 ## Règles métier
 
@@ -55,6 +56,18 @@
 - Garde unique : `requirePlatformAdmin(ctx)` ; aucune page/route admin sans elle.
 - Le lien de navigation « Admin » n'apparaît que si l'utilisateur est `platform_admin`
   (confort, **pas** la sécurité).
+- Lecture seule pour les vues « tout voir » ; le retrait de contenu relève de F20, la
+  suppression de compte ci-dessous.
+
+## Comptes (dépendance externe)
+
+La lecture des **informations de connexion** (e-mail, dates, sessions) et la **suppression
+d'un compte** passent par l'API d'administration **Neon Auth** (`admin/list-users`,
+`admin/remove-user`). Or cette API autorise selon le rôle `admin` **de Neon Auth**, distinct
+du `platform_admin` applicatif. Tant qu'aucun compte ne porte ce rôle (ou qu'aucune clé
+serveur n'est fournie), ces deux fonctions restent **bloquées** — voir `docs/TODO.md`
+(intervention utilisateur) et `docs/backlog.md`. La vue `/admin/profiles` couvre en attendant
+tout ce que notre base contient.
 
 ## Critères d'acceptation
 

@@ -1,7 +1,9 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   check,
   index,
+  jsonb,
   pgEnum,
   pgTable,
   primaryKey,
@@ -185,5 +187,158 @@ export const postComments = pgTable(
     index("post_comments_post_idx").on(t.postId, t.createdAt.desc(), t.id.desc()),
     index("post_comments_parent_idx").on(t.parentId),
     check("post_comments_body_check", sql`char_length(${t.body}) between 1 and 1000`),
+  ],
+);
+
+// ─── V1.5 — espaces, appartenances, administration (F14/F15/F16/F17) ─────────
+
+// Nature d'un espace : établissement, filière ou thème.
+export const spaceType = pgEnum("space_type", ["university", "department", "theme"]);
+
+// Visibilité d'un espace : public (tout connecté) ou privé (membres/admins).
+export const spaceVisibility = pgEnum("space_visibility", ["public", "private"]);
+
+// Méthodes d'accès d'un espace (ADR 0006). `email_domain` arrive en V2 (F29).
+export const spaceAccessKind = pgEnum("space_access_kind", [
+  "open",
+  "invite_code",
+  "invite_link",
+  "manual_approval",
+]);
+
+// Rôle porté par une appartenance.
+export const membershipRole = pgEnum("membership_role", ["member", "space_admin"]);
+
+// Niveau de vérification porté par l'appartenance, jamais par le compte.
+export const membershipVerification = pgEnum("membership_verification", [
+  "unverified",
+  "verified",
+]);
+
+// Action journalisée sur un espace (qui, quand, quelle méthode).
+export const spaceAccessAction = pgEnum("space_access_action", [
+  "join",
+  "request",
+  "approve",
+  "reject",
+  "revoke",
+  "invite",
+]);
+
+// Un espace : université, filière ou communauté thématique. `metadata` porte
+// toute donnée spécifique à un type (le cœur reste générique).
+export const spaces = pgTable(
+  "spaces",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    type: spaceType("type").notNull(),
+    visibility: spaceVisibility("visibility").notNull().default("public"),
+    metadata: jsonb("metadata")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    createdBy: uuid("created_by").references(() => profiles.id, { onDelete: "set null" }),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex("spaces_slug_uq").on(t.slug),
+    index("spaces_visibility_idx").on(t.visibility, t.createdAt.desc(), t.id.desc()),
+    check("spaces_slug_check", sql`${t.slug} ~ '^[a-z0-9-]{3,40}$'`),
+    check("spaces_name_check", sql`char_length(${t.name}) between 3 and 80`),
+    check(
+      "spaces_description_check",
+      sql`${t.description} is null or char_length(${t.description}) <= 1000`,
+    ),
+  ],
+);
+
+// Méthodes d'accès configurées sur un espace (une ligne par méthode).
+export const spaceAccessMethods = pgTable(
+  "space_access_methods",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    spaceId: uuid("space_id")
+      .notNull()
+      .references(() => spaces.id, { onDelete: "cascade" }),
+    method: spaceAccessKind("method").notNull(),
+    config: jsonb("config")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex("space_access_methods_space_method_uq").on(t.spaceId, t.method),
+    index("space_access_methods_space_idx").on(t.spaceId),
+  ],
+);
+
+// Appartenance d'un profil à un espace : rôle + niveau de vérification.
+export const memberships = pgTable(
+  "memberships",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    spaceId: uuid("space_id")
+      .notNull()
+      .references(() => spaces.id, { onDelete: "cascade" }),
+    profileId: uuid("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    role: membershipRole("role").notNull().default("member"),
+    verificationLevel: membershipVerification("verification_level")
+      .notNull()
+      .default("unverified"),
+    verifiedVia: spaceAccessKind("verified_via"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex("memberships_space_profile_uq").on(t.spaceId, t.profileId),
+    index("memberships_space_role_idx").on(t.spaceId, t.role),
+    index("memberships_profile_idx").on(t.profileId),
+  ],
+);
+
+// Admin plateforme : rôle applicatif global (F16). Ne dépend pas de Neon Auth.
+export const platformAdmins = pgTable("platform_admins", {
+  profileId: uuid("profile_id")
+    .primaryKey()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  grantedBy: uuid("granted_by").references(() => profiles.id, { onDelete: "set null" }),
+  grantedAt: timestamp("granted_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Journal d'accès à un espace (F15/F17) : lecture seule côté admin.
+export const spaceAccessLog = pgTable(
+  "space_access_log",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    spaceId: uuid("space_id")
+      .notNull()
+      .references(() => spaces.id, { onDelete: "cascade" }),
+    profileId: uuid("profile_id").references(() => profiles.id, { onDelete: "set null" }),
+    method: spaceAccessKind("method"),
+    action: spaceAccessAction("action").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("space_access_log_space_idx").on(t.spaceId, t.createdAt.desc(), t.id.desc()),
+    index("space_access_log_created_idx").on(t.createdAt.desc(), t.id.desc()),
   ],
 );
