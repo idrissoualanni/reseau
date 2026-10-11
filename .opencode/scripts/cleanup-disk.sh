@@ -19,6 +19,11 @@ if [ -d "$LOCALAPPDATA/Temp/node-compile-cache" ]; then
   rm -r "$LOCALAPPDATA/Temp/node-compile-cache" && echo "node-compile-cache supprimé"
 fi
 
+# 2b. Binaires Playwright (cache réinstallable via `npx playwright install`)
+if [ -d "$LOCALAPPDATA/ms-playwright" ]; then
+  rm -r "$LOCALAPPDATA/ms-playwright" 2>/dev/null && echo "ms-playwright supprimé"
+fi
+
 # 3. Fichiers temporaires racine du Temp (régénérables)
 find "$LOCALAPPDATA/Temp" -maxdepth 1 -type f \( -name '*.tmp' -o -name '*.cpuprofile' -o -name 'mat-debug-*.log' -o -name 'vscode-inno-updater-*.log' -o -name 'cv_debug.log' -o -name '.bun-*' -o -name '*.tmp.exe' -o -name '*.log' \) -delete 2>/dev/null || true
 
