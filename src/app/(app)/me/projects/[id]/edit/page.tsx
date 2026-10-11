@@ -4,6 +4,7 @@ import { requireSession } from "@/lib/auth";
 import { getOwnProfile } from "@/lib/profile";
 import { getOwnProject, getProjectSkills } from "@/lib/projects";
 import { NotFoundError } from "@/lib/errors";
+import { getPublicUrl } from "@/lib/storage";
 import { PageShell } from "@/components/page-shell";
 import { ProjectForm } from "@/components/projects/project-form";
 import type { Project, Skill } from "@/lib/types";
@@ -39,7 +40,12 @@ export default async function EditProjectPage({ params }: EditProjectPageProps) 
   return (
     <PageShell>
       <h1 className="mb-6 text-2xl font-semibold tracking-tight">Modifier le projet</h1>
-      <ProjectForm mode="edit" project={project} initialSkills={skills} />
+      <ProjectForm
+        mode="edit"
+        project={project}
+        initialSkills={skills}
+        coverUrl={project.coverKey ? getPublicUrl(project.coverKey) : null}
+      />
     </PageShell>
   );
 }
