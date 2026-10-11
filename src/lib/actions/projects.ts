@@ -48,6 +48,15 @@ function skillSlugs(formData: FormData): string[] {
   return formData.getAll("skillSlugs").map(String).filter((value) => value.length > 0);
 }
 
+// Couverture optionnelle : champ absent → undefined (aucun changement) ;
+// chaîne vide → null (suppression) ; sinon la clé (vérifiée par le cas d'usage).
+function coverKey(formData: FormData): string | null | undefined {
+  const raw = formData.get("coverKey");
+  if (raw === null) return undefined;
+  const value = String(raw);
+  return value.length > 0 ? value : null;
+}
+
 function toErrorState(error: unknown): ProjectFormState {
   if (error instanceof AppError) {
     if (error.code === "UNAUTHENTICATED") {
@@ -76,6 +85,7 @@ export async function createProjectAction(
     title: text(formData, "title"),
     body: text(formData, "body"),
     skillSlugs: skillSlugs(formData),
+    coverKey: coverKey(formData),
   });
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
 
@@ -104,6 +114,7 @@ export async function updateProjectAction(
     title: text(formData, "title"),
     body: text(formData, "body"),
     skillSlugs: skillSlugs(formData),
+    coverKey: coverKey(formData),
   });
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
 
