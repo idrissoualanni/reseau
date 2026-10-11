@@ -12,7 +12,7 @@
 | `/admin` | tableau de bord : compteurs (espaces, admins, contenus, accès récents) |
 | `/admin/spaces` | liste, création, édition, archivage des espaces |
 | `/admin/spaces/new` | formulaire de création |
-| `/admin/spaces/[id]` | édition + méthodes d'accès (F15, lecture) |
+| `/admin/spaces/[id]` | édition d'un espace (nom, description, visibilité) |
 | `/admin/admins` | nommer / retirer des admins plateforme |
 | `/admin/access-log` | journal d'accès (filtre par espace) |
 | `/admin/profiles` | **tout voir** : tous les profils (y compris sans contenu) |
@@ -27,7 +27,8 @@
 2. **L'admin plateforme voit tout** : profils, posts et projets, **brouillons inclus**, sans
    filtre de visibilité. Lecture seule dans cette livraison (retrait = F20 modération).
 3. Nommer un `space_admin` se fait depuis l'édition d'un espace (F15+).
-4. Le journal d'accès est **en lecture seule** et paginé par curseur.
+4. Le journal d'accès est **en lecture seule** et **borné** (`ADMIN_LIST_LIMIT = 200`) :
+   la console n'est pas publique, un curseur serait superflu.
 5. Un espace archivé reste administrable (restauration possible plus tard).
 
 ## API
@@ -41,10 +42,10 @@
 | `GET` | `/api/admin/admins` | liste des platform admins |
 | `POST` | `/api/admin/admins` | nommer |
 | `DELETE` | `/api/admin/admins/[profileId]` | retirer |
-| `GET` | `/api/admin/access-log` | journal (curseur) |
-| `GET` | `/api/admin/profiles` | tous les profils (curseur) |
-| `GET` | `/api/admin/posts` | tous les posts, brouillons inclus (curseur) |
-| `GET` | `/api/admin/projects` | tous les projets, brouillons inclus (curseur) |
+| `GET` | `/api/admin/access-log` | journal (liste bornée) |
+| `GET` | `/api/admin/profiles` | tous les profils (liste bornée) |
+| `GET` | `/api/admin/posts` | tous les posts, brouillons inclus (liste bornée) |
+| `GET` | `/api/admin/projects` | tous les projets, brouillons inclus (liste bornée) |
 
 ## Données
 
