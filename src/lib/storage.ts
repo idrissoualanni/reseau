@@ -93,3 +93,18 @@ export async function presignAvatarUpload(
   });
   return getSignedUrl(getS3(), command, { expiresIn });
 }
+
+// URL présignée PUT pour uploader une couverture de projet (F06). Le bucket
+// `projet` est public_read : lecture anonyme, écriture authentifiée présignée.
+export async function presignProjectCoverUpload(
+  key: string,
+  contentType: string,
+  expiresIn = 900,
+): Promise<string> {
+  const command = new PutObjectCommand({
+    Bucket: PROJECT_IMAGE_BUCKET,
+    Key: key,
+    ContentType: contentType,
+  });
+  return getSignedUrl(getS3(), command, { expiresIn });
+}

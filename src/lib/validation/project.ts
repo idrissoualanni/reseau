@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { normalizeSkillName } from "@/lib/validation/skills";
+import { imageContentTypeSchema, MAX_AVATAR_IMAGE_BYTES } from "@/lib/validation/image";
 
 // Schémas partagés du module projets (F05/F06). Les mêmes contraintes servent au
 // REST, au GraphQL et au formulaire client. `body` doit faire 1–5000 (contrainte
@@ -81,6 +82,22 @@ export const publishProjectSchema = z
   .strict();
 
 export const projectIdSchema = uuidSchema;
+
+// Demande d'URL présignée d'upload d'une couverture de projet (F06). Mêmes
+// contraintes d'image que l'avatar (5 Mo, whitelist) ; identité = session.
+export const presignProjectCoverSchema = z
+  .object({
+    kind: z.literal("project-cover"),
+    contentType: imageContentTypeSchema,
+    size: z
+      .number()
+      .int()
+      .min(1, "Fichier vide.")
+      .max(MAX_AVATAR_IMAGE_BYTES, "Image trop lourde (5 Mo maximum)."),
+  })
+  .strict();
+
+export type PresignProjectCoverInput = z.infer<typeof presignProjectCoverSchema>;
 
 export const listProjectsQuerySchema = z.object({
   first: z.coerce.number().int().min(1).max(50).default(20),

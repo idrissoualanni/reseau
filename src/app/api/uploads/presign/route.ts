@@ -9,9 +9,12 @@ import {
   postImagePrefix,
   presignAvatarUpload,
   presignPostImageUpload,
+  presignProjectCoverUpload,
+  projectCoverPrefix,
 } from "@/lib/storage";
 import { presignPostImageSchema } from "@/lib/validation/post";
 import { presignAvatarSchema } from "@/lib/validation/profile";
+import { presignProjectCoverSchema } from "@/lib/validation/project";
 import { imageExtension } from "@/lib/validation/image";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
@@ -20,11 +23,12 @@ const PRESIGN_EXPIRES_IN = 900; // 15 min, le temps de PUT depuis le navigateur
 const presignSchema = z.discriminatedUnion("kind", [
   presignPostImageSchema,
   presignAvatarSchema,
+  presignProjectCoverSchema,
 ]);
 
-// URL présignée d'upload d'image (F12 posts, F13 avatar, ADR 0004). Le
-// navigateur écrit ensuite directement dans le bucket Neon ; le contenu ne
-// passe jamais par cette API. L'identité vient de la session (api-rest §5).
+// URL présignée d'upload d'image (F12 posts, F13 avatar, F06 couverture projet,
+// ADR 0004). Le navigateur écrit ensuite directement dans le bucket Neon ; le
+// contenu ne passe jamais par cette API. L'identité vient de la session (api-rest §5).
 export const POST = withApi(async (request: Request) => {
   const blocked = guardMutation(request, "/api/uploads/presign", APP_URL, 20);
   if (blocked) return blocked;
@@ -38,11 +42,15 @@ export const POST = withApi(async (request: Request) => {
   const key =
     input.kind === "post-image"
       ? `${postImagePrefix(profile.id)}${randomUUID()}.${ext}`
-      : `${avatarPrefix(profile.id)}${randomUUID()}.${ext}`;
+      : input.kind === "profile-avatar"
+        ? `${avatarPrefix(profile.id)}${randomUUID()}.${ext}`
+        : `${projectCoverPrefix(profile.id)}${randomUUID()}.${ext}`;
   const uploadUrl =
     input.kind === "post-image"
       ? await presignPostImageUpload(key, input.contentType, PRESIGN_EXPIRES_IN)
-      : await presignAvatarUpload(key, input.contentType, PRESIGN_EXPIRES_IN);
+      : input.kind === "profile-avatar"
+        ? await presignAvatarUpload(key, input.contentType, PRESIGN_EXPIRES_IN)
+        : await presignProjectCoverUpload(key, input.contentType, PRESIGN_EXPIRES_IN);
 
   return ok({ uploadUrl, key, expiresIn: PRESIGN_EXPIRES_IN });
 });
