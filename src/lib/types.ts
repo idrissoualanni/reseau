@@ -63,3 +63,116 @@ export type ProjectPage = {
   items: Project[];
   nextCursor: string | null;
 };
+
+// ─── V1.5 — espaces, appartenances, administration (F14/F15/F16/F17) ─────────
+
+export type SpaceType = "university" | "department" | "theme";
+export type SpaceVisibility = "public" | "private";
+export type SpaceAccessKind = "open" | "invite_code" | "invite_link" | "manual_approval";
+export type MembershipRole = "member" | "space_admin";
+export type MembershipVerification = "unverified" | "verified";
+export type SpaceAccessAction =
+  | "join"
+  | "request"
+  | "approve"
+  | "reject"
+  | "revoke"
+  | "invite";
+
+export type Space = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  type: SpaceType;
+  visibility: SpaceVisibility;
+  metadata: Record<string, unknown>;
+  createdBy: string | null;
+  archivedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type SpaceAccessMethod = {
+  id: string;
+  spaceId: string;
+  method: SpaceAccessKind;
+  config: Record<string, unknown>;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type Membership = {
+  id: string;
+  spaceId: string;
+  profileId: string;
+  role: MembershipRole;
+  verificationLevel: MembershipVerification;
+  verifiedVia: SpaceAccessKind | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type PlatformAdmin = {
+  profileId: string;
+  grantedBy: string | null;
+  grantedAt: Date;
+};
+
+export type SpaceAccessLogEntry = {
+  id: string;
+  spaceId: string;
+  profileId: string | null;
+  method: SpaceAccessKind | null;
+  action: SpaceAccessAction;
+  createdAt: Date;
+};
+
+// Référence publique d'un profil : jamais d'e-mail ni de `user_id`.
+export type ProfileRef = {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarKey: string | null;
+};
+
+// Vues d'administration « tout voir » (F17).
+export type AdminProfileRecord = {
+  profile: Profile;
+  postCount: number;
+  projectCount: number;
+};
+
+export type AdminPostRecord = {
+  post: Post;
+  author: ProfileRef;
+};
+
+export type AdminProjectRecord = {
+  project: Project;
+  author: ProfileRef;
+};
+
+export type AdminAccessLogRecord = {
+  entry: SpaceAccessLogEntry;
+  space: { id: string; slug: string; name: string };
+  profile: ProfileRef | null;
+};
+
+export type AdminPlatformAdminRecord = {
+  profileId: string;
+  grantedAt: Date;
+  profile: ProfileRef;
+  grantedBy: ProfileRef | null;
+};
+
+export type AdminStats = {
+  spaces: number;
+  archivedSpaces: number;
+  platformAdmins: number;
+  profiles: number;
+  posts: number;
+  projects: number;
+  accessEvents: number;
+};

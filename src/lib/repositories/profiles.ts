@@ -35,6 +35,11 @@ export async function findProfileByUsername(username: string): Promise<Profile |
   return row ? toProfile(row) : null;
 }
 
+export async function findProfileById(id: string): Promise<Profile | null> {
+  const [row] = await db.select().from(profiles).where(sql`${profiles.id} = ${id}`).limit(1);
+  return row ? toProfile(row) : null;
+}
+
 export async function isUsernameTaken(username: string): Promise<boolean> {
   const [row] = await db
     .select({ id: profiles.id })
