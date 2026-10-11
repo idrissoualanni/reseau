@@ -1,52 +1,55 @@
 ---
-description: Vitest, Vitest UI, stratégie de tests, conventions et bonnes pratiques
-paths: ["**/*.test.ts", "**/*.test.tsx", "vitest.*"]
+description: Vitest (unitaires, intégration, schéma GraphQL), stratégie, conventions et vérifications
+paths: ["**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts", "vitest.*"]
 ---
 # Tests & Qualité
 
-## 1. Outils et Stratégie Globale (Pyramide des tests)
-- **Stack principale :** **Vitest** pour les tests unitaires et d'intégration. **Playwright** pour le E2E.
-- **Workflow de développement :** Utiliser `npm run test:ui` en local pour un feedback visuel et rapide.
-- **Intégration Continue (CI) :** Utiliser `npm test` (sans UI). La CI bloque tout déploiement si un test échoue ou si la couverture minimale n'est pas atteinte.
-- **Pyramide stricte :** 
-  - **Unitaires (70%) :** Exécution ultra-rapide sur la couche `application/` et `domain/`. Isolez le code avec des mocks/stubs pour les dépendances externes (bases de données, API tierces).
-  - **Intégration (20%) :** Validation des interactions avec les systèmes réels (couche `data/`, requêtes SQL). Utilise une base Neon de test dédiée ou une branche éphémère.
-  - **End-to-End (10%) :** Un test E2E par fonctionnalité clé/parcours utilisateur critique (ajouté dès que le premier "Happy Path" est fonctionnel).
+Source autoritaire. Miroir OpenCode : `.opencode/rules/testing.md`.
 
-## 2. Organisation et Nommage
-- **Colocation :** Les fichiers de test `*.test.ts(x)` doivent se trouver dans le même dossier, juste à côté du fichier testé (ex: `user.service.ts` -> `user.service.test.ts`).
-- **Structure BDD (Behavior-Driven Development) :** 
-  - Utiliser `describe` pour définir le contexte ou la méthode testée.
-  - Utiliser `it` pour décrire le comportement attendu sous forme de phrase active.
-  - *Bon exemple :* `describe('Publication d'article')` -> `it('refuse la publication si le titre est manquant')`.
-  - *Mauvais exemple :* `it('test publish fail')`.
-- **Principe d'unicité :** Un test = un comportement = une assertion principale (ou un groupe logique d'assertions liées au même état).
+## 1. Outils
+- **Vitest uniquement** (`vitest.config.mts`, `environment: "node"`, alias `@` → `./src`). Playwright **non installé** : pas d'E2E pour l'instant (voir `docs/backlog.md`).
+- Scripts : `npm test` (= `vitest run`, CI) ; `npm run test:watch` (local) ; `npm test -- <chemin>` (ciblé) ; `npm run lint` ; `npm run typecheck` ; `npm run graphql:check`.
+- Pas de `npm run test:ui` (Vitest UI non installé).
+- **Worktree neuf** : `npx next typegen` **puis** `npm run typecheck`. Sans `next typegen`, `tsc` échoue sur `Cannot find name 'LayoutProps'` (`src/app/layout.tsx`) — type global généré par Next 16.
+- **Disque** : ne pas lancer `next build` sous ~1,5 Go libre. Nettoyage : `sh .opencode/scripts/cleanup-disk.sh`.
 
-## 3. Écriture des Tests (Règles d'Or)
-- **Motif AAA (Arrange, Act, Assert) :** Séparer visuellement chaque phase par un saut de ligne.
-  1. *Arrange :* Préparation des données et du contexte (mocks, factories).
-  2. *Act :* Appel de la fonction/méthode.
-  3. *Assert :* Vérification des résultats et des effets de bord.
-- **Traçabilité des spécifications :** Chaque règle métier (critère d'acceptation de la fiche/ticket) et chaque cas d'erreur explicite doit avoir son test correspondant.
-- **Déterminisme absolu :** Aucun test ne doit dépendre de l'heure du système, d'une génération aléatoire non contrôlée, ou du réseau externe.
-  - *Horloge :* Utiliser `vi.setSystemTime()` ou injecter un fournisseur de date.
-  - *Aléatoire/UUID :* Injecter un générateur prédictible ou mocker les modules de génération (ex: `crypto.randomUUID`).
-- **Interdiction de contournement :** Il est strictement interdit de supprimer, de commenter, ou de modifier un test légitime uniquement pour "faire passer la CI". L'utilisation de `it.skip` ou `describe.skip` est tolérée **uniquement** si elle est accompagnée d'un commentaire contenant le lien vers le ticket/fiche de résolution.
+## 2. Pyramide (adaptée au projet)
+- Unitaires (~70 %) : cas d'usage de `src/lib/**` avec repository injecté/simulé.
+- Intégration (~20 %) : plusieurs couches à la fois (validation → cas d'usage → mapper/schéma). **Hors ligne par défaut** : mocke `src/lib/repositories/**` et exécute le vrai schéma Pothos (`src/server/graphql/**`).
+- E2E (0 % aujourd'hui) : Playwright non installé.
 
-## 4. Tests d'Intégration et Données
-- **Isolation des tests :** Chaque test d'intégration doit s'exécuter dans un état propre. La base de données doit être nettoyée entre chaque test (utiliser `beforeEach` ou `afterEach` pour tronquer les tables, et non les supprimer).
-- **Gestion des données :** 
-  - **Obligatoire :** Les données de test doivent être générées via des **fabriques (factories)** (dans `test/factories`), afin de masquer la complexité de création et garantir des données valides par défaut.
-  - **Interdit :** Ne jamais copier/utiliser d'exports de la base de données de production.
-- **Transactions :** Si la base de données le supporte, enveloppez chaque test d'intégration dans une transaction SQL qui fait un `ROLLBACK` à la fin, pour garantir des tests rapides sans écrire physiquement sur le disque.
+## 3. Organisation et nommage
+- Colocalisation à côté du code testé : `x.ts` → `x.test.ts` (unitaire) ou `x.integration.test.ts` (intégration).
+- `describe` = contexte/méthode ; `it` = phrase active. Ex. : `it("refuse un commentaire racine sans contenu")`.
+- Un test = un comportement = une assertion principale (ou groupe cohérent d'assertions liées au même état).
 
-## 5. Sécurité et Autorisations
-- **Tests négatifs par défaut :** Pour toute mutation (création, mise à jour, suppression) ou accès à une ressource protégée, un test d'interdiction est obligatoire.
-- **Cas à couvrir systématiquement :**
-  - "Un utilisateur non authentifié reçoit une erreur 401."
-  - "Un membre n'ayant pas les droits/rôles suffisants reçoit une erreur 403."
-  - "Un membre ne peut pas modifier la ressource appartenant à un autre membre."
+## 4. Motif AAA et déterminisme
+- Arrange / Act / Assert séparés par une ligne vide.
+- Horloge : `vi.setSystemTime()` ou injection ; UUID : injecter ou mocker `crypto.randomUUID`. Aucun réseau externe.
+- Zod v4 : un champ `.nullable()` refuse `undefined` ; passer `null` (`?? null`, pas `?? undefined`).
 
-## 6. Couverture de Code (Code Coverage)
-- **Couverture intelligente :** Le seuil minimal exigé pour la couche métier (`application/` et `domain/`) est de **80% des lignes et des branches**.
-- **Pas de dogmatisme :** Ne pas viser 100% aveuglément au détriment de la qualité des tests. Les fichiers de configuration, les déclarations de types purs et les scripts de migration peuvent être exclus du rapport de couverture.
+## 5. Traçabilité des fiches
+- Chaque critère d'acceptation de `docs/features/Fxx.md` a au moins un test (commentaire `// Fxx critère n`).
+- Toute évolution de comportement met le test à jour **avant** ou **avec** le code.
+
+## 6. Tests d'intégration et données
+- **Hors ligne d'abord** (repos mockés + vrai schéma) : voie par défaut de la CI, aucune base requise.
+- **Base réelle : opt-in uniquement** : `DATABASE_URL` **+** drapeau dédié ; uniquement la branche Neon **dev** (`NEON_BRANCH=dev`) ; **jamais la production**.
+- Données via fabriques ; nettoyage **scopé** au jeu de test (jamais une table entière, jamais une ressource existante). Ne jamais copier d'export de production.
+
+## 7. Sécurité et autorisations
+- Un test négatif obligatoire pour toute mutation ou ressource protégée : non authentifié → `UNAUTHENTICATED` (401) ; droits insuffisants → `FORBIDDEN` (403) ; ressource invisible → `NOT_FOUND`.
+- Couvrir les gardes sensibles : admin plateforme, « dernier admin », accès espace.
+
+## 8. GraphQL
+- Après tout changement de schéma : `npm run graphql:export` (écrit `schema.graphql`) puis `npm run graphql:check` (test d'export). `schema.graphql` est committé, jamais édité à la main.
+- Tester les erreurs par `extensions.code`, jamais par le message.
+
+## 9. Couverture
+- Cible : ≥ 80 % lignes/branches sur les cas d'usage (`src/lib/**`). Config, types purs et scripts peuvent être exclus.
+- Ne pas viser 100 % au détriment de la qualité des tests.
+
+## 10. Interdits
+- Supprimer, commenter ou assouplir un test légitime pour passer la CI.
+- `it.skip` / `describe.skip` sans commentaire de justification (fiche/ticket).
+- Aucun secret en clair dans un test, un log ou un commit.
