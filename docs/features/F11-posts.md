@@ -17,7 +17,7 @@
 - Fiche UX : `docs/ux/posts.md`.
 
 ## API
-- GraphQL (ADR 0002) : `posts`, `post(id)`, `createPost`, `deletePost`, `addComment`, `deleteComment`, `addReply`.
+- GraphQL (ADR 0002) : `posts`, `post(id)`, `createPost`, `deletePost`, `addComment`, `deleteComment`. Les réponses utilisent `addComment` avec `parentId` (pas de mutation `addReply` dédiée à ce jour).
 - Relations (auteur, commentaires) via DataLoader (anti N+1).
 
 ## Données

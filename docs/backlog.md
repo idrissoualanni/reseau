@@ -9,6 +9,18 @@
 > sont livrés en V1 (2026-10-10) — voir `docs/features/F11-posts.md` et
 > `docs/features/F12-posts-images.md`. Le fil libre enrichi (vidéo) reste ici.
 
+## QA intégration V1.5 (2026-10-11) — écarts constatés
+- [ ] **Front posts hors GraphQL** — `/posts`, `/posts/[id]` et le fil de posts
+  appellent les cas d'usage / actions serveur ; aucun client n'utilise
+  `/api/graphql` (règle `api-graphql` §0 : les posts sont en GraphQL). Écart de
+  périmètre à trancher (ADR) — non corrigé.
+- [ ] **F11 : `addReply` absent du schéma** — les réponses passent par
+  `addComment(input: { parentId })` (vérifié par test d'intégration). Aligner la
+  fiche F11, ou créer la mutation `addReply` dédiée.
+- [ ] **F11 : profondeur > 3 niveaux** — les réponses plus profondes sont
+  masquées sans compteur ni « voir plus » (`buildCommentTrees`, `posts-feed.ts`),
+  alors que la fiche le prévoit.
+
 ## Fil libre enrichi (V1.5 — texte/image/vidéo)
 - [x] **Images sur les posts** : **livré V1 (2026-10-10)** — upload présigné Neon
   (bucket `post` public_read), fiche `docs/features/F12-posts-images.md`.
