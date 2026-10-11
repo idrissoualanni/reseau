@@ -163,7 +163,9 @@ builder.mutationFields((t) => ({
       run(async () => {
         const input = validateInput(createCommentSchema, {
           postId: args.input.postId,
-          parentId: args.input.parentId ?? undefined,
+          // `null` (et non `undefined`) : le schéma partagé attend
+          // `string | null` pour un commentaire racine (api-graphql §10).
+          parentId: args.input.parentId ?? null,
           body: args.input.body,
         });
         return addComment(requireProfile(ctx), input);
