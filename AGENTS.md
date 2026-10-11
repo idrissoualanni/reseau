@@ -446,3 +446,8 @@ npm i @aws-sdk/client-s3 @aws-sdk/s3-request-presigner dotenv
 - ne touche pas encore a la V1.5
 - explique moi ca et corrige l'erreur creer un rules WIP utilisateur
 - utilise le bucket profile pour les images de profile , et le bucket projet pour les images de projet 
+- la page des post ne s'affiche pas et le feed aussi 
+- verifie aussi URL de requête
+- corrige le neon storage et les poste j'ai deja mis a jour le env render met a jour le env local 
+- il faut developper la page de feed de post 
+- utilise le mcp de neon pour le storage 
