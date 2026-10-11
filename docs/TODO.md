@@ -110,6 +110,11 @@
   worktree supprimé. Stubs cassés `projects/page.tsx` / `posts/page.tsx` supprimés.
 - [x] **Fusion F07/F08 → dev** : **fait (2026-10-10)** — feed `/`, détail
   `/projects/[id]`, profil `/u/[username]`, domaine F08 public, 98 tests verts.
+- [x] **Fichiers de test alignés (2026-10-11)** — agent QA (`.claude/agents/qa.md`,
+  `.opencode/agents/qa.md`), rule `testing` (`.claude/rules/testing.md` + miroir
+  `.opencode/rules/testing.md`), skill `vitest-testing` et commande `/test`. Vitest
+  uniquement, intégration **hors ligne** (`*.integration.test.ts`), `npx next typegen`
+  avant `typecheck`, base réelle en opt-in sur la branche **dev**.
 
 ## Lots restants
 - [x] **F09 — Recherche d'étudiants** (`/search`) : **fait (2026-10-10)** — worktree
@@ -128,10 +133,16 @@
   schéma (`spaces`, `space_access_methods`, `memberships`, `platform_admins`, `space_access_log`),
   cas d'usage `src/lib/admin.ts`, REST `/api/admin/*` + espaces publics, console `/admin/*`,
   lien sidebar conditionnel. Fiches `docs/features/F14`, `F16`, `F17`, `docs/ux/admin-plateforme.md`.
+- [x] **Tests d'intégration posts/commentaires + garde admin (2026-10-11)** — worktree
+  `v1.5-integration` mergé (+18 tests, **189 verts**). Deux correctifs GraphQL :
+  `addComment` racine (`parentId: null`, Zod v4 refuse `undefined`) et `Post.comments`
+  ne renvoie que les racines (les réponses sont sous `replies`). Écart noté :
+  front posts hors GraphQL (`docs/backlog.md`).
 - [ ] **Appliquer la migration `drizzle/0006_abandoned_longshot.sql`** sur Neon **dev**
   (tables V1.5, additive). Aucune migration destructive.
-- [ ] **`PLATFORM_ADMIN_EMAILS`** : renseigner dans `.env.local` et Render dev (dashboard) —
-  **intervention utilisateur**. Sinon aucun admin ne peut être amorcé.
+- [x] **`PLATFORM_ADMIN_EMAILS`** : **fait dans `.env.local` (2026-10-11)** — valeur =
+  e-mail git `idrissoualanni0@gmail.com` (à confirmer). **Reste** : Render dev
+  (dashboard) — **intervention utilisateur**. Sinon aucun admin ne peut être amorcé.
 - [ ] **Console d'admin d'espace (reste de F17)** : approuver/retirer des membres, configurer
   les méthodes d'accès, modération d'espace — dépend de F15 (rejoindre) et F20 (signalement).
 - [ ] **Comptes (infos de connexion + suppression)** : l'API admin Neon Auth exige le rôle
