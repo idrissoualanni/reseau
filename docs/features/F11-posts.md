@@ -13,8 +13,8 @@
 6. Aucune donnée privée exposée dans les commentaires (pas d'e-mail, pas d'identifiant interne).
 
 ## Écrans / routes
-- `/posts` (fil de posts + commentaires) · `/posts/[id]` (détail + commentaires).
-- Fiche UX : `docs/ux/posts.md` (à créer avant codage).
+- `/posts` (fil groupé par jour, en lecture) · `/posts/new` (composition dédiée) · `/posts/[id]` (détail + commentaires).
+- Fiche UX : `docs/ux/posts.md`.
 
 ## API
 - GraphQL (ADR 0002) : `posts`, `post(id)`, `createPost`, `deletePost`, `addComment`, `deleteComment`, `addReply`.
@@ -30,9 +30,11 @@
 - [x] Les réponses sont affichées avec indentation (max 3 niveaux visuels).
 - [x] L'auteur supprime son commentaire ; les réponses sont retirées en cascade.
 - [x] Aucune donnée privée dans les réponses API.
+- [x] Le fil est groupé par jour (« Aujourd'hui », « Hier », puis la date) sans fusionner deux jours.
+- [x] Publier se fait sur une page dédiée `/posts/new` ; après publication, retour au fil avec le post mis en évidence.
 
 ## Tests attendus
-Unitaires : création, réponse, cascade de suppression. Intégration : requête avec jeu de données. E2E : publier → commenter → répondre.
+Unitaires : création, réponse, cascade de suppression, **groupement temporel du fil** (`posts-grouping.test.ts`). Intégration : requête avec jeu de données. E2E : publier (page dédiée) → retour au fil → commenter → répondre.
 
 ## Hors périmètre
 Commentaires riches (images, mentions), modération, likes/réactions (V1.5+).

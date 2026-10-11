@@ -1,19 +1,26 @@
 # Fiche UX — Posts et commentaires
 
-- **Route** : `/posts` (fil) · `/posts/[id]` (détail) · **Fonctionnalité(s)** : F11 · F12 · **Version** : V1
+- **Routes** : `/posts` (fil) · `/posts/new` (composition) · `/posts/[id]` (détail)
+- **Fonctionnalité(s)** : F11 · F12 · **Version** : V1
 - **Utilisateur et objectif** : un membre connecté publie une activité (avec une image optionnelle) et en discute avec la communauté.
 - **Action principale** : publier un post (ou commenter un post existant).
 
 ## Parcours
-1. Arrivée depuis la navigation (« Posts ») → 2. lecture du fil → 3. publication d'un post → 4. clic sur un post → détail + commentaires → 5. commenter / répondre à un commentaire → 6. clic sur l'auteur → profil public (F08).
+1. Arrivée depuis la navigation (« Posts ») → 2. lecture du fil **groupé par jour** → 3. clic sur « Publier » → page dédiée `/posts/new` → 4. publication → **retour au fil**, le nouveau post est mis en évidence → 5. clic sur un post → détail + commentaires → 6. commenter / répondre à un commentaire → 7. clic sur l'auteur → profil public (F08).
 
 ## Contenu et hiérarchie
-1. **Titre** : « Posts » (h1).
-2. **Champ de publication** : textarea + bouton « Publier » (texte brut, max 1000 caractères) + bouton « Ajouter une image » (F12 : 1 image jpeg/png/webp/gif ≤ 10 Mo, aperçu avec retrait avant publication).
-3. **Fil de posts** (plus récents d'abord) : auteur (avatar + nom, lien profil), texte, image (F12, lien vers le détail), date, nombre de commentaires, lien vers le détail.
-4. **Détail d'un post** : texte complet + image (F12) + liste de commentaires.
-5. **Commentaires** : auteur, texte, date, bouton « Répondre ». Les réponses sont indentées (max 3 niveaux visuels, puis « voir plus »).
-6. **Actions** : l'auteur d'un post peut le supprimer ; l'auteur d'un commentaire peut le supprimer (ses réponses sont retirées en cascade).
+1. **Fil `/posts`** — titre « Posts » (h1), sous-titre, bouton primaire « Publier » (lien vers `/posts/new`).
+   - **Groupement temporel** : sections par jour — « Aujourd'hui », « Hier », puis la date (« lundi 5 octobre »). Deux jours distincts ne sont **jamais** fusionnés.
+   - **Carte de post (hiérarchie)** : ligne d'en-tête (avatar + nom en gras, lien profil ; heure à droite, date complète en `title`/`aria-label`), corps en texte brut (16 px, interligne détendu), image optionnelle, puis une **ligne d'action** séparée par un filet discret (« 3 commentaires » / « Commenter »).
+   - Le corps **et** l'image sont des liens vers le détail (cible tactile confortable).
+2. **Page de composition `/posts/new`** — lien « Retour au fil », titre « Nouveau post » (h1), formulaire plein écran :
+   - textarea (texte brut, max 5000 caractères) + aide/caption ;
+   - bouton « Ajouter une image » (F12 : 1 image jpeg/png/webp/gif ≤ 10 Mo) ;
+   - **aperçu fidèle** : l'image est affichée avec le même cadrage que dans le fil (`object-cover`, ratio du fil) avec la mention « voici comment l'image apparaîtra dans le fil » ; retrait possible avant publication.
+   - Après succès → **retour au fil** ; le post publié est **mis en évidence** (ancre `#post-<id>`, anneau d'accent).
+3. **Détail `/posts/[id]`** — texte complet + image + liste de commentaires.
+4. **Commentaires** — auteur, texte, heure, bouton « Répondre ». Les réponses sont indentées (max 3 niveaux visuels). L'auteur d'un commentaire peut le supprimer (cascade).
+5. **Actions** : l'auteur d'un post peut le supprimer ; l'auteur d'un commentaire peut le supprimer.
 
 ## États
 | État | Ce que voit l'utilisateur |
@@ -21,21 +28,24 @@
 | Chargement | squelettes de posts |
 | Vide | « Aucun post pour l'instant. » + CTA « Publier le premier post » |
 | Erreur | bandeau d'erreur + « Réessayer » |
-| Succès | fil de posts avec commentaires |
+| Succès | fil groupé par jour ; post publié mis en évidence |
+| Upload image | bouton désactivé pendant l'envoi, erreur affichée dans le formulaire |
 | Hors connexion | « Pas de connexion, réessaie. » |
 
 ## Mobile (360 px) puis desktop
-Colonne unique à 360 px ; desktop : largeur feed, fil centré. Zones tactiles ≥ 44 px.
+Colonne unique à 360 px ; en-tête de fil : titre + bouton « Publier » (cible ≥ 44 px). Desktop : largeur feed, fil centré. Pas de défilement horizontal.
 
 ## Accessibilité
-Un seul h1 ; le champ de publication a un label lié ; les boutons d'action ont des libellés explicites ; contrastes AA ; le texte des commentaires est en texte brut (pas de HTML).
+Un seul h1 par page (fil, composition, détail) ; labels liés ; boutons d'action explicites ; focus visible ; contrastes AA ; le corps et l'image sont des liens focusables ; le post mis en évidence ne repose **pas sur la couleur seule** (anneau + position dans le fil) ; texte brut (pas de HTML).
 
 ## Composants utilisés
-`PageShell`, `Card`/`CardContent`, `Button`, `Textarea`, `Avatar`, `EmptyState`, `Skeleton`, composants `posts/post-card`, `posts/post-composer`, `posts/comment-thread` (ajoutés au design system).
+`PageShell`, `Card`/`CardContent`, `Button`, `Textarea`/`TextareaField`, `Avatar`, `EmptyState`, `Skeleton`, composants `posts/post-card`, `posts/post-composer`, `posts/comment-thread`, `posts/comment-input` (design system). Utilitaire `posts-grouping`.
 
 ## Textes (français)
-- Titre : « Posts »
-- Publier : « Publier » / placeholder : « Quoi de neuf ? »
+- Titre : « Posts » · « Nouveau post »
+- Publier : « Publier » / « Publier le premier post » / placeholder « Quoi de neuf ? »
+- Aperçu image : « Aperçu : voici comment l'image apparaîtra dans le fil. »
 - Vide : « Aucun post pour l'instant. » / « Publie le premier pour lancer la discussion. »
 - Commenter : « Commenter » · Répondre : « Répondre » · Supprimer : « Supprimer »
-- « Voir plus de réponses » · erreur : « Impossible de charger les posts. » · hors connexion : « Pas de connexion, réessaie. »
+- « Voir plus » · erreur : « Impossible de charger les posts. » · hors connexion : « Pas de connexion, réessaie. »
+- Groupes : « Aujourd'hui », « Hier », puis la date (« lundi 5 octobre »).

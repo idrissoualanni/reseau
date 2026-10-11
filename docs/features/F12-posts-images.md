@@ -12,9 +12,11 @@
 5. **Le schéma GraphQL expose `imageUrl`, jamais `imageKey`** (rule api-graphql §19).
 6. **Post sans image** : `imageUrl` nul, aucun impact sur le fil existant.
 7. **Suppression** : supprimer un post ne supprime pas le fichier du bucket en V1 (fichiers orphelins nettoyés plus tard, V1.5).
+8. **Aperçu fidèle** : à la composition, l'image est prévisualisée avec le cadrage du fil (`object-cover`, même ratio) pour montrer le rendu final. **Le recadrage (zoom/déplacement) reste hors V1** (V1.5).
 
 ## Écrans / routes
-- `/posts` (fil) : carte de post avec image (si présente) ; composer avec sélecteur d'image.
+- `/posts` (fil) : carte de post avec image (si présente).
+- `/posts/new` (composition dédiée) : sélecteur d'image + **aperçu fidèle** du cadrage final (même rendu que le fil).
 - `/posts/[id]` (détail) : image du post affichée au-dessus du texte.
 - Fiche UX : `docs/ux/posts.md` (mise à jour).
 
@@ -46,6 +48,7 @@
 - [ ] Given une image > 10 Mo ou non-image, When on demande un upload, Then l'API refuse (400).
 - [ ] Given une clé hors préfixe `posts/{profileId}/`, When on publie, Then le cas d'usage refuse (422).
 - [ ] Given un post avec image, When on lit son `imageUrl` via GraphQL, Then la clé n'est jamais exposée.
+- [ ] Given une image choisie à la composition, When on l'ajoute, Then l'aperçu reprend le cadrage du fil (rendu final).
 
 ## Tests attendus
 - Unitaires : schéma imageKey, validation, cas d'usage (accepte/refuse selon préfixe).

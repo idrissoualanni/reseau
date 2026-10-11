@@ -41,6 +41,9 @@
 ## Idées en attente (non triées)
 - [ ] **Likes/réactions** sur les posts (V1.5+).
 - [ ] **Mentions** dans les commentaires.
+- [ ] **Brouillon local** du post (composition `/posts/new`) — V1.5.
+- [ ] **Recadrage / zoom d'image** à la composition — V1.5 (hors périmètre F12).
+- [ ] **Filtres et tri du fil** (auteur, compétence, date) — V1.5.
 - [ ] **Modération** des commentaires.
 - [ ] **Recherche texte libre** sur nom/bio (F09 V1.5+).
 - [ ] **Combinaison de plusieurs compétences** dans la recherche (F09 V1.5+).

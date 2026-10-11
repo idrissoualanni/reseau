@@ -77,6 +77,10 @@
   création F05 + édition F06 ; aperçu + retrait ; tests de validation. Mergé sur `dev`.
 
 ## Designer / UI
+- [x] **Ergonomie des posts** : **fait (2026-10-11)** — fil groupé par jour, hiérarchie de la
+  carte de post, composition sur page dédiée `/posts/new`, aperçu image fidèle, mise en
+  évidence du post publié (ancre `#post-<id>`). Aucune migration, aucune API modifiée.
+  Worktree `posts-ux` → `dev`. Voir `docs/ux/posts.md`, `docs/features/F11-posts.md`, `F12`.
 - [x] **Sidebar** : **fait (2026-10-11)** — icône de repli (collapse) + dropdown utilisateur
   dans le sidebar shadcn/ui, lien « Posts » aligné sur `NAV_ITEMS` (source unique).
   Mergé sur `dev` (commit `4998a98`).
