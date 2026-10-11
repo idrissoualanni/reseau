@@ -315,15 +315,6 @@ export const memberships = pgTable(
   ],
 );
 
-// Admin plateforme : rôle applicatif global (F16). Ne dépend pas de Neon Auth.
-export const platformAdmins = pgTable("platform_admins", {
-  profileId: uuid("profile_id")
-    .primaryKey()
-    .references(() => profiles.id, { onDelete: "cascade" }),
-  grantedBy: uuid("granted_by").references(() => profiles.id, { onDelete: "set null" }),
-  grantedAt: timestamp("granted_at", { withTimezone: true }).defaultNow().notNull(),
-});
-
 // Journal d'accès à un espace (F15/F17) : lecture seule côté admin.
 export const spaceAccessLog = pgTable(
   "space_access_log",

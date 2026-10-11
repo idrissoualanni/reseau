@@ -1,6 +1,5 @@
 import type {
   AdminAccessLogRecord,
-  AdminPlatformAdminRecord,
   AdminPostRecord,
   AdminProfileRecord,
   AdminProjectRecord,
@@ -42,15 +41,6 @@ export function toSpaceAccessMethodDto(method: SpaceAccessMethod) {
     method: method.method,
     isActive: method.isActive,
     createdAt: method.createdAt.toISOString(),
-  };
-}
-
-export function toPlatformAdminDto(record: AdminPlatformAdminRecord) {
-  return {
-    profileId: record.profileId,
-    profile: toAuthorSummary(record.profile),
-    grantedBy: toAuthorSummary(record.grantedBy),
-    grantedAt: record.grantedAt.toISOString(),
   };
 }
 

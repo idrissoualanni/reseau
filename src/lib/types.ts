@@ -114,12 +114,6 @@ export type Membership = {
   updatedAt: Date;
 };
 
-export type PlatformAdmin = {
-  profileId: string;
-  grantedBy: string | null;
-  grantedAt: Date;
-};
-
 export type SpaceAccessLogEntry = {
   id: string;
   spaceId: string;
@@ -160,17 +154,9 @@ export type AdminAccessLogRecord = {
   profile: ProfileRef | null;
 };
 
-export type AdminPlatformAdminRecord = {
-  profileId: string;
-  grantedAt: Date;
-  profile: ProfileRef;
-  grantedBy: ProfileRef | null;
-};
-
 export type AdminStats = {
   spaces: number;
   archivedSpaces: number;
-  platformAdmins: number;
   profiles: number;
   posts: number;
   projects: number;

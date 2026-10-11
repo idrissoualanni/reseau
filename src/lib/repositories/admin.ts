@@ -1,7 +1,6 @@
 import { desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
-  platformAdmins,
   posts,
   profiles,
   projects,
@@ -190,7 +189,6 @@ export async function adminStats(): Promise<AdminStats> {
       archived: sql<number>`(count(*) filter (where ${spaces.archivedAt} is not null))::int`,
     })
     .from(spaces);
-  const [adminRows] = await db.select({ value: sql<number>`count(*)::int` }).from(platformAdmins);
   const [profileRows] = await db.select({ value: sql<number>`count(*)::int` }).from(profiles);
   const [postRows] = await db.select({ value: sql<number>`count(*)::int` }).from(posts);
   const [projectRows] = await db.select({ value: sql<number>`count(*)::int` }).from(projects);
@@ -199,7 +197,6 @@ export async function adminStats(): Promise<AdminStats> {
   return {
     spaces: spaceRows?.total ?? 0,
     archivedSpaces: spaceRows?.archived ?? 0,
-    platformAdmins: adminRows?.value ?? 0,
     profiles: profileRows?.value ?? 0,
     posts: postRows?.value ?? 0,
     projects: projectRows?.value ?? 0,

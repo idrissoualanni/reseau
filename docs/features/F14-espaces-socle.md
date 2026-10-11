@@ -11,7 +11,8 @@
    `name`, une `description` optionnelle et une `visibility` (`public`, `private`).
 2. `slug` : 3–40 caractères, `[a-z0-9-]`, unique, non réservé.
 3. Le cœur ignore le type : toute donnée spécifique vit dans `spaces.metadata` (jsonb).
-4. Seul un `platform_admin` crée, modifie ou archive un espace (délégation en F16/F17).
+4. Seul un compte au rôle `admin` (Neon Auth) crée, modifie ou archive un espace
+   (délégation en F16/F17).
 5. Archiver (`archived_at`) retire l'espace des listes sans supprimer membres ni contenu.
 6. Lecture : un espace `public` est visible de tout utilisateur connecté ; un espace
    `private` n'est visible que de ses membres et des admins plateforme (`NOT_FOUND` sinon).
@@ -58,13 +59,13 @@ REST (`.claude/rules/api-rest.md`).
 
 ## Sécurité et autorisation
 
-- Création / édition / archive : `platform_admin` uniquement, vérifié **côté serveur**.
+- Création / édition / archive : rôle `admin` (Neon Auth) uniquement, vérifié **côté serveur**.
 - Lecture privée : membre ou admin plateforme, sinon `NOT_FOUND` (jamais `FORBIDDEN`).
 - Aucun `userId` lu depuis la requête : identité issue de la session.
 
 ## Critères d'acceptation
 
-- [ ] Given un platform_admin, When il crée un espace valide, Then l'espace apparaît en base.
+- [ ] Given un compte au rôle `admin`, When il crée un espace valide, Then l'espace apparaît en base.
 - [ ] Given un slug déjà utilisé, When on crée, Then `CONFLICT`.
 - [ ] Given un membre non admin, When il appelle `POST /api/admin/spaces`, Then `FORBIDDEN`.
 - [ ] Given un espace `private`, When un non-membre le demande, Then `NOT_FOUND`.

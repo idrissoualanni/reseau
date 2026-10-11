@@ -2,29 +2,27 @@
 
 Écrite avant le code (règle `docs/ux/_template.md`).
 
-- **Route** : `/admin`, `/admin/spaces`, `/admin/admins`, `/admin/access-log`,
+- **Route** : `/admin`, `/admin/spaces`, `/admin/access-log`,
   `/admin/profiles`, `/admin/posts`, `/admin/projects`
 - **Fonctionnalité(s)** : F14, F16, F17 · **Version** : V1.5
-- **Utilisateur et objectif** : un `platform_admin` vient créer/configurer les espaces,
-  nommer des admins, **voir tout le contenu** et consulter le journal d'accès, en moins de
-  30 secondes.
+- **Utilisateur et objectif** : un compte au rôle `admin` (Neon Auth) vient
+  créer/configurer les espaces, **voir tout le contenu** et consulter le journal d'accès,
+  en moins de 30 secondes.
 - **Action principale** : « Créer un espace » (visible sans défilement à 360 px).
 
 ## Parcours
 
 1. Arrivée depuis le sidebar (entrée « Admin ») → 2. tableau de bord (compteurs, derniers
-   accès) → 3. création/édition d'un espace ou nomination d'un admin → 4. retour au tableau
-   de bord avec confirmation.
+   accès) → 3. création/édition d'un espace → 4. retour au tableau de bord avec confirmation.
 
 ## Contenu et hiérarchie
 
 1. En-tête « Administration » + rôle.
 2. Bouton primaire « Créer un espace ».
-3. Compteurs : espaces actifs, espaces archivés, admins plateforme.
+3. Compteurs : espaces actifs, espaces archivés.
 4. Tableau « Espaces » : nom, type, visibilité, membres, statut, actions.
-5. Tableau « Admins plateforme » : profil, nommé par, date, action retirer.
-6. Journal d'accès : date, espace, profil, méthode, action.
-7. Vues de lecture « tout voir » : profils, posts, projets (brouillons inclus, badge).
+5. Journal d'accès : date, espace, profil, méthode, action.
+6. Vues de lecture « tout voir » : profils, posts, projets (brouillons inclus, badge).
 
 ## États
 
@@ -33,7 +31,7 @@
 | Chargement | squelette de tableau (lignes grises) |
 | Vide | « Aucun espace. Crée le premier. » + bouton |
 | Erreur | message + « Réessayer » |
-| Succès | toast « Espace créé » / « Admin nommé » |
+| Succès | toast « Espace créé » |
 | Hors connexion | message clair, saisie conservée |
 
 ## Mobile (360 px) puis desktop
@@ -53,7 +51,6 @@
 
 ## Textes (français)
 
-- Titres : « Administration », « Espaces », « Admins plateforme », « Journal d'accès ».
-- Boutons : « Créer un espace », « Enregistrer », « Archiver », « Nommer un admin ».
-- Erreurs : « Accès refusé », « Un espace utilise déjà ce slug », « Il doit rester au moins
-  un admin ».
+- Titres : « Administration », « Espaces », « Journal d'accès ».
+- Boutons : « Créer un espace », « Enregistrer », « Archiver ».
+- Erreurs : « Accès refusé », « Un espace utilise déjà ce slug ».

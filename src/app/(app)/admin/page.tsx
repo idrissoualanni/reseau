@@ -14,7 +14,6 @@ export default async function AdminOverviewPage() {
     { label: "Profils", value: stats.profiles },
     { label: "Posts", value: stats.posts },
     { label: "Projets", value: stats.projects },
-    { label: "Admins plateforme", value: stats.platformAdmins },
     { label: "Événements d'accès", value: stats.accessEvents },
   ];
 

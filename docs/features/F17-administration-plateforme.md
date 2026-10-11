@@ -1,19 +1,18 @@
 # F17 — Administration plateforme
 
 - **Version** : V1.5 · **Dépend de** : F14, F16 · **Agents** : backend, frontend, designer
-- **Objectif** : console d'administration de la plateforme (espaces, admins, journal).
-- **User story** : En tant qu'admin plateforme, je veux créer des espaces, nommer des admins
-  et lire le journal d'accès, afin de piloter le réseau.
+- **Objectif** : console d'administration de la plateforme (espaces, contenus, journal).
+- **User story** : En tant qu'admin plateforme, je veux créer des espaces, voir tout le
+  contenu et lire le journal d'accès, afin de piloter le réseau.
 
 ## Contenu livré (partie plateforme)
 
 | Écran | Rôle |
 |---|---|
-| `/admin` | tableau de bord : compteurs (espaces, admins, contenus, accès récents) |
+| `/admin` | tableau de bord : compteurs (espaces, contenus, accès récents) |
 | `/admin/spaces` | liste, création, édition, archivage des espaces |
 | `/admin/spaces/new` | formulaire de création |
 | `/admin/spaces/[id]` | édition d'un espace (nom, description, visibilité) |
-| `/admin/admins` | nommer / retirer des admins plateforme |
 | `/admin/access-log` | journal d'accès (filtre par espace) |
 | `/admin/profiles` | **tout voir** : tous les profils (y compris sans contenu) |
 | `/admin/posts` | **tout voir** : tous les posts (auteur, date) |
@@ -22,7 +21,7 @@
 
 ## Règles métier
 
-1. Toute la console exige `platform_admin` (garde serveur, `NOT_FOUND` pour un non-admin
+1. Toute la console exige le rôle `admin` (garde serveur, `NOT_FOUND` pour un non-admin
    sur les pages, `FORBIDDEN` sur l'API).
 2. **L'admin plateforme voit tout** : profils, posts et projets, **brouillons inclus**, sans
    filtre de visibilité. Lecture seule dans cette livraison (retrait = F20 modération).
@@ -39,9 +38,6 @@
 | `POST` | `/api/admin/spaces` | créer |
 | `PATCH` | `/api/admin/spaces/[id]` | modifier |
 | `DELETE` | `/api/admin/spaces/[id]` | archiver |
-| `GET` | `/api/admin/admins` | liste des platform admins |
-| `POST` | `/api/admin/admins` | nommer |
-| `DELETE` | `/api/admin/admins/[profileId]` | retirer |
 | `GET` | `/api/admin/access-log` | journal (liste bornée) |
 | `GET` | `/api/admin/profiles` | tous les profils (liste bornée) |
 | `GET` | `/api/admin/posts` | tous les posts, brouillons inclus (liste bornée) |
@@ -49,13 +45,13 @@
 
 ## Données
 
-`spaces`, `platform_admins`, `space_access_log`, `memberships`, `profiles`, `posts`,
+`spaces`, `space_access_log`, `memberships`, `profiles`, `posts`,
 `projects`.
 
 ## Sécurité et autorisation
 
 - Garde unique : `requirePlatformAdmin(ctx)` ; aucune page/route admin sans elle.
-- Le lien de navigation « Admin » n'apparaît que si l'utilisateur est `platform_admin`
+- Le lien de navigation « Admin » n'apparaît que si l'utilisateur a le rôle `admin`
   (confort, **pas** la sécurité).
 - Lecture seule pour les vues « tout voir » ; le retrait de contenu relève de F20, la
   suppression de compte ci-dessous.
@@ -64,17 +60,15 @@
 
 La lecture des **informations de connexion** (e-mail, dates, sessions) et la **suppression
 d'un compte** passent par l'API d'administration **Neon Auth** (`admin/list-users`,
-`admin/remove-user`). Or cette API autorise selon le rôle `admin` **de Neon Auth**, distinct
-du `platform_admin` applicatif. Tant qu'aucun compte ne porte ce rôle (ou qu'aucune clé
-serveur n'est fournie), ces deux fonctions restent **bloquées** — voir `docs/TODO.md`
-(intervention utilisateur) et `docs/backlog.md`. La vue `/admin/profiles` couvre en attendant
-tout ce que notre base contient.
+`admin/remove-user`). Cette API exige une **clé serveur** Better Auth (ou une session admin
+côté serveur). Tant qu'aucune clé serveur n'est fournie, ces deux fonctions restent
+**bloquées** — voir `docs/TODO.md` (intervention utilisateur) et `docs/backlog.md`. La vue
+`/admin/profiles` couvre en attendant tout ce que notre base contient.
 
 ## Critères d'acceptation
 
 - [ ] Given un non-admin, When il ouvre `/admin`, Then `NOT_FOUND` (aucune fuite d'existence).
-- [ ] Given un platform_admin, When il crée un espace, Then il apparaît dans `/admin/spaces`.
-- [ ] Given un platform_admin, When il retire un admin (≠ dernier), Then il disparaît.
+- [ ] Given un compte `role = "admin"`, When il crée un espace, Then il apparaît dans `/admin/spaces`.
 - [ ] Given des accès journalisés, When il filtre par espace, Then seuls ces accès listent.
 - [ ] Given un projet `draft`, When l'admin parcourt `/admin/projects`, Then il le voit.
 - [ ] Given deux profils, When l'admin parcourt `/admin/profiles`, Then il voit les deux.

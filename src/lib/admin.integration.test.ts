@@ -11,14 +11,6 @@ vi.mock("@/lib/repositories/admin", () => ({
   listAdminProjects: vi.fn(),
 }));
 
-vi.mock("@/lib/repositories/platform-admins", () => ({
-  countPlatformAdmins: vi.fn(),
-  deletePlatformAdmin: vi.fn(),
-  insertPlatformAdmin: vi.fn(),
-  isPlatformAdmin: vi.fn(),
-  listPlatformAdmins: vi.fn(),
-}));
-
 vi.mock("@/lib/repositories/profiles", () => ({
   findProfileById: vi.fn(),
   findProfileByUserId: vi.fn(),
@@ -37,29 +29,25 @@ vi.mock("@/lib/repositories/spaces", () => ({
   updateSpaceById: vi.fn(),
 }));
 
-vi.mock("@/lib/env", () => ({
-  getPlatformAdminEmails: vi.fn(() => new Set<string>()),
-}));
-
 import {
   archiveSpace,
   getAdminStats,
   listPostsForAdmin,
   requirePlatformAdmin,
+  type AdminContext,
 } from "@/lib/admin";
 import { ForbiddenError } from "@/lib/errors";
-import { getPlatformAdminEmails } from "@/lib/env";
 import * as adminRepo from "@/lib/repositories/admin";
-import * as platformAdminsRepo from "@/lib/repositories/platform-admins";
 import * as profilesRepo from "@/lib/repositories/profiles";
 import * as spacesRepo from "@/lib/repositories/spaces";
 import type { Profile, Space } from "@/lib/types";
 
 const admin = vi.mocked(adminRepo);
-const platformAdmins = vi.mocked(platformAdminsRepo);
 const profiles = vi.mocked(profilesRepo);
 const spaces = vi.mocked(spacesRepo);
-const getAdminEmails = vi.mocked(getPlatformAdminEmails);
+
+const adminCtx: AdminContext = { userId: "u1", roles: ["admin"] };
+const userCtx: AdminContext = { userId: "u1", roles: ["user"] };
 
 const profile: Profile = {
   id: "p1",
@@ -91,79 +79,59 @@ function space(overrides: Partial<Space> = {}): Space {
   };
 }
 
-function actAsAdmin(): void {
-  profiles.findProfileByUserId.mockResolvedValue(profile);
-  platformAdmins.isPlatformAdmin.mockResolvedValue(true);
-}
-
-function actAsMember(): void {
-  profiles.findProfileByUserId.mockResolvedValue(profile);
-  platformAdmins.isPlatformAdmin.mockResolvedValue(false);
-}
-
 beforeEach(() => {
   vi.resetAllMocks();
-  getAdminEmails.mockReturnValue(new Set<string>());
 });
 
 describe("requirePlatformAdmin (F16)", () => {
-  it("renvoie le profil d'un administrateur plateforme", async () => {
-    actAsAdmin();
-    await expect(requirePlatformAdmin({ userId: "u1" })).resolves.toEqual(profile);
+  it("accepte un admin", async () => {
+    profiles.findProfileByUserId.mockResolvedValue(profile);
+    await expect(requirePlatformAdmin(adminCtx)).resolves.toEqual(profile);
   });
 
   it("refuse un membre ordinaire", async () => {
-    actAsMember();
-    await expect(requirePlatformAdmin({ userId: "u1" })).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(requirePlatformAdmin(userCtx)).rejects.toBeInstanceOf(ForbiddenError);
   });
 });
 
 describe("garde avant lecture (F17)", () => {
   it("getAdminStats refuse un membre sans lire de statistiques", async () => {
-    actAsMember();
-    await expect(getAdminStats({ userId: "u1" })).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(getAdminStats(userCtx)).rejects.toBeInstanceOf(ForbiddenError);
     expect(admin.adminStats).not.toHaveBeenCalled();
   });
 
   it("listPostsForAdmin refuse un membre sans lire de posts", async () => {
-    actAsMember();
-    await expect(listPostsForAdmin({ userId: "u1" })).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(listPostsForAdmin(userCtx)).rejects.toBeInstanceOf(ForbiddenError);
     expect(admin.listAdminPosts).not.toHaveBeenCalled();
   });
 
   it("getAdminStats lit les statistiques pour un administrateur", async () => {
-    actAsAdmin();
+    profiles.findProfileByUserId.mockResolvedValue(profile);
     const stats = {
       spaces: 1,
       archivedSpaces: 0,
-      platformAdmins: 1,
       profiles: 3,
       posts: 1,
       projects: 3,
       accessEvents: 0,
     };
     admin.adminStats.mockResolvedValue(stats);
-    await expect(getAdminStats({ userId: "u1" })).resolves.toEqual(stats);
+    await expect(getAdminStats(adminCtx)).resolves.toEqual(stats);
   });
 });
 
 describe("archiveSpace (F14)", () => {
   it("archive un espace actif au nom de l'administrateur", async () => {
-    actAsAdmin();
+    profiles.findProfileByUserId.mockResolvedValue(profile);
     spaces.findSpaceById.mockResolvedValue(space());
-    spaces.archiveSpaceById.mockResolvedValue(true);
-
-    await archiveSpace({ userId: "u1" }, "sp1");
-
+    await archiveSpace(adminCtx, "sp1");
     expect(spaces.archiveSpaceById).toHaveBeenCalledWith("sp1");
   });
 
-  it("n'archive pas un espace déjà archivé", async () => {
-    actAsAdmin();
+  it("archivage idempotent : n'écrit pas un espace déjà archivé", async () => {
+    profiles.findProfileByUserId.mockResolvedValue(profile);
     spaces.findSpaceById.mockResolvedValue(space({ archivedAt: new Date() }));
-
-    await archiveSpace({ userId: "u1" }, "sp1");
-
+    await archiveSpace(adminCtx, "sp1");
     expect(spaces.archiveSpaceById).not.toHaveBeenCalled();
   });
 });

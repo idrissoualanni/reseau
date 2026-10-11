@@ -10,6 +10,12 @@
 > `docs/features/F12-posts-images.md`. Le fil libre enrichi (vidéo) reste ici.
 
 ## QA intégration V1.5 (2026-10-11) — écarts constatés
+- [ ] **Visibilité des OTP par l'admin (proposé)** — l'admin plateforme souhaite voir
+  tous les codes OTP envoyés aux utilisateurs. Sensible (secrets d'authentification) :
+  à cadrer avec `securite` avant tout code (journalisation, rétention, autorisation).
+  Non implémenté — hors du périmètre F16/F17 actuel.
+- [ ] **Gestion des comptes par l'admin** — voir/list, bannir, supprimer : exige une clé
+  serveur Better Auth (F17, `docs/TODO.md`).
 - [ ] **Front posts hors GraphQL** — `/posts`, `/posts/[id]` et le fil de posts
   appellent les cas d'usage / actions serveur ; aucun client n'utilise
   `/api/graphql` (règle `api-graphql` §0 : les posts sont en GraphQL). Écart de
