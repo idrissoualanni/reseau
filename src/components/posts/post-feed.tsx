@@ -4,11 +4,18 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { PostCard } from "@/components/posts/post-card";
 import { loadPostsPage } from "@/lib/actions/posts";
+import { groupPostsByDay } from "@/lib/posts-grouping";
 import type { PostFeedPage } from "@/lib/posts-feed";
 
-// Fil de posts paginé (F11) : bouton « Voir plus » client (même pattern que
-// ProjectFeed). Les cartes réutilisent `PostCard`.
-export function PostFeed({ initialPage }: { initialPage: PostFeedPage }) {
+// Fil de posts paginé (F11) : cartes regroupées par jour. `nowIso` vient du
+// serveur pour que le libellé des groupes soit identique au rendu serveur.
+export function PostFeed({
+  initialPage,
+  nowIso,
+}: {
+  initialPage: PostFeedPage;
+  nowIso: string;
+}) {
   const [page, setPage] = useState<PostFeedPage>(initialPage);
   const [pending, startTransition] = useTransition();
 
@@ -24,13 +31,22 @@ export function PostFeed({ initialPage }: { initialPage: PostFeedPage }) {
     });
   }
 
+  const groups = groupPostsByDay(page.edges, nowIso);
+
   return (
-    <div className="space-y-4">
-      <div className="space-y-4">
-        {page.edges.map((edge) => (
-          <PostCard key={edge.cursor} post={edge.post} author={edge.author} />
-        ))}
-      </div>
+    <div className="space-y-8">
+      {groups.map((group) => (
+        <section key={group.key} aria-label={group.label} className="space-y-3">
+          <h2 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            {group.label}
+          </h2>
+          <div className="space-y-4">
+            {group.items.map((edge) => (
+              <PostCard key={edge.cursor} post={edge.post} author={edge.author} />
+            ))}
+          </div>
+        </section>
+      ))}
 
       {page.hasNextPage ? (
         <div className="flex justify-center">

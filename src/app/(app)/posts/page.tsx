@@ -1,16 +1,16 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { MessageSquare, Plus } from "lucide-react";
 import { requireSession } from "@/lib/auth";
 import { getOwnProfile } from "@/lib/profile";
 import { loadPostsFeed } from "@/lib/posts-feed";
 import { PageShell } from "@/components/page-shell";
-import { Card, CardContent } from "@/components/ui/card";
-import { PostComposer } from "@/components/posts/post-composer";
+import { Button } from "@/components/ui/button";
 import { PostFeed } from "@/components/posts/post-feed";
 import { EmptyState } from "@/components/empty-state";
-import { MessageSquare } from "lucide-react";
 
-// Fil de posts (F11) : publication + liste paginée (plus récents d'abord).
-// La session est lue à chaque requête (route bloquante, pas de prerender).
+// Fil de posts (F11) : lecture groupée par jour + CTA vers la page de
+// composition dédiée. La session est lue à chaque requête (route bloquante).
 export const instant = false;
 export default async function PostsPage() {
   const session = await requireSession();
@@ -24,27 +24,34 @@ export default async function PostsPage() {
 
   return (
     <PageShell width="feed" className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Posts</h1>
-        <p className="text-muted-foreground text-sm">
-          Publie une activité et discute avec la communauté.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Posts</h1>
+          <p className="text-muted-foreground text-sm">
+            Publie une activité et discute avec la communauté.
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/posts/new">
+            <Plus aria-hidden />
+            Publier
+          </Link>
+        </Button>
       </div>
-
-      <Card>
-        <CardContent className="p-4">
-          <PostComposer />
-        </CardContent>
-      </Card>
 
       {feed.edges.length === 0 ? (
         <EmptyState
           icon={MessageSquare}
           title="Aucun post pour l'instant."
           description="Publie le premier pour lancer la discussion."
+          action={
+            <Button asChild>
+              <Link href="/posts/new">Publier le premier post</Link>
+            </Button>
+          }
         />
       ) : (
-        <PostFeed initialPage={feed} />
+        <PostFeed initialPage={feed} nowIso={new Date().toISOString()} />
       )}
     </PageShell>
   );

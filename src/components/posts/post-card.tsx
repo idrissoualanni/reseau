@@ -10,20 +10,35 @@ type PostCardProps = {
   author: AuthorSummary | null;
 };
 
-function formatDate(iso: string): string {
+// Heure seule : le jour est porté par l'en-tête de groupe (fil groupé par jour).
+function formatTime(iso: string): string {
   return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
     timeZone: "UTC",
   }).format(new Date(iso));
 }
 
-// Carte d'un post du fil (F11) : auteur, texte brut, date, nombre de
-// commentaires, lien vers le détail. Composant statique.
+function formatFullDate(iso: string): string {
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  }).format(new Date(iso));
+}
+
+// Carte d'un post du fil (F11) : en-tête auteur, corps, image optionnelle,
+// ligne d'action commentaires. L'`id` sert d'ancre `#post-<id>` pour mettre en
+// évidence un post fraîchement publié (variant `target:`).
 export function PostCard({ post, author }: PostCardProps) {
   return (
-    <Card>
+    <Card
+      id={`post-${post.id}`}
+      className="scroll-mt-20 transition-shadow target:ring-primary/40 target:ring-2"
+    >
       <CardContent className="space-y-3 p-4">
         <div className="flex items-center gap-2">
           {author ? (
@@ -32,31 +47,44 @@ export function PostCard({ post, author }: PostCardProps) {
               className="hover:underline focus-visible:ring-ring inline-flex items-center gap-2 rounded-sm outline-none focus-visible:ring-2"
             >
               <Avatar name={author.displayName} src={author.avatarUrl} size="md" className="size-7 text-xs" />
-              <span className="text-sm font-medium">{author.displayName}</span>
+              <span className="text-sm font-semibold">{author.displayName}</span>
             </Link>
           ) : (
             <span className="text-muted-foreground text-sm">Membre</span>
           )}
-          <time dateTime={post.createdAt} className="text-muted-foreground/70 ml-auto text-xs">
-            {formatDate(post.createdAt)}
+          <time
+            dateTime={post.createdAt}
+            title={formatFullDate(post.createdAt)}
+            aria-label={formatFullDate(post.createdAt)}
+            className="text-muted-foreground ml-auto text-xs"
+          >
+            {formatTime(post.createdAt)}
           </time>
         </div>
 
-        <p className="text-sm whitespace-pre-wrap">{post.body}</p>
+        <Link
+          href={`/posts/${post.id}`}
+          className="focus-visible:ring-ring block rounded-sm outline-none focus-visible:ring-2"
+        >
+          <p className="text-base leading-relaxed whitespace-pre-wrap">{post.body}</p>
+        </Link>
 
         {post.imageUrl ? (
-          <Link href={`/posts/${post.id}`} className="block focus-visible:ring-ring rounded-md outline-none focus-visible:ring-2">
+          <Link
+            href={`/posts/${post.id}`}
+            className="focus-visible:ring-ring block rounded-xl outline-none focus-visible:ring-2"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element -- bucket post public_read (F12) */}
             <img
               src={post.imageUrl}
               alt="Image du post"
-              className="bg-surface max-h-96 w-full rounded-[14px] object-cover"
+              className="bg-muted max-h-96 w-full rounded-xl object-cover"
               loading="lazy"
             />
           </Link>
         ) : null}
 
-        <div className="flex items-center gap-4 pt-1">
+        <div className="border-border/60 flex items-center gap-4 border-t pt-3">
           <Link
             href={`/posts/${post.id}`}
             className="text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex items-center gap-1.5 rounded-sm text-xs outline-none focus-visible:ring-2"
