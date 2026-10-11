@@ -138,8 +138,9 @@
   `addComment` racine (`parentId: null`, Zod v4 refuse `undefined`) et `Post.comments`
   ne renvoie que les racines (les réponses sont sous `replies`). Écart noté :
   front posts hors GraphQL (`docs/backlog.md`).
-- [ ] **Appliquer la migration `drizzle/0006_abandoned_longshot.sql`** sur Neon **dev**
-  (tables V1.5, additive). Aucune migration destructive.
+- [x] **Migration `drizzle/0006_abandoned_longshot.sql` appliquée sur Neon dev** (2026-10-11,
+  vérifié via MCP : 5 tables V1.5 présentes, `__drizzle_migrations.apply_count = 7`).
+  Aucune migration destructive.
 - [x] **`PLATFORM_ADMIN_EMAILS`** : **fait dans `.env.local` (2026-10-11)** — valeur =
   e-mail git `idrissoualanni0@gmail.com` (à confirmer). **Reste** : Render dev
   (dashboard) — **intervention utilisateur**. Sinon aucun admin ne peut être amorcé.
