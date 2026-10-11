@@ -24,11 +24,23 @@
   essai sur une adresse déjà créée → aucun code). Délai anti-spam de 60 s sur `/verify-email`.
 
 ## Render / déploiement
-- [ ] **`render.yaml`** : mettre à jour via le MCP Render (service `reseau`).
-- [ ] **Service `reseau`** (`srv-db4ek92jnfac73b4uij0`) : variables d'environnement de dev.
+- [x] **`render.yaml`** : **aligné (2026-10-11)** via MCP Render — service `reseau`
+  (srv-db4ek92jnfac73b4uij0), `NEXT_PUBLIC_APP_URL` = `fromService.publicUrl`,
+  stockage `AWS_*`. Secrets restent `sync: false` (dashboard).
+- [ ] **Service `reseau`** (`srv-db4ek92jnfac73b4uij0`) : renseigner les secrets en dev
+  (`DATABASE_URL`, `NEON_AUTH_*`, `AWS_*`) — **intervention utilisateur**. La clé Render
+  n'est jamais écrite : `{file:.secrets/render-api-key}` (gitignoré).
+- [x] **Env dev corrigé (2026-10-10)** : `NEXT_PUBLIC_APP_URL` valait `http://localhost:3000`
+  → **403 sur toutes les mutations** (`/api/uploads/presign`, `/api/me/*`, GraphQL), vérifié via
+  l'API Render. Remis à `https://reseau-3tuk.onrender.com` ; `NEXT_PUBLIC_GRAPHQL_URL` renseigné
+  (`https://reseau-3tuk.onrender.com/api/graphql`). Rebuild dev déclenché (les `NEXT_PUBLIC_*`
+  sont inlinées au build).
 - [ ] **Supprimer le service `srv-db46e4btqb8s73e8bsd0`** (ancien, hors `reseau`).
 - [ ] **Branche de déploiement** : ne JAMAIS déployer depuis `main` ; déployer depuis `dev`.
-- [ ] **Fin de V1** : tests complets → déploiement Render dev + Neon dev → tester ce qui est
+- [x] **V1 — code vérifié (2026-10-11)** : `npm run build` (26/26 pages), `tsc --noEmit`
+  (0 erreur), `npm run lint` (0 erreur), `npm test` (**150/150 verts**). Toutes les branches
+  sont contenues dans `dev`.
+- [ ] **Fin de V1** : déploiement Render dev + Neon dev → tester ce qui est
   réellement déployé (sondes de vérification), pas seulement le statut du build.
 
 ## Profil (F03/F04/F10) — reporté du Lot 2
@@ -48,24 +60,34 @@
   remplacer par Redis (Render KV).
 
 ## Stockage / images (F06/F12)
-- [x] **Convention** : **décidé (2026-10-09)** — Neon Object Storage (S3-compatible).
-  Les variables `AWS_*` (`.env.local`) sont la convention réelle ; `.env.example`
-  doit être aligné (`STORAGE_*` → `AWS_*`). Voir `docs/api/rest.md` § uploads.
+- [x] **Convention** : **décidé (2026-10-09), aligné (2026-10-11)** — Neon Object Storage
+  (S3-compatible), variables `AWS_*` (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
+  `AWS_REGION`, `AWS_ENDPOINT_URL_S3`). `.env.example` et `render.yaml` alignés ;
+  buckets `post` / `projet` / `profile` (voir `src/lib/storage.ts`).
 - [x] **Bucket tranché** : **fait (2026-10-10)** — images de posts : bucket `post` en
   `public_read` ; clé `posts/{profileId}/{uuid}.{ext}` ; presign PUT 15 min ;
   `imageUrl` exposé (jamais `imageKey`). F12 terminé (voir `docs/features/F12-posts-images.md`).
 - [x] **Avatars** : **fait (2026-10-10)** — bucket `profile`, clé `profiles/{profileId}/{uuid}.{ext}`,
   ≤ 5 Mo, F13 (voir `docs/features/F13-avatar-profil.md`).
-- [ ] **Couvertures de projets** : brancher l'upload présigné (bucket `projet`, décision
-  AGENTS.md 2026-10-10), Lot suivant. Le bucket `projet` reste **à créer** sur Neon
-  (`public_read`) ; `storage.ts` route déjà les clés `projects/` vers ce bucket.
+- [x] **Buckets Neon vérifiés (2026-10-10)** : `post`, `profile`, **`projet`** (tous `public_read`),
+  `asset` (privé). Endpoint dev = `https://br-jolly-pine-b50wjyjx.storage.c-7.us-east-2.aws.neon.tech`,
+  région `us-east-2`, `force_path_style: true`. Aligné avec `AWS_*` en local et sur Render.
+- [x] **Couvertures de projets** : **fait (2026-10-11)** — upload présigné branché (bucket
+  `projet`, kind `project-cover`, clé `projects/{profileId}/{uuid}.{ext}`, ≤ 5 Mo) ;
+  création F05 + édition F06 ; aperçu + retrait ; tests de validation. Mergé sur `dev`.
 
 ## Designer / UI
-- [ ] **Sidebar** : ajouter une **icône de repli** (collapse) et un **dropdown** utilisateur
-  dans le sidebar shadcn/ui (consigne AGENTS.md 2026-10-10).
+- [x] **Sidebar** : **fait (2026-10-11)** — icône de repli (collapse) + dropdown utilisateur
+  dans le sidebar shadcn/ui, lien « Posts » aligné sur `NAV_ITEMS` (source unique).
+  Mergé sur `dev` (commit `4998a98`).
+- [x] **Lien « Posts » manquant (2026-10-10)** : le sidebar (`src/components/app-sidebar.tsx`)
+  n'affiche pas `/posts` (liste locale désalignée de `src/components/navigation.ts`). À aligner
+  sur `NAV_ITEMS` (source unique) — traité dans la refonte du sidebar.
 
 ## Clés encore vides (lots ultérieurs — non nécessaires à la V1)
-- `NEXT_PUBLIC_GRAPHQL_URL` — Lot 3+ : `${NEXT_PUBLIC_APP_URL}/api/graphql`.
+- `NEXT_PUBLIC_GRAPHQL_URL` — **fait (2026-10-10)** : `https://reseau-3tuk.onrender.com/api/graphql`
+  (local + Render). ⚠️ `.env.local` n'interpole pas `${...}` : ne jamais écrire
+  `${NEXT_PUBLIC_APP_URL}/...` (valeur littérale cassée).
 - `NEXT_PUBLIC_SIGNALING_URL`, `NEXT_PUBLIC_STUN_URL`, `TURN_URL`, `TURN_CREDENTIAL` — EN ATTENTE
   (WebRTC V1.5+) : à obtenir fournisseur TURN (Twilio, Cloudflare Calls ou coturn) et
   configurer dans `.env.local`. Non critique pour V1 ; reporter au Lot 3+.
@@ -94,6 +116,11 @@
   126 tests verts.
 
 ## À faire par l'utilisateur (nécessite son intervention)
+- ⚠️ **Sécurité — cookie de session exposé** : le cookie `__Secure-neon-auth.*` a été collé en
+  clair dans `AGENTS.md` (WIP non commité). À retirer du fichier ; considérer la session comme
+  compromise (se déconnecter/reconnecter). Ne jamais committer `AGENTS.md` avec ce contenu.
+- **Render** : supprimer le service `srv-db46e4btqb8s73e8bsd0` (le dev utilise
+  `srv-db4ek92jnfac73b4uij0`).
 - **Turnstile** : décider si clés de test dev ou attente domaine.
 - **Bucket stockage** : nommer le bucket Neon Object Storage (ADR 0004 « proposé »).
 - **TURN** : choisir le fournisseur pour WebRTC (V1.5+).
