@@ -18,7 +18,8 @@ Index. Chaque fichier répond à une seule question. Les agents lisent `CLAUDE.m
 | `skills-to-install.md` | Skills externes à installer |
 | `open-decisions.md` | Ce qui reste à trancher |
 | `risks.md` | Risques et réponses, données personnelles |
-| `features/` | Une fiche par fonctionnalité (F01–F10) + `_template.md` |
+| `features/README.md` | Liste complète des fonctionnalités (F01–F39), versions, ordre de développement |
+| `features/` | Une fiche par fonctionnalité (`Fxx-slug.md`) + `_template.md` |
 | `decisions/` | ADR : une décision d'architecture par fichier |
 | `ux/` | Fiches UX par page (écrites avant le code frontend) |
 | `plans/` | Plans validés (sortie de `/plan`) |
