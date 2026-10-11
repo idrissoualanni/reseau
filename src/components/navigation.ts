@@ -1,4 +1,4 @@
-import { Compass, Layers, MessageSquare, UserRound, type LucideIcon } from "lucide-react";
+import { Compass, Layers, MessageSquare, Shield, UserRound, type LucideIcon } from "lucide-react";
 
 export type NavItem = {
   href: string;
@@ -14,3 +14,11 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/search", label: "Recherche", icon: Compass },
   { href: "/me/profile", label: "Mon profil", icon: UserRound },
 ];
+
+// Entrée réservée aux admins plateforme (F17) : affichée seulement si le
+// membre porte le rôle applicatif.
+export const ADMIN_NAV_ITEM: NavItem = {
+  href: "/admin",
+  label: "Administration",
+  icon: Shield,
+};
