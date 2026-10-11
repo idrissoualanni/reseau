@@ -2,66 +2,58 @@
 
 - **Version** : V1.5 · **Dépend de** : F14 · **Agents** : backend, securite, frontend
 - **Objectif** : porter des rôles sur chaque appartenance, sans branche de code dispersée.
-- **User story** : En tant qu'admin plateforme, je veux nommer des admins, afin de déléguer
-  la gestion des espaces.
+- **User story** : En tant qu'admin plateforme, je veux déléguer la gestion des espaces
+  à des rôles, afin de répartir les responsabilités.
 
 ## Règles métier
 
-1. Rôles d'espace stockés en **données** : `memberships.role` ∈ {`member`, `space_admin`}.
-2. Rôle plateforme : table `platform_admins` (`profile_id`).
-3. Un profil a **au plus une** appartenance par espace (`UNIQUE(space_id, profile_id)`).
-4. Un compte peut appartenir à plusieurs espaces avec des rôles différents.
-5. Autorisation **côté serveur** à chaque cas d'usage : `requirePlatformAdmin`,
-   `requireSpaceAdmin`. Jamais seulement dans l'UI.
-6. Moindre privilège : un `space_admin` n'administre que **son** espace.
-7. Amorçage : `PLATFORM_ADMIN_EMAILS` (liste d'e-mails) accorde le rôle `platform_admin`
-   au profil correspondant lors du contrôle d'accès (idempotent). Aucun secret en base.
-8. Dernier admin plateforme : impossible de retirer le dernier `platform_admin`.
+1. Rôle plateforme : champ `role` de **Neon Auth** (`"user"` / `"admin"`). Source unique,
+   gérée dans la **console Neon Auth**. Aucune table applicative (`platform_admins` supprimée).
+2. Rôle d'espace : colonne `memberships.role` (`member`, `space_admin`).
+3. L'autorisation est vérifiée **côté serveur** (`requirePlatformAdmin`) ; la valeur vient
+   de la session serveur, jamais de la requête.
+4. `role` peut être une chaîne ou un tableau → normalisé par `normalizeRoles`.
+5. Aucune élévation possible depuis un rôle inférieur.
 
 ## Écrans / routes
 
-`/admin/admins` (nommer/retirer des admins plateforme) — voir UX `admin-plateforme.md`.
+Pas d'écran applicatif : les rôles se gèrent dans la console Neon Auth. `/admin/*` est
+réservé au rôle `admin` (voir UX `admin-plateforme.md`).
 
 ## API
 
-| Méthode | Route | Entrée | Sortie |
-|---|---|---|---|
-| `GET` | `/api/admin/admins` | — | liste des platform admins |
-| `POST` | `/api/admin/admins` | `{ profileId }` | admin nommé |
-| `DELETE` | `/api/admin/admins/[profileId]` | — | admin retiré |
+Aucune route dédiée (les routes `/admin/admins` ont été retirées).
 
 ## Données
 
-`memberships` (`role`, `verification_level`, `verified_via`), `platform_admins`.
+`memberships` (`role`, `verification_level`, `verified_via`). Le rôle plateforme vit dans
+`neon_auth."user".role`, hors schéma applicatif.
 
 ## Validation (Zod)
 
-`grantPlatformAdminSchema` (`{ profileId: uuid }`), `setMembershipRoleSchema`.
+`setMembershipRoleSchema`.
 
 ## Erreurs
 
 | Cas | Code | Message |
 |---|---|---|
-| non admin plateforme | `FORBIDDEN` | « Accès refusé. » |
-| retrait du dernier admin | `RULE_VIOLATION` | « Il doit rester au moins un admin. » |
-| profil inexistant | `NOT_FOUND` | « Profil introuvable. » |
+| rôle plateforme absent | `FORBIDDEN` | « Accès refusé. » |
 
 ## Sécurité et autorisation
 
-- Seul un `platform_admin` nomme/retire un `platform_admin` et pose un `space_admin`.
-- Un `space_admin` ne peut agir que sur son espace (vérifié en base).
+- Seul un compte dont `role` contient `"admin"` accède à `/admin` et à ses cas d'usage.
+- Un admin d'espace ne peut agir que sur son espace (vérifié en base).
 - Aucune élévation possible depuis un rôle inférieur.
 
 ## Critères d'acceptation
 
-- [ ] Given un platform_admin connecté, When il nomme un profil, Then il devient admin.
-- [ ] Given un non-admin, When il appelle `POST /api/admin/admins`, Then `FORBIDDEN`.
-- [ ] Given un seul platform_admin, When il se retire, Then `RULE_VIOLATION`.
-- [ ] Given `PLATFORM_ADMIN_EMAILS`, When le profil correspondant agit, Then il est admin.
+- [x] Given un compte Neon Auth `role = "admin"`, When il ouvre `/admin`, Then il y accède.
+- [x] Given un compte `role = "user"`, When il ouvre `/admin`, Then 404 (pas de fuite).
+- [x] Given `role` rendu en tableau, When la session est lue, Then le rôle admin est détecté.
 
 ## Tests attendus
 
-- Unitaires : garde d'autorisation (`admin.test.ts`, repos mockés), validation.
+- Unitaires : garde d'autorisation (`admin.test.ts`, repos mockés), normalisation des rôles.
 
 ## Hors périmètre
 

@@ -95,10 +95,10 @@ Statuts : ✅ livré · 🔜 à développer · ⏳ reporté.
 
 - **Version** : V1.5 · **Dépend de** : F14 · **Agents** : backend, securite, frontend
 - **Objectif** : porter des rôles sur chaque appartenance.
-- **Contenu** : `member`, `space_admin`, `platform_admin` stockés en **données** (pas de
-  `if role === …` dispersés). Autorisation **côté serveur**, moindre privilège. Un compte peut
-  appartenir à plusieurs espaces avec des rôles différents.
-- **Données** : `memberships.role`, `platform_admins`.
+- **Contenu** : rôle plateforme = `role` **Neon Auth** (`user`/`admin`), géré en console ;
+  rôle d'espace = `memberships.role`. Pas de `if role === …` dispersés. Autorisation
+  **côté serveur**, moindre privilège. Un compte peut appartenir à plusieurs espaces.
+- **Données** : `memberships.role` ; rôle plateforme dans `neon_auth."user".role`.
 - **Hors périmètre** : rôles `recruiter`/`entrepreneur`/`mentor` (V3).
 
 ## F17 — Administration d'espace
@@ -139,7 +139,7 @@ Statuts : ✅ livré · 🔜 à développer · ⏳ reporté.
 - **Version** : V1.5 · **Dépend de** : F11, F18 · **Agents** : backend, frontend, securite
 - **Objectif** : signaler et traiter un contenu inapproprié.
 - **Contenu** : signaler un post/commentaire/vidéo (motif) ; file de traitement pour
-  `space_admin`/`platform_admin` ; masquage/retrait ; journal.
+  `space_admin` et admin plateforme (rôle `admin` Neon Auth) ; masquage/retrait ; journal.
 - **Données** : `reports` (cible, motif, statut, traité par).
 - **Hors périmètre** : modération automatique par IA.
 

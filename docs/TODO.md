@@ -130,25 +130,27 @@
 
 ## V1.5 — Administration plateforme (worktree `v1.5-admin`)
 - [x] **F14 socle espaces, F16 rôles, F17 console plateforme** : **livré (2026-10-11)** —
-  schéma (`spaces`, `space_access_methods`, `memberships`, `platform_admins`, `space_access_log`),
+  schéma (`spaces`, `space_access_methods`, `memberships`, `space_access_log`),
   cas d'usage `src/lib/admin.ts`, REST `/api/admin/*` + espaces publics, console `/admin/*`,
   lien sidebar conditionnel. Fiches `docs/features/F14`, `F16`, `F17`, `docs/ux/admin-plateforme.md`.
+- [x] **Accès admin par rôle Neon Auth (2026-10-11)** — `platform_admins` supprimée ;
+  `requirePlatformAdmin` et `/admin` reposent sur `session.user.role` (`admin`). Routes/page/
+  onglet admins retirés, `PLATFORM_ADMIN_EMAILS` supprimé. Tests/lint/typecheck verts.
 - [x] **Tests d'intégration posts/commentaires + garde admin (2026-10-11)** — worktree
   `v1.5-integration` mergé (+18 tests, **189 verts**). Deux correctifs GraphQL :
   `addComment` racine (`parentId: null`, Zod v4 refuse `undefined`) et `Post.comments`
   ne renvoie que les racines (les réponses sont sous `replies`). Écart noté :
   front posts hors GraphQL (`docs/backlog.md`).
-- [x] **Migration `drizzle/0006_abandoned_longshot.sql` appliquée sur Neon dev** (2026-10-11,
-  vérifié via MCP : 5 tables V1.5 présentes, `__drizzle_migrations.apply_count = 7`).
-  Aucune migration destructive.
-- [x] **`PLATFORM_ADMIN_EMAILS`** : **fait dans `.env.local` (2026-10-11)** — valeur =
-  e-mail git `idrissoualanni0@gmail.com` (à confirmer). **Reste** : Render dev
-  (dashboard) — **intervention utilisateur**. Sinon aucun admin ne peut être amorcé.
+- [x] **Migrations V1.5 appliquées sur Neon dev** : `0006` (tables V1.5), puis `0007`
+  (drop `platform_admins`). Vérifié via MCP : `__drizzle_migrations.apply_count = 8`,
+  `platform_admins` absente. La `0007` est destructive : ne pas la rejouer ailleurs sans relecture.
+- [x] **`PLATFORM_ADMIN_EMAILS` supprimé** (2026-10-11) — remplacé par le rôle `admin`
+  de Neon Auth. Aucun amarrage applicatif ni variable d'environnement nécessaire.
 - [ ] **Console d'admin d'espace (reste de F17)** : approuver/retirer des membres, configurer
   les méthodes d'accès, modération d'espace — dépend de F15 (rejoindre) et F20 (signalement).
-- [ ] **Comptes (infos de connexion + suppression)** : l'API admin Neon Auth exige le rôle
-  `admin` **de Neon Auth** (ou une clé serveur), distinct du `platform_admin` applicatif.
-  **Intervention utilisateur** : attribuer ce rôle ou fournir une clé serveur.
+- [ ] **Comptes (infos de connexion + suppression)** : l'API admin Better Auth exige une
+  **clé serveur** (l'accès `/admin` par rôle ne suffit pas côté serveur).
+  **Intervention utilisateur** : fournir la clé serveur.
 
 ## À faire par l'utilisateur (nécessite son intervention)
 - ⚠️ **Sécurité — cookie de session exposé** : le cookie `__Secure-neon-auth.*` a été collé en
@@ -159,7 +161,9 @@
 - **Turnstile** : décider si clés de test dev ou attente domaine.
 - **Bucket stockage** : nommer le bucket Neon Object Storage (ADR 0004 « proposé »).
 - **TURN** : choisir le fournisseur pour WebRTC (V1.5+).
-- **Admin plateforme** : renseigner `PLATFORM_ADMIN_EMAILS` (`.env.local` + Render dev) pour
-  amorcer le premier administrateur, puis appliquer la migration `0006` sur Neon dev.
-- **Comptes / suppression** : attribuer le rôle `admin` **de Neon Auth** (ou fournir une clé
-  serveur) pour débloquer la lecture des identifiants et la suppression de compte (F17).
+- **Admin plateforme** : attribuer le rôle `admin` dans la console Neon Auth (déjà fait pour
+  `alanniidrissou4@gmail.com`). Aucune variable à poser.
+- **Comptes / suppression** : fournir une **clé serveur** Better Auth pour débloquer la lecture
+  des identifiants et la suppression de compte (F17).
+- **OTP admin (proposé)** : permettre à l'admin de voir les codes OTP envoyés aux
+  utilisateurs — à cadrer (voir `docs/backlog.md`).
