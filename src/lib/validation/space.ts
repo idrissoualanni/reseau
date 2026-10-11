@@ -63,9 +63,5 @@ export const updateSpaceSchema = z
   .strict()
   .refine((value) => Object.keys(value).length > 0, { message: "Aucune modification fournie." });
 
-// Nommer un admin plateforme (F16).
-export const grantPlatformAdminSchema = z.object({ profileId: z.uuid("Profil invalide.") }).strict();
-
 export type CreateSpaceInput = z.infer<typeof createSpaceSchema>;
 export type UpdateSpaceInput = z.infer<typeof updateSpaceSchema>;
-export type GrantPlatformAdminInput = z.infer<typeof grantPlatformAdminSchema>;

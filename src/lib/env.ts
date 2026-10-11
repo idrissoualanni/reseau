@@ -25,12 +25,6 @@ const storageEnvSchema = z.object({
   AWS_ENDPOINT_URL_S3: z.url(),
 });
 
-// Amorçage du rôle `platform_admin` (F16) : liste d'e-mails séparés par des
-// virgules. Facultatif — en son absence, seuls les admins en base comptent.
-const adminEnvSchema = z.object({
-  PLATFORM_ADMIN_EMAILS: z.string().optional(),
-});
-
 export type AuthEnv = z.infer<typeof authEnvSchema>;
 export type TurnstileEnv = z.infer<typeof turnstileEnvSchema>;
 export type StorageEnv = z.infer<typeof storageEnvSchema>;
@@ -63,17 +57,4 @@ let storageEnv: StorageEnv | undefined;
 export function getStorageEnv(): StorageEnv {
   storageEnv ??= parseOrThrow(storageEnvSchema, "de stockage");
   return storageEnv;
-}
-
-// E-mails autorisés à l'amorçage du rôle plateforme, en minuscules.
-let platformAdminEmails: Set<string> | undefined;
-
-export function getPlatformAdminEmails(): Set<string> {
-  platformAdminEmails ??= new Set(
-    (parseOrThrow(adminEnvSchema, "d'administration").PLATFORM_ADMIN_EMAILS ?? "")
-      .split(",")
-      .map((email) => email.trim().toLowerCase())
-      .filter((email) => email.length > 0),
-  );
-  return platformAdminEmails;
 }

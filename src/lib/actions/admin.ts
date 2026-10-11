@@ -3,14 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import {
-  archiveSpace,
-  createSpace,
-  grantPlatformAdminByUsername,
-  revokePlatformAdmin,
-  toAdminContext,
-  updateSpace,
-} from "@/lib/admin";
+import { archiveSpace, createSpace, toAdminContext, updateSpace } from "@/lib/admin";
 import { requireSession } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
 import { createSpaceSchema, updateSpaceSchema } from "@/lib/validation/space";
@@ -106,44 +99,4 @@ export async function archiveSpaceAction(
   }
   revalidatePath("/admin/spaces");
   return { success: "Espace archivé." };
-}
-
-const grantAdminSchema = z.object({
-  username: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .regex(/^[a-z0-9_]{3,30}$/, "Nom d'utilisateur invalide."),
-});
-
-export async function grantPlatformAdminAction(
-  _prev: AdminFormState,
-  formData: FormData,
-): Promise<AdminFormState> {
-  const parsed = grantAdminSchema.safeParse({ username: text(formData, "username") });
-  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
-
-  try {
-    const session = await requireSession();
-    await grantPlatformAdminByUsername(toAdminContext(session), parsed.data.username);
-  } catch (error) {
-    return toErrorState(error);
-  }
-
-  revalidatePath("/admin/admins");
-  return { success: "Administrateur nommé." };
-}
-
-export async function revokePlatformAdminAction(
-  _prev: AdminFormState,
-  formData: FormData,
-): Promise<AdminFormState> {
-  try {
-    const session = await requireSession();
-    await revokePlatformAdmin(toAdminContext(session), text(formData, "profileId"));
-  } catch (error) {
-    return toErrorState(error);
-  }
-  revalidatePath("/admin/admins");
-  return { success: "Administrateur retiré." };
 }

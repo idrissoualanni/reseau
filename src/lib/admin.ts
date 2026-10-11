@@ -1,9 +1,7 @@
-import { getPlatformAdminEmails } from "@/lib/env";
 import {
   ConflictError,
   ForbiddenError,
   NotFoundError,
-  RuleViolationError,
 } from "@/lib/errors";
 import {
   adminStats,
@@ -12,14 +10,7 @@ import {
   listAdminProfiles,
   listAdminProjects,
 } from "@/lib/repositories/admin";
-import {
-  countPlatformAdmins,
-  deletePlatformAdmin,
-  insertPlatformAdmin,
-  isPlatformAdmin,
-  listPlatformAdmins,
-} from "@/lib/repositories/platform-admins";
-import { findProfileById, findProfileByUserId, findProfileByUsername } from "@/lib/repositories/profiles";
+import { findProfileByUserId } from "@/lib/repositories/profiles";
 import {
   archiveSpaceById,
   findSpaceById,
@@ -32,7 +23,7 @@ import {
   updateSpaceById,
   type SpaceWithMemberCount,
 } from "@/lib/repositories/spaces";
-import type { AdminStats, AdminPlatformAdminRecord, Space, Profile } from "@/lib/types";
+import type { AdminStats, Space, Profile } from "@/lib/types";
 import type { CreateSpaceInput, UpdateSpaceInput } from "@/lib/validation/space";
 
 // Cas d'usage de l'administration plateforme (F14/F16/F17). Toute autorisation
@@ -42,28 +33,37 @@ import type { CreateSpaceInput, UpdateSpaceInput } from "@/lib/validation/space"
 export type AdminContext = {
   userId: string;
   email?: string | null;
+  roles: string[];
 };
+
+// Neon Auth rend `role` comme chaîne ou comme tableau selon le plugin.
+export function normalizeRoles(role: unknown): string[] {
+  if (Array.isArray(role)) {
+    return role.filter((value): value is string => typeof value === "string");
+  }
+  return typeof role === "string" ? [role] : [];
+}
 
 // Construit le contexte d'administration depuis la session (jamais la requête).
 export function toAdminContext(session: {
-  user: { id: string; email?: string | null };
+  user: { id: string; email?: string | null; role?: string | string[] | null };
 }): AdminContext {
-  return { userId: session.user.id, email: session.user.email ?? null };
+  return {
+    userId: session.user.id,
+    email: session.user.email ?? null,
+    roles: normalizeRoles(session.user.role),
+  };
+}
+
+// Rôle plateforme = rôle `admin` Neon Auth (source unique, F16).
+export function hasPlatformAdminRole(ctx: AdminContext): boolean {
+  return ctx.roles.includes("admin");
 }
 
 // Profil admin plateforme, ou `null` (sans lever). Réutilisé par le layout et la nav.
 export async function getPlatformAdminProfile(ctx: AdminContext): Promise<Profile | null> {
-  const profile = await findProfileByUserId(ctx.userId);
-  if (!profile) return null;
-  if (await isPlatformAdmin(profile.id)) return profile;
-
-  // Amorçage par liste blanche d'e-mails (idempotent) : seul chemin d'élévation.
-  const email = ctx.email?.trim().toLowerCase();
-  if (email && getPlatformAdminEmails().has(email)) {
-    await insertPlatformAdmin(profile.id, null);
-    return profile;
-  }
-  return null;
+  if (!hasPlatformAdminRole(ctx)) return null;
+  return findProfileByUserId(ctx.userId);
 }
 
 export async function requirePlatformAdmin(ctx: AdminContext): Promise<Profile> {
@@ -134,43 +134,6 @@ export async function archiveSpace(ctx: AdminContext, id: string): Promise<void>
   if (!existing) throw new NotFoundError("Espace introuvable.");
   if (existing.archivedAt) return;
   await archiveSpaceById(id);
-}
-
-// ─── Admins plateforme (F16) ─────────────────────────────────────────────────
-
-export async function listPlatformAdminsUseCase(
-  ctx: AdminContext,
-): Promise<AdminPlatformAdminRecord[]> {
-  await requirePlatformAdmin(ctx);
-  return listPlatformAdmins();
-}
-
-export async function grantPlatformAdmin(ctx: AdminContext, profileId: string): Promise<void> {
-  const admin = await requirePlatformAdmin(ctx);
-  const profile = await findProfileById(profileId);
-  if (!profile) throw new NotFoundError("Profil introuvable.");
-  await insertPlatformAdmin(profileId, admin.id);
-}
-
-// Nomination depuis l'interface : le nom d'utilisateur public est plus commode
-// que l'identifiant interne. La résolution se fait côté serveur.
-export async function grantPlatformAdminByUsername(
-  ctx: AdminContext,
-  username: string,
-): Promise<void> {
-  const admin = await requirePlatformAdmin(ctx);
-  const profile = await findProfileByUsername(username);
-  if (!profile) throw new NotFoundError("Profil introuvable.");
-  await insertPlatformAdmin(profile.id, admin.id);
-}
-
-export async function revokePlatformAdmin(ctx: AdminContext, profileId: string): Promise<void> {
-  await requirePlatformAdmin(ctx);
-  if ((await countPlatformAdmins()) <= 1) {
-    throw new RuleViolationError("Il doit rester au moins un administrateur.");
-  }
-  const removed = await deletePlatformAdmin(profileId);
-  if (!removed) throw new NotFoundError("Administrateur introuvable.");
 }
 
 // ─── Vues « tout voir » (F17) ────────────────────────────────────────────────
