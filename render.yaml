@@ -38,16 +38,14 @@ projects:
                 sync: false
               - key: AUTH_SECRET
                 sync: false
-              # Stockage S3-compatible Neon Object Storage (variables lues côté code)
-              - key: STORAGE_ACCESS_KEY_ID
+              # Stockage Neon Object Storage (buckets `post`, `projet`, `profile`)
+              - key: AWS_ACCESS_KEY_ID
                 sync: false
-              - key: STORAGE_SECRET_ACCESS_KEY
+              - key: AWS_SECRET_ACCESS_KEY
                 sync: false
-              - key: STORAGE_BUCKET
+              - key: AWS_REGION
                 sync: false
-              - key: STORAGE_ENDPOINT
-                sync: false
-              - key: STORAGE_PUBLIC_BASE_URL
+              - key: AWS_ENDPOINT_URL_S3
                 sync: false
               # Turnstile — clé secrète gérée dashboard (sync: false), désactivé V1
               - key: TURNSTILE_SECRET_KEY
@@ -91,15 +89,13 @@ projects:
                 sync: false
               - key: AUTH_SECRET
                 sync: false
-              - key: STORAGE_ACCESS_KEY_ID
+              - key: AWS_ACCESS_KEY_ID
                 sync: false
-              - key: STORAGE_SECRET_ACCESS_KEY
+              - key: AWS_SECRET_ACCESS_KEY
                 sync: false
-              - key: STORAGE_BUCKET
+              - key: AWS_REGION
                 sync: false
-              - key: STORAGE_ENDPOINT
-                sync: false
-              - key: STORAGE_PUBLIC_BASE_URL
+              - key: AWS_ENDPOINT_URL_S3
                 sync: false
               - key: TURNSTILE_SECRET_KEY
                 sync: false
