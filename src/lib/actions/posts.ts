@@ -63,14 +63,16 @@ export async function createPostAction(
   });
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
 
-  try {
-    await createPost(ctx, parsed.data);
-  } catch (error) {
-    return toErrorState(error);
-  }
+  // Publication puis redirection vers le fil, post mis en évidence via
+  // l'ancre `#post-<id>` (variant `target:` de la carte).
+  const result = await createPost(ctx, parsed.data).then(
+    (post) => ({ ok: true as const, post }),
+    (error) => ({ ok: false as const, error }),
+  );
+  if (!result.ok) return toErrorState(result.error);
 
   revalidatePath("/posts");
-  return { success: "Post publié." };
+  redirect(`/posts#post-${result.post.id}`);
 }
 
 export async function deletePostAction(formData: FormData): Promise<PostFormState> {

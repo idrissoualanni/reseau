@@ -66,7 +66,7 @@ export default async function PostDetailPage({
             <img
               src={imageUrl}
               alt="Image du post"
-              className="bg-surface max-h-[32rem] w-full rounded-[14px] object-cover"
+              className="bg-muted max-h-[32rem] w-full rounded-xl object-cover"
             />
           ) : null}
         </CardContent>

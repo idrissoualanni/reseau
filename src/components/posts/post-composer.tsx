@@ -4,10 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TextareaField } from "@/components/textarea-field";
-import {
-  createPostAction,
-  type PostFormState,
-} from "@/lib/actions/posts";
+import { createPostAction, type PostFormState } from "@/lib/actions/posts";
 import { MAX_POST_BODY } from "@/lib/posts";
 import { MAX_POST_IMAGE_BYTES } from "@/lib/validation/post";
 
@@ -15,9 +12,9 @@ const initialState: PostFormState = {};
 
 type PresignResponse = { uploadUrl: string; key: string; expiresIn: number };
 
-// Champ de publication d'un post (F11) : texte brut, max 5000 caractères.
-// F12 : une image optionnelle est PUT vers une URL présignée Neon avant la
-// publication ; le contenu ne transite jamais par l'API applicative.
+// Composition d'un post (F11) sur sa page dédiée : texte brut (max 5000),
+// image optionnelle (F12) PUT vers une URL présignée Neon avant publication.
+// L'aperçu reprend le cadrage du fil pour montrer le rendu final (F12 règle 8).
 export function PostComposer() {
   const [state, formAction, pending] = useActionState(createPostAction, initialState);
   const [selected, setSelected] = useState<File | null>(null);
@@ -38,6 +35,12 @@ export function PostComposer() {
     }
     setSelected(file);
     setPreviewUrl(URL.createObjectURL(file));
+  }
+
+  function clearImage() {
+    setSelected(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   async function presignAndPublish(formData: FormData) {
@@ -72,7 +75,7 @@ export function PostComposer() {
   }
 
   return (
-    <form action={presignAndPublish} className="space-y-3">
+    <form action={presignAndPublish} className="space-y-4">
       {state.error ? (
         <p
           role="alert"
@@ -92,31 +95,6 @@ export function PostComposer() {
         </p>
       ) : null}
 
-      {previewUrl ? (
-        <div className="relative">
-          {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local avant upload */}
-          <img
-            src={previewUrl}
-            alt="Aperçu de l'image du post"
-            className="bg-surface max-h-64 w-full rounded-[14px] object-cover"
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              setSelected(null);
-              setPreviewUrl(null);
-              if (fileInputRef.current) fileInputRef.current.value = "";
-            }}
-            aria-label="Retirer l'image"
-            className="absolute top-2 right-2"
-          >
-            <X />
-          </Button>
-        </div>
-      ) : null}
-
       <TextareaField
         name="body"
         label="Quoi de neuf ?"
@@ -124,8 +102,34 @@ export function PostComposer() {
         maxLength={MAX_POST_BODY}
         error={state.fieldErrors?.body}
         hint={`${MAX_POST_BODY} caractères maximum.`}
-        rows={4}
+        rows={8}
       />
+
+      {previewUrl ? (
+        <figure className="space-y-2">
+          <div className="relative">
+            {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local avant upload */}
+            <img
+              src={previewUrl}
+              alt="Aperçu de l'image du post"
+              className="bg-muted max-h-96 w-full rounded-xl object-cover"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={clearImage}
+              aria-label="Retirer l'image"
+              className="absolute top-2 right-2"
+            >
+              <X />
+            </Button>
+          </div>
+          <figcaption className="text-muted-foreground text-xs">
+            Aperçu : voici comment l&apos;image apparaîtra dans le fil.
+          </figcaption>
+        </figure>
+      ) : null}
 
       <div className="flex items-center justify-between gap-2">
         <input
@@ -135,6 +139,7 @@ export function PostComposer() {
           onChange={(event) => pickImage(event.target.files?.[0] ?? null)}
           className="sr-only"
           id="post-image"
+          aria-label="Choisir une image"
         />
         <Button
           type="button"
@@ -143,9 +148,9 @@ export function PostComposer() {
           disabled={pending}
         >
           <ImagePlus />
-          Ajouter une image
+          {selected ? "Changer d'image" : "Ajouter une image"}
         </Button>
-        <Button type="submit" disabled={pending || (!selected && false)}>
+        <Button type="submit" disabled={pending}>
           {pending ? <Loader2 className="animate-spin" /> : null}
           {pending ? "Publication…" : "Publier"}
         </Button>
