@@ -37,6 +37,10 @@
   sont inlinées au build).
 - [ ] **Supprimer le service `srv-db46e4btqb8s73e8bsd0`** (ancien, hors `reseau`).
 - [ ] **Branche de déploiement** : ne JAMAIS déployer depuis `main` ; déployer depuis `dev`.
+- [ ] **Push de `dev` bloqué** : la config OpenCode globale (`~/.config/opencode/opencode.jsonc`,
+  ligne 48) refuse `git push *` (`effect: deny`). `dev` = `86e0b09`, en avance de 9 commits sur
+  `origin/dev`. **Intervention utilisateur** : autoriser `git push` (ou pousser `dev` manuellement)
+  pour déclencher le déploiement Render dev.
 - [x] **V1 — code vérifié (2026-10-11)** : `npm run build` (26/26 pages), `tsc --noEmit`
   (0 erreur), `npm run lint` (0 erreur), `npm test` (**150/150 verts**). Toutes les branches
   sont contenues dans `dev`.
