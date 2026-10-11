@@ -3,6 +3,7 @@ import {
   createProjectSchema,
   listProjectsQuerySchema,
   MAX_SKILLS_PER_PROJECT,
+  presignProjectCoverSchema,
   publishProjectSchema,
   updateProjectSchema,
 } from "./project";
@@ -89,5 +90,53 @@ describe("listProjectsQuerySchema", () => {
     expect(result.success).toBe(true);
     if (result.success) expect(result.data.first).toBe(20);
     expect(listProjectsQuerySchema.safeParse({ first: 51 }).success).toBe(false);
+  });
+});
+
+describe("presignProjectCoverSchema (F06)", () => {
+  it("accepte une couverture valide", () => {
+    const result = presignProjectCoverSchema.safeParse({
+      kind: "project-cover",
+      contentType: "image/jpeg",
+      size: 1024,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("refuse un type d'image non supporté", () => {
+    expect(
+      presignProjectCoverSchema.safeParse({
+        kind: "project-cover",
+        contentType: "image/svg+xml",
+        size: 1024,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("refuse un fichier vide ou trop lourd (5 Mo)", () => {
+    expect(
+      presignProjectCoverSchema.safeParse({
+        kind: "project-cover",
+        contentType: "image/png",
+        size: 0,
+      }).success,
+    ).toBe(false);
+    expect(
+      presignProjectCoverSchema.safeParse({
+        kind: "project-cover",
+        contentType: "image/png",
+        size: 6 * 1024 * 1024,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("refuse un kind inconnu (.strict)", () => {
+    expect(
+      presignProjectCoverSchema.safeParse({
+        kind: "avatar",
+        contentType: "image/png",
+        size: 1024,
+      }).success,
+    ).toBe(false);
   });
 });
