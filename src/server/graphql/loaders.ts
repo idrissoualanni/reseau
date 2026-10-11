@@ -45,6 +45,9 @@ export function createLoaders(): Loaders {
       const rows = await listCommentsForPosts([...postIds]);
       const grouped = new Map<string, CommentRow[]>();
       for (const row of rows) {
+        // `Post.comments` n'expose que les racines ; les réponses vivent sous
+        // `PostComment.replies` (sinon une réponse apparaîtrait deux fois).
+        if (row.parentId !== null) continue;
         const list = grouped.get(row.postId) ?? [];
         list.push(row);
         grouped.set(row.postId, list);
