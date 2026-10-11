@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronsUpDown, LogOut, UserRound } from "lucide-react";
-import { NAV_ITEMS } from "@/components/navigation";
+import { NAV_ITEMS, ADMIN_NAV_ITEM } from "@/components/navigation";
 import { signOutAction } from "@/lib/actions/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar } from "@/components/avatar";
@@ -36,7 +36,7 @@ export type SidebarUser = {
   email?: string;
 };
 
-export function AppSidebar({ user }: { user: SidebarUser | null }) {
+export function AppSidebar({ user, isAdmin = false }: { user: SidebarUser | null; isAdmin?: boolean }) {
   const pathname = usePathname();
 
   return (
@@ -77,6 +77,28 @@ export function AppSidebar({ user }: { user: SidebarUser | null }) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        {isAdmin ? (
+          <SidebarGroup>
+            <SidebarGroupLabel>Administration</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname.startsWith(ADMIN_NAV_ITEM.href)}
+                    tooltip={ADMIN_NAV_ITEM.label}
+                    aria-current={pathname.startsWith(ADMIN_NAV_ITEM.href) ? "page" : undefined}
+                  >
+                    <Link href={ADMIN_NAV_ITEM.href}>
+                      <ADMIN_NAV_ITEM.icon />
+                      <span>{ADMIN_NAV_ITEM.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ) : null}
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>

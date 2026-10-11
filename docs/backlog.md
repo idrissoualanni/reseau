@@ -38,6 +38,14 @@
 - [ ] **Entrepreneurs** : le cœur doit rester générique (règle non négociable).
 - [ ] **Intégration universités** : établissement, filière, diplômes.
 
+## Administration (V1.5)
+- [x] **Console plateforme (F14/F16/F17 partie plateforme)** : **livré (2026-10-11)** —
+  espaces, admins plateforme, journal d'accès, vues « tout voir ». Worktree `v1.5-admin`.
+- [ ] **Console d'admin d'espace** : approuver/refuser/retirer des membres, configurer les
+  méthodes d'accès, modération d'espace (reste de F17) — dépend de F15 et F20.
+- [ ] **Comptes (identifiants + suppression)** : bloqué par le rôle `admin` de Neon Auth
+  (intervention utilisateur).
+
 ## Idées en attente (non triées)
 - [ ] **Likes/réactions** sur les posts (V1.5+).
 - [ ] **Mentions** dans les commentaires.

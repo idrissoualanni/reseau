@@ -119,6 +119,21 @@
   commentaires imbriqués (indentation max 3 niveaux), suppressions en cascade,
   126 tests verts.
 
+## V1.5 — Administration plateforme (worktree `v1.5-admin`)
+- [x] **F14 socle espaces, F16 rôles, F17 console plateforme** : **livré (2026-10-11)** —
+  schéma (`spaces`, `space_access_methods`, `memberships`, `platform_admins`, `space_access_log`),
+  cas d'usage `src/lib/admin.ts`, REST `/api/admin/*` + espaces publics, console `/admin/*`,
+  lien sidebar conditionnel. Fiches `docs/features/F14`, `F16`, `F17`, `docs/ux/admin-plateforme.md`.
+- [ ] **Appliquer la migration `drizzle/0006_abandoned_longshot.sql`** sur Neon **dev**
+  (tables V1.5, additive). Aucune migration destructive.
+- [ ] **`PLATFORM_ADMIN_EMAILS`** : renseigner dans `.env.local` et Render dev (dashboard) —
+  **intervention utilisateur**. Sinon aucun admin ne peut être amorcé.
+- [ ] **Console d'admin d'espace (reste de F17)** : approuver/retirer des membres, configurer
+  les méthodes d'accès, modération d'espace — dépend de F15 (rejoindre) et F20 (signalement).
+- [ ] **Comptes (infos de connexion + suppression)** : l'API admin Neon Auth exige le rôle
+  `admin` **de Neon Auth** (ou une clé serveur), distinct du `platform_admin` applicatif.
+  **Intervention utilisateur** : attribuer ce rôle ou fournir une clé serveur.
+
 ## À faire par l'utilisateur (nécessite son intervention)
 - ⚠️ **Sécurité — cookie de session exposé** : le cookie `__Secure-neon-auth.*` a été collé en
   clair dans `AGENTS.md` (WIP non commité). À retirer du fichier ; considérer la session comme
@@ -128,3 +143,7 @@
 - **Turnstile** : décider si clés de test dev ou attente domaine.
 - **Bucket stockage** : nommer le bucket Neon Object Storage (ADR 0004 « proposé »).
 - **TURN** : choisir le fournisseur pour WebRTC (V1.5+).
+- **Admin plateforme** : renseigner `PLATFORM_ADMIN_EMAILS` (`.env.local` + Render dev) pour
+  amorcer le premier administrateur, puis appliquer la migration `0006` sur Neon dev.
+- **Comptes / suppression** : attribuer le rôle `admin` **de Neon Auth** (ou fournir une clé
+  serveur) pour débloquer la lecture des identifiants et la suppression de compte (F17).

@@ -1,5 +1,6 @@
 import { AppSidebar, type SidebarUser } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { getPlatformAdminProfile, toAdminContext } from "@/lib/admin";
 import { getSession } from "@/lib/auth";
 import { getOwnProfile } from "@/lib/profile";
 import { getPublicUrl } from "@/lib/storage";
@@ -10,6 +11,9 @@ import { getPublicUrl } from "@/lib/storage";
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   const profile = session?.user ? await getOwnProfile(session.user.id) : null;
+  const isAdmin = session?.user
+    ? (await getPlatformAdminProfile(toAdminContext(session))) !== null
+    : false;
 
   const user: SidebarUser | null = profile
     ? {
@@ -22,7 +26,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <SidebarProvider>
-      <AppSidebar user={user} />
+      <AppSidebar user={user} isAdmin={isAdmin} />
       <SidebarInset>
         <div className="border-border bg-background/80 sticky top-0 z-30 flex h-12 items-center border-b px-4 backdrop-blur md:hidden">
           <SidebarTrigger />
