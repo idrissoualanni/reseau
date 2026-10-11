@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Worktrees des taches (imbriques) : ne pas linter leur code ni leurs builds.
+    ".opencode/**",
   ]),
 ]);
 
