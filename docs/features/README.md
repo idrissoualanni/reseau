@@ -25,9 +25,9 @@ Statuts : ✅ livré · 🔜 à développer · ⏳ reporté.
 | F12 | Images sur les posts | V1 | F11 | ✅ |
 | F13 | Avatar de profil | V1 | F12 | ✅ |
 | F14 | Espaces (socle) | V1.5 | F03 | ✅ |
-| F15 | Rejoindre un espace (accès) | V1.5 | F14 | 🔜 |
+| F15 | Rejoindre un espace (accès) | V1.5 | F14 | 🔜 (code écrit, à vérifier) |
 | F16 | Rôles et appartenances | V1.5 | F14 | ✅ |
-| F17 | Administration d'espace | V1.5 | F15, F16 | 🔜 (partie plateforme ✅) |
+| F17 | Administration d'espace | V1.5 | F15, F16 | 🔜 (plateforme ✅, code écrit, à vérifier) |
 | F18 | Publications structurées | V1.5 | F05, F14 | 🔜 |
 | F19 | Vidéo dans le fil | V1.5 | F12 | 🔜 |
 | F20 | Modération et signalement | V1.5 | F11, F18 | 🔜 |

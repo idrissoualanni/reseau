@@ -146,8 +146,14 @@
   `platform_admins` absente. La `0007` est destructive : ne pas la rejouer ailleurs sans relecture.
 - [x] **`PLATFORM_ADMIN_EMAILS` supprimé** (2026-10-11) — remplacé par le rôle `admin`
   de Neon Auth. Aucun amarrage applicatif ni variable d'environnement nécessaire.
-- [ ] **Console d'admin d'espace (reste de F17)** : approuver/retirer des membres, configurer
-  les méthodes d'accès, modération d'espace — dépend de F15 (rejoindre) et F20 (signalement).
+- [ ] **F15 — rejoindre un espace + console d'espace (reste de F17)** : **code écrit
+  (worktree `v15-espaces`), NON vérifié** — accès `open`/`invite_code`/`invite_link`/
+  `manual_approval`, approbation/refus/retrait des membres, configuration des méthodes,
+  pages publiques `/spaces` + `/spaces/[slug]`, onglets console Membres/Accès.
+  ⚠️ **À vérifier dès que le disque le permet** : `npm ci` puis `npm test`, `npm run lint`,
+  `npm run typecheck`, `npm run build` (bloqués : ~150 Mo libres, `node_modules` absent).
+  Restent hors périmètre : modération d'espace (F20) et page dédiée `space_admin` hors
+  `/admin` plateforme (voir `docs/backlog.md`).
 - [ ] **Comptes (infos de connexion + suppression)** : l'API admin Better Auth exige une
   **clé serveur** (l'accès `/admin` par rôle ne suffit pas côté serveur).
   **Intervention utilisateur** : fournir la clé serveur.

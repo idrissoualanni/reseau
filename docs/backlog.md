@@ -64,6 +64,12 @@
 - [ ] **Comptes (identifiants + suppression)** : bloqué par le rôle `admin` de Neon Auth
   (intervention utilisateur).
 
+## Espaces (V1.5 / V2)
+- [ ] **Page dédiée `space_admin`** : écran des administrateurs d'espace **hors** console
+  `/admin` plateforme (la console d'espace reste à livrer, voir ci-dessus) — à examiner.
+- [ ] **`email_domain` (F29, V2)** : méthode d'accès par domaine e-mail (OTP vers une adresse
+  du domaine autorisé) — enum `space_access_kind`, hors périmètre F15, à examiner en V2.
+
 ## Idées en attente (non triées)
 - [ ] **Likes/réactions** sur les posts (V1.5+).
 - [ ] **Mentions** dans les commentaires.

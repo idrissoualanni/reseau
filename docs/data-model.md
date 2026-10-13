@@ -84,4 +84,13 @@ Les extensions et index GIN s'écrivent dans une migration Drizzle **SQL personn
 
 Règle : une table n'est créée que dans la version qui l'utilise. Les ajouts futurs doivent être additifs (nouvelles tables, colonnes nullables).
 
+## Convention — appartenance en attente (F15)
+
+F15 (rejoindre un espace) n'ajoute **aucune table ni colonne** : une demande en attente est
+une ligne `memberships` avec `verification_level = 'unverified'` et
+`verified_via = 'manual_approval'`. L'approbation (F17) ne fait que passer cette même ligne
+à `verification_level = 'verified'` ; le journal `space_access_log` enregistre `request`
+puis `approve`. Aucune migration n'est donc nécessaire au-delà des tables V1.5 déjà définies
+(`spaces`, `space_access_methods`, `memberships`, `space_access_log`).
+
 **Supprimé du cadrage initial** : table `endorsements` (validation par pairs/enseignants).
