@@ -451,3 +451,6 @@ npm i @aws-sdk/client-s3 @aws-sdk/s3-request-presigner dotenv
 - corrige le neon storage et les poste j'ai deja mis a jour le env render met a jour le env local 
 - il faut developper la page de feed de post 
 - utilise le mcp de neon pour le storage 
+- admin de la platforme peut voir toute les infos de la plaforme toute les poste et les projet creer et les informations de connection il peut supprimer un compte ajoute un midelware de verification de compte 
+- l'admin se connect grace a l'endpoint admin pour  arriger sur sa page de connection 
+- je veux travailler sur une feature l'admin doit voir tous les code otp qui seront envoyer au utilisateur 
