@@ -114,6 +114,12 @@ export type Membership = {
   updatedAt: Date;
 };
 
+// Appartenance jointe à son profil, pour les vues de gestion (F15/F17).
+export type SpaceMember = {
+  membership: Membership;
+  profile: Profile;
+};
+
 export type SpaceAccessLogEntry = {
   id: string;
   spaceId: string;

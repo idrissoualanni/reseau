@@ -65,3 +65,63 @@ export const updateSpaceSchema = z
 
 export type CreateSpaceInput = z.infer<typeof createSpaceSchema>;
 export type UpdateSpaceInput = z.infer<typeof updateSpaceSchema>;
+
+// ─── Rejoindre un espace / administration des membres (F15) ──────────────────
+
+// Méthodes d'accès (ADR 0006). `email_domain` reste en V2 (F29).
+export const SPACE_ACCESS_KINDS = [
+  "open",
+  "invite_code",
+  "invite_link",
+  "manual_approval",
+] as const;
+
+// Rôles portés par une appartenance.
+export const MEMBERSHIP_ROLES = ["member", "space_admin"] as const;
+
+export const spaceAccessKindSchema = z.enum(SPACE_ACCESS_KINDS);
+
+// Corps du POST /api/spaces/[slug]/join. `code` et `token` restent optionnels :
+// seule la méthode choisie dit lequel est attendu.
+export const joinSpaceSchema = z
+  .object({
+    method: z.enum(SPACE_ACCESS_KINDS, "Choisis une méthode d'accès."),
+    code: z.string().trim().min(1, "Code requis.").max(64, "64 caractères maximum.").optional(),
+    token: z.string().trim().min(1, "Jeton requis.").max(128, "128 caractères maximum.").optional(),
+    message: optionalText(500, "500 caractères maximum."),
+  })
+  .strict();
+
+export const setMembershipRoleSchema = z
+  .object({
+    role: z.enum(MEMBERSHIP_ROLES, "Choisis un rôle."),
+  })
+  .strict();
+
+// Configuration d'une méthode d'accès. `method` vient de la query du PUT.
+export const setAccessMethodSchema = z
+  .object({
+    isActive: z.boolean(),
+    code: z
+      .string()
+      .trim()
+      .min(6, "6 caractères minimum.")
+      .max(64, "64 caractères maximum.")
+      .optional(),
+    regenerate: z.boolean().optional(),
+  })
+  .strict();
+
+// Décision prise par un gestionnaire sur une demande en attente.
+export const MEMBERSHIP_DECISIONS = ["approve", "reject"] as const;
+
+export const membershipDecisionSchema = z
+  .object({
+    action: z.enum(MEMBERSHIP_DECISIONS, "Action inconnue."),
+  })
+  .strict();
+
+export type JoinSpaceInput = z.infer<typeof joinSpaceSchema>;
+export type SetMembershipRoleInput = z.infer<typeof setMembershipRoleSchema>;
+export type SetAccessMethodInput = z.infer<typeof setAccessMethodSchema>;
+export type MembershipDecisionInput = z.infer<typeof membershipDecisionSchema>;
