@@ -35,6 +35,10 @@
 - [ ] **Vérifier la garde de vérification d'e-mail** en conditions réelles (compte
   non vérifié → `/verify-email`) — **intervention utilisateur** : libérer l'espace disque
   (~1 Go) puis `npm install`, `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`.
+- [ ] **Prouver la forme de `session.user`** (`emailVerified`) sur une session d'inscription :
+  la garde est **fail-open** ; si le champ est absent, elle est inerte. À confirmer en dev.
+- [ ] **Définir une rétention/purge pour `auth_otp_audit`** (ex. 30–90 j) — exigé par la
+  revue `securite` et `donnees-personnelles.md` (exception tracée dans `security.md`).
 
 ## Render / déploiement
 - [x] **`render.yaml`** : **aligné (2026-10-11)** via MCP Render — service `reseau`

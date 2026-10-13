@@ -13,6 +13,7 @@ description: Authentification, autorisation, validation, uploads, données perso
 - Secrets : aucun dans le dépôt ; `.env*` et fichiers de clés jamais lus ni écrits par les agents (hook `protect-files`). Rotation en cas de fuite.
 - Cloudflare : WAF, limitation de débit sur `/api/auth/*` et `/api/uploads/*`, Turnstile à l'inscription.
 - Logs : aucun e-mail, mot de passe, code, jeton, contenu de profil. Identifiants opaques uniquement.
+- **Exception tracée (2026-10-13) — `auth_otp_audit`.** L'**e-mail de destination** est autorisé dans la seule table `auth_otp_audit` (journal des *envois* OTP, `/admin/otp`), réservée à l'admin plateforme. **Jamais le code OTP** ; une durée de conservation (purge) doit être définie (`docs/TODO.md`). Cette exception ne s'étend ni aux logs applicatifs ni aux autres tables.
 - Réponses : en-têtes de sécurité (CSP, `X-Content-Type-Options`, `Referrer-Policy`), cookies `HttpOnly`/`Secure`/`SameSite`.
 - Données personnelles : minimiser, durée de conservation définie, suppression de compte avant production, conformité loi sénégalaise à valider (`docs/risks.md`).
 - Dépendances : épingler les versions, `npm audit` en CI, pas de dépendance non nécessaire.

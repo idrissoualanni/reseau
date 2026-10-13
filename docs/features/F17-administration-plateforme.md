@@ -38,10 +38,15 @@
 - Un utilisateur authentifié mais **non vérifié** (`session.user.emailVerified === false`)
   est redirigé vers `/verify-email` avant le rendu de toute page de l'app
   (`src/app/(app)/layout.tsx`, via `src/lib/auth-guard.ts`).
+- Même garde **au niveau API** : `requireSession()` (`src/lib/auth.ts`) refuse
+  (`FORBIDDEN`) une session non vérifiée, et le contexte GraphQL
+  (`src/server/graphql/context.ts`) la traite comme anonyme. La garde UI seule ne suffisait
+  pas (`security.md`).
 - Neon Auth bloque déjà la connexion (`EMAIL_NOT_VERIFIED`) ; cette garde couvre le cas
   d'une **session créée à l'inscription** et non encore vérifiée (sinon `/` reste ouvert).
 - Garde **fail-open** : si le champ `emailVerified` est absent de la session, on ne bloque
-  pas (aucun risque d'enfermer les comptes existants).
+  pas (aucun risque d'enfermer les comptes existants). ⚠️ La forme réelle de `session.user`
+  reste à **prouver** en environnement (voir `docs/TODO.md`).
 - Aucune donnée nouvelle, aucune migration.
 
 ### Journal des envois OTP (option A — sans le code)
@@ -54,7 +59,7 @@
   `forgot-password`), `outcome` (`sent` | `failed`), `error_code` (nullable), `created_at`.
 - Écriture **best-effort** : un échec d'écriture ne doit jamais casser l'inscription, la
   connexion ou le renvoi de code.
-- Page admin `/admin/otp` (onglet « OTP »), liste bornée (`ADMIN_LIST_LIMIT = 200`),
+- Page admin `/admin/otp` (onglet « OTP »), liste bornée (`OTP_EVENTS_LIMIT = 200`),
   lecture seule ; route `GET /api/admin/otp-events`.
 - ⚠️ **Bloqué pour l'application uniquement** : la migration doit être appliquée sur la
   branche Neon dev (`npm run db:migrate`). Impossible tant que `node_modules` est vide

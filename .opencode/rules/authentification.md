@@ -13,5 +13,7 @@
 - **Garde de vérification.** Page connectée ⇒ e-mail vérifié : `emailVerified === false`
   ⇒ redirection `/verify-email` (`src/lib/auth-guard.ts`). Fail-open si champ absent.
 - **Journal des envois OTP.** `auth_otp_audit` trace les envois (adresse, type, résultat,
-  date), **best-effort**, **jamais le code**, jamais bloquant.
+  date), **best-effort**, **jamais le code**, jamais bloquant. Exception tracée
+  (`security.md`) : l'e-mail de destination y est autorisé, réservé à l'admin plateforme ;
+  définir une rétention (purge) — `docs/TODO.md`.
 - **Mot de passe.** Utiliser `PasswordField` (bouton afficher/masquer).
