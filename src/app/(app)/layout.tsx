@@ -1,7 +1,9 @@
+import { redirect } from "next/navigation";
 import { AppSidebar, type SidebarUser } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { getPlatformAdminProfile, toAdminContext } from "@/lib/admin";
 import { getSession } from "@/lib/auth";
+import { isEmailVerified } from "@/lib/auth-guard";
 import { getOwnProfile } from "@/lib/profile";
 import { getPublicUrl } from "@/lib/storage";
 
@@ -10,6 +12,12 @@ import { getPublicUrl } from "@/lib/storage";
 // L'utilisateur est chargé côté serveur (cookies) et passé au sidebar.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
+
+  // Un compte authentifié mais non vérifié ne doit pas atteindre l'app.
+  if (session?.user && !isEmailVerified(session.user)) {
+    redirect("/verify-email");
+  }
+
   const profile = session?.user ? await getOwnProfile(session.user.id) : null;
   const isAdmin = session?.user
     ? (await getPlatformAdminProfile(toAdminContext(session))) !== null
