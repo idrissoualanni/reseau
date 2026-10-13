@@ -10,4 +10,8 @@
 - **Délai anti-spam.** 60 s entre deux renvois.
 - **Layout.** Sidebar dans `(app)` uniquement ; les pages d'auth (`(auth)`) n'ont ni
   sidebar ni top bar.
+- **Garde de vérification.** Page connectée ⇒ e-mail vérifié : `emailVerified === false`
+  ⇒ redirection `/verify-email` (`src/lib/auth-guard.ts`). Fail-open si champ absent.
+- **Journal des envois OTP.** `auth_otp_audit` trace les envois (adresse, type, résultat,
+  date), **best-effort**, **jamais le code**, jamais bloquant.
 - **Mot de passe.** Utiliser `PasswordField` (bouton afficher/masquer).

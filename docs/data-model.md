@@ -93,4 +93,22 @@ une ligne `memberships` avec `verification_level = 'unverified'` et
 puis `approve`. Aucune migration n'est donc nécessaire au-delà des tables V1.5 déjà définies
 (`spaces`, `space_access_methods`, `memberships`, `space_access_log`).
 
+## Table V1.5 — `auth_otp_audit` (journal des envois OTP)
+
+Trace **qu'un code OTP a été envoyé** (option A de la console admin). **Aucun code OTP
+n'est stocké** : Neon Auth (Managed Better Auth) génère et envoie le code, l'app ne le
+reçoit jamais.
+
+| Colonne | Type | Règle |
+|---|---|---|
+| id | uuid PK | `gen_random_uuid()` |
+| email | text, not null | adresse normalisée (minuscules), 3–254 car. |
+| type | text, not null | `email-verification` \| `forgot-password` (CHECK) |
+| outcome | text, not null | `sent` \| `failed` (CHECK) |
+| error_code | text, null | code d'erreur Bootstrap/Better Auth éventuel |
+| created_at | timestamptz, not null | `now()` |
+
+Index : `auth_otp_audit_created_idx (created_at DESC, id DESC)` (liste bornée admin),
+`auth_otp_audit_email_idx (email)`. Migration additive `0008_auth_otp_audit.sql`.
+
 **Supprimé du cadrage initial** : table `endorsements` (validation par pairs/enseignants).

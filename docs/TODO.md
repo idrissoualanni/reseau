@@ -23,6 +23,19 @@
   `emailOtp.sendVerificationOtp` **même si le compte existe déjà** (cause du bug : second
   essai sur une adresse déjà créée → aucun code). Délai anti-spam de 60 s sur `/verify-email`.
 
+## Console admin (V1.5) — journal OTP + garde e-mail
+- [x] **Visibilité des OTP — décision (2026-10-13)** : avec Neon Auth (Managed Better
+  Auth), le code n'est **jamais** reçu par l'app ; l'exposer est impossible. Retenu :
+  **option A** — page admin `/admin/otp` listant les **envois** (adresse, type, date,
+  succès/échec), **jamais le code**. Options « SMTP custom + boîte dev » et « sortir de
+  l'auth managée » écartées pour l'instant (voir `docs/backlog.md`).
+- [ ] **Appliquer la migration `0008_auth_otp_audit.sql`** sur Neon **dev** :
+  `npm run db:migrate` — **bloqué** tant que `node_modules` est vide (disque plein).
+  Le SQL est additif et déjà écrit. Ensuite : `npm test` (dont tests audit/mapper).
+- [ ] **Vérifier la garde de vérification d'e-mail** en conditions réelles (compte
+  non vérifié → `/verify-email`) — **intervention utilisateur** : libérer l'espace disque
+  (~1 Go) puis `npm install`, `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`.
+
 ## Render / déploiement
 - [x] **`render.yaml`** : **aligné (2026-10-11)** via MCP Render — service `reseau`
   (srv-db4ek92jnfac73b4uij0), `NEXT_PUBLIC_APP_URL` = `fromService.publicUrl`,

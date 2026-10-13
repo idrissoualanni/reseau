@@ -10,10 +10,15 @@
 > `docs/features/F12-posts-images.md`. Le fil libre enrichi (vidéo) reste ici.
 
 ## QA intégration V1.5 (2026-10-11) — écarts constatés
-- [ ] **Visibilité des OTP par l'admin (proposé)** — l'admin plateforme souhaite voir
-  tous les codes OTP envoyés aux utilisateurs. Sensible (secrets d'authentification) :
-  à cadrer avec `securite` avant tout code (journalisation, rétention, autorisation).
-  Non implémenté — hors du périmètre F16/F17 actuel.
+- [ ] **Visibilité des OTP par l'admin** — **tranché (2026-10-13)** : avec Neon Auth
+  (Managed Better Auth), le code n'est **jamais** reçu par l'app ; l'afficher est
+  impossible. Retenu : **option A** — journal des **envois** (`/admin/otp`), **jamais
+  le code**. Écarté pour l'instant (à réexaminer) :
+  - **option B** — SMTP custom + boîte de dev pour intercepter les e-mails : nécessite de
+    sortir de l'envoi partagé Neon et de configurer un fournisseur (secret en plus).
+  - **option C** — abandonner l'auth managée (self-hosted Better Auth) : perte du
+    bénéfice Neon Auth, chantier majeur.
+  Voir `docs/features/F17-administration-plateforme.md` §« Journal des envois OTP ».
 - [ ] **Gestion des comptes par l'admin** — voir/list, bannir, supprimer : exige une clé
   serveur Better Auth (F17, `docs/TODO.md`).
 - [ ] **Front posts hors GraphQL** — `/posts`, `/posts/[id]` et le fil de posts

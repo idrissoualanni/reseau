@@ -25,5 +25,12 @@ description: Parcours d'authentification (Neon Auth / Managed Better Auth)
   (`src/components/password-field.tsx`), jamais un `<input type="password">` nu.
 - **Layout.** La sidebar vit dans `src/app/(app)/layout.tsx` (pages connectées).
   Les pages d'auth (groupe `(auth)`) n'ont **ni sidebar ni top bar**.
+- **Garde de vérification.** Toute page connectée exige un e-mail vérifié : si
+  `session.user.emailVerified === false`, redirection vers `/verify-email`
+  (`src/lib/auth-guard.ts` dans `(app)/layout.tsx`). Fail-open si le champ est absent.
+- **Journal des envois OTP.** Les envois (`emailOtp.sendVerificationOtp`) sont tracés en
+  base (`auth_otp_audit` : adresse, type, résultat, date) de façon **best-effort** :
+  jamais le code, jamais bloquant. Le code OTP n'est **jamais** stocké ni affiché
+  (Neon Auth gère l'envoi ; l'app ne le reçoit pas).
 - **Raccord après vérification.** `/verify-email` → `/` → `/onboarding/profile` si
   aucun profil. `signIn` renvoie vers `/verify-email` sur `EMAIL_NOT_VERIFIED`.

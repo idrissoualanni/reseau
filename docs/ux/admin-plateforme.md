@@ -3,7 +3,7 @@
 Écrite avant le code (règle `docs/ux/_template.md`).
 
 - **Route** : `/admin`, `/admin/spaces`, `/admin/access-log`,
-  `/admin/profiles`, `/admin/posts`, `/admin/projects`
+  `/admin/profiles`, `/admin/posts`, `/admin/projects`, `/admin/otp`
 - **Fonctionnalité(s)** : F14, F16, F17 · **Version** : V1.5
 - **Utilisateur et objectif** : un compte au rôle `admin` (Neon Auth) vient
   créer/configurer les espaces, **voir tout le contenu** et consulter le journal d'accès,
@@ -23,6 +23,9 @@
 4. Tableau « Espaces » : nom, type, visibilité, membres, statut, actions.
 5. Journal d'accès : date, espace, profil, méthode, action.
 6. Vues de lecture « tout voir » : profils, posts, projets (brouillons inclus, badge).
+7. Onglet « OTP » : journal des **envois** (adresse, type, date, résultat), **jamais le
+   code**. Mention explicite en tête : « Le code n'est jamais visible (généré et envoyé
+   par Neon Auth). »
 
 ## États
 
