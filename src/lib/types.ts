@@ -168,3 +168,13 @@ export type AdminStats = {
   projects: number;
   accessEvents: number;
 };
+
+// Journal des envois OTP (F17) : **aucun code** n'est stocké ni exposé.
+export type AdminOtpEventRecord = {
+  id: string;
+  email: string;
+  type: string;
+  outcome: string;
+  errorCode: string | null;
+  createdAt: Date;
+};

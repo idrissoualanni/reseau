@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toAdminProfileDto, toSpaceDto, toAccessLogDto } from "./admin";
+import { toAdminProfileDto, toSpaceDto, toAccessLogDto, toOtpEventDto } from "./admin";
 import type { AdminAccessLogRecord, AdminProfileRecord, Profile, Space } from "@/lib/types";
 
 const profile: Profile = {
@@ -68,5 +68,24 @@ describe("toAccessLogDto", () => {
     expect(dto.profile).toBeNull();
     expect(dto.action).toBe("join");
     expect(dto.createdAt).toBe("2026-01-03T00:00:00.000Z");
+  });
+});
+
+describe("toOtpEventDto (F17)", () => {
+  it("expose l'adresse et la date, sans jamais de code", () => {
+    const dto = toOtpEventDto({
+      id: "o1",
+      email: "awa@example.com",
+      type: "email-verification",
+      outcome: "sent",
+      errorCode: null,
+      createdAt: new Date("2026-01-01T00:00:00Z"),
+    });
+    expect(dto.email).toBe("awa@example.com");
+    expect(dto.outcome).toBe("sent");
+    expect(dto.createdAt).toBe("2026-01-01T00:00:00.000Z");
+    expect(dto).not.toHaveProperty("code");
+    expect(dto).not.toHaveProperty("otp");
+    expect(dto).not.toHaveProperty("token");
   });
 });

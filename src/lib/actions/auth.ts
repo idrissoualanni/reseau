@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth";
+import { recordOtpSend } from "@/lib/auth-audit";
 import { safeNextPath } from "@/lib/safe-next";
 import {
   forgotPasswordSchema,
@@ -50,6 +51,12 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
   const { error: otpError } = await auth.emailOtp.sendVerificationOtp({
     email: parsed.data.email,
     type: "email-verification",
+  });
+  await recordOtpSend({
+    email: parsed.data.email,
+    type: "email-verification",
+    ok: !otpError,
+    errorCode: (otpError as { code?: string } | null)?.code ?? null,
   });
 
   // Message neutre quand l'adresse existe déjà : ne jamais révéler l'existence
@@ -127,6 +134,12 @@ export async function resendVerificationAction(
     email: parsed.data.email,
     type: "email-verification",
   });
+  await recordOtpSend({
+    email: parsed.data.email,
+    type: "email-verification",
+    ok: !error,
+    errorCode: (error as { code?: string } | null)?.code ?? null,
+  });
   if (error) {
     return {
       error: "L'envoi du code a échoué. Réessaie dans une minute.",
@@ -145,9 +158,15 @@ export async function forgotPasswordAction(
     return { fieldErrors: fieldErrors(parsed.error) };
   }
 
-  await getAuth().emailOtp.sendVerificationOtp({
+  const { error } = await getAuth().emailOtp.sendVerificationOtp({
     email: parsed.data.email,
     type: "forget-password",
+  });
+  await recordOtpSend({
+    email: parsed.data.email,
+    type: "forgot-password",
+    ok: !error,
+    errorCode: (error as { code?: string } | null)?.code ?? null,
   });
   // Réponse neutre : ne pas révéler si l'adresse existe (F02).
   return {

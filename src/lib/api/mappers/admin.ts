@@ -1,5 +1,6 @@
 import type {
   AdminAccessLogRecord,
+  AdminOtpEventRecord,
   AdminPostRecord,
   AdminProfileRecord,
   AdminProjectRecord,
@@ -95,4 +96,16 @@ export function toAccessLogDto(record: AdminAccessLogRecord) {
 
 export function toProfileRefDto(ref: ProfileRef) {
   return toAuthorSummary(ref);
+}
+
+// Journal des envois OTP : adresse, type, résultat, date. **Jamais de code.**
+export function toOtpEventDto(record: AdminOtpEventRecord) {
+  return {
+    id: record.id,
+    email: record.email,
+    type: record.type,
+    outcome: record.outcome,
+    errorCode: record.errorCode,
+    createdAt: record.createdAt.toISOString(),
+  };
 }
