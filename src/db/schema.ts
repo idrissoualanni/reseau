@@ -333,3 +333,26 @@ export const spaceAccessLog = pgTable(
     index("space_access_log_created_idx").on(t.createdAt.desc(), t.id.desc()),
   ],
 );
+
+// Journal des envois OTP (console admin, option A) : jamais le code.
+export const authOtpAudit = pgTable(
+  "auth_otp_audit",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    email: text("email").notNull(),
+    type: text("type").notNull(),
+    outcome: text("outcome").notNull(),
+    errorCode: text("error_code"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("auth_otp_audit_created_idx").on(t.createdAt.desc(), t.id.desc()),
+    index("auth_otp_audit_email_idx").on(t.email),
+    check("auth_otp_audit_email_check", sql`char_length(${t.email}) between 3 and 254`),
+    check(
+      "auth_otp_audit_type_check",
+      sql`${t.type} in ('email-verification','forgot-password')`,
+    ),
+    check("auth_otp_audit_outcome_check", sql`${t.outcome} in ('sent','failed')`),
+  ],
+);
