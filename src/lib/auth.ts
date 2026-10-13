@@ -1,6 +1,7 @@
 import { createNeonAuth, type NeonAuth } from "@neondatabase/auth/next/server";
 import { getAuthEnv } from "@/lib/env";
-import { UnauthenticatedError } from "@/lib/errors";
+import { ForbiddenError, UnauthenticatedError } from "@/lib/errors";
+import { isEmailVerified } from "@/lib/auth-guard";
 
 let instance: NeonAuth | undefined;
 
@@ -26,6 +27,10 @@ export async function requireSession() {
   const session = await getSession();
   if (!session?.user) {
     throw new UnauthenticatedError();
+  }
+  // Garde de vérification (F17) : une session non vérifiée n'accède à aucune API.
+  if (!isEmailVerified(session.user)) {
+    throw new ForbiddenError("Adresse e-mail non vérifiée.");
   }
   return session;
 }

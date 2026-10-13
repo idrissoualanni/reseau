@@ -25,7 +25,8 @@ export async function recordOtpSend(input: {
       errorCode: input.errorCode ?? null,
     });
   } catch {
-    // Journal best-effort : on n'échoue jamais le parcours utilisateur pour l'audit.
+    // Best-effort : signal générique, jamais l'e-mail ni le code (security.md §logs).
+    console.error("otp_audit_insert_failed");
   }
 }
 
