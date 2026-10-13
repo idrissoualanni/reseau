@@ -5,6 +5,7 @@ import { getSpaceForAdmin, toAdminContext } from "@/lib/admin";
 import { requireSession } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { SpaceForm } from "@/components/admin/space-form";
+import { SpaceTabs } from "@/components/admin/space-tabs";
 
 export const instant = false;
 
@@ -25,6 +26,7 @@ export default async function EditSpacePage({ params }: { params: Promise<{ id: 
         <ArrowLeft className="size-4" aria-hidden />
         Espaces
       </Link>
+      <SpaceTabs spaceId={space.id} />
       <Card>
         <CardContent>
           <SpaceForm
