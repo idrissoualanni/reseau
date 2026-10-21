@@ -1,6 +1,6 @@
 # TODO — actions différées à ne pas oublier
 
-> Fichier de rappel des actions volontairement reportées. Mis à jour le 2026-10-10.
+> Fichier de rappel des actions volontairement reportées. Mis à jour le 2026-10-21.
 > Quand une ligne est faite, la retirer d'ici ; l'historique reste dans `CHANGELOG.md` et
 > `docs/prompt-loop/journal.md`.
 
@@ -29,16 +29,22 @@
   **option A** — page admin `/admin/otp` listant les **envois** (adresse, type, date,
   succès/échec), **jamais le code**. Options « SMTP custom + boîte dev » et « sortir de
   l'auth managée » écartées pour l'instant (voir `docs/backlog.md`).
-- [ ] **Appliquer la migration `0008_auth_otp_audit.sql`** sur Neon **dev** :
-  `npm run db:migrate` — **bloqué** tant que `node_modules` est vide (disque plein).
-  Le SQL est additif et déjà écrit. Ensuite : `npm test` (dont tests audit/mapper).
+- [x] **Migration `0008_auth_otp_audit.sql` sur Neon dev** : **appliquée (2026-10-21)** —
+  `drizzle-kit migrate` ne persiste pas sur Neon (driver `@neondatabase/serverless`) : appliquée
+  via **MCP Neon** (`run_sql_transaction`, SQL additif `IF NOT EXISTS`) puis enregistrée dans
+  `drizzle.__drizzle_migrations` (hash SHA-256 `7e62e5f8…`, `created_at` epoch ms).
+  Vérifié : 9 migrations, table `auth_otp_audit` (6 colonnes) + index `created_idx` / `email_idx`.
 - [ ] **Vérifier la garde de vérification d'e-mail** en conditions réelles (compte
-  non vérifié → `/verify-email`) — **intervention utilisateur** : libérer l'espace disque
-  (~1 Go) puis `npm install`, `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`.
+  non vérifié → `/verify-email`) — **intervention utilisateur** : tester sur le dev déployé.
+  La vérification **locale** est faite (2026-10-21) : voir « V1/V1.5 — code vérifié » plus bas.
 - [ ] **Prouver la forme de `session.user`** (`emailVerified`) sur une session d'inscription :
   la garde est **fail-open** ; si le champ est absent, elle est inerte. À confirmer en dev.
 - [ ] **Définir une rétention/purge pour `auth_otp_audit`** (ex. 30–90 j) — exigé par la
   revue `securite` et `donnees-personnelles.md` (exception tracée dans `security.md`).
+- [x] **MCP Render hors service** : `get_service` / `list_deploys` renvoient `unauthorized`
+  (2026-10-21). **Intervention utilisateur** : régénérer la clé API Render
+  (`{file:.secrets/render-api-key}`) et reconnecter le MCP. En attendant, l'état du
+  déploiement dev ne peut être vérifié que via le dashboard Render.
 
 ## Render / déploiement
 - [x] **`render.yaml`** : **aligné (2026-10-11)** via MCP Render — service `reseau`
@@ -54,13 +60,18 @@
   sont inlinées au build).
 - [ ] **Supprimer le service `srv-db46e4btqb8s73e8bsd0`** (ancien, hors `reseau`).
 - [ ] **Branche de déploiement** : ne JAMAIS déployer depuis `main` ; déployer depuis `dev`.
-- [ ] **Push de `dev` bloqué** : la config OpenCode globale (`~/.config/opencode/opencode.jsonc`,
-  ligne 48) refuse `git push *` (`effect: deny`). `dev` = `86e0b09`, en avance de 9 commits sur
-  `origin/dev`. **Intervention utilisateur** : autoriser `git push` (ou pousser `dev` manuellement)
-  pour déclencher le déploiement Render dev.
+- [x] **Push de `dev`** : **synchronisé (2026-10-21)** — `git status -sb` = `dev...origin/dev`
+  avec **0 commit en attente** (`242916a`), 3 branches (`admin-console`, `v1.5-admin-role`,
+  `v15-espaces`) entièrement contenues dans `dev`. Le `effect: deny` sur `git push *` de la
+  config OpenCode globale peut rester actif : si un prochain push est refusé, **intervention
+  utilisateur** (autoriser `git push` ou pousser manuellement).
 - [x] **V1 — code vérifié (2026-10-11)** : `npm run build` (26/26 pages), `tsc --noEmit`
   (0 erreur), `npm run lint` (0 erreur), `npm test` (**150/150 verts**). Toutes les branches
   sont contenues dans `dev`.
+- [x] **V1/V1.5 — revérifié (2026-10-21)** après reprise d'une session interrompue :
+  `npm install` (708 paquets), `npm run lint` (0 erreur), `npx next typegen` +
+  `npm run typecheck` (0 erreur), `npm test` (**242 verts / 4 skipped**),
+  `npm run build` (OK). Blocage levé : `node_modules` était vide (0 entrée).
 - [ ] **Fin de V1** : déploiement Render dev + Neon dev → tester ce qui est
   réellement déployé (sondes de vérification), pas seulement le statut du build.
 
@@ -163,12 +174,13 @@
   `platform_admins` absente. La `0007` est destructive : ne pas la rejouer ailleurs sans relecture.
 - [x] **`PLATFORM_ADMIN_EMAILS` supprimé** (2026-10-11) — remplacé par le rôle `admin`
   de Neon Auth. Aucun amarrage applicatif ni variable d'environnement nécessaire.
-- [ ] **F15 — rejoindre un espace + console d'espace (reste de F17)** : **code écrit
-  (worktree `v15-espaces`), NON vérifié** — accès `open`/`invite_code`/`invite_link`/
-  `manual_approval`, approbation/refus/retrait des membres, configuration des méthodes,
-  pages publiques `/spaces` + `/spaces/[slug]`, onglets console Membres/Accès.
-  ⚠️ **À vérifier dès que le disque le permet** : `npm ci` puis `npm test`, `npm run lint`,
-  `npm run typecheck`, `npm run build` (bloqués : ~150 Mo libres, `node_modules` absent).
+- [x] **F15 — rejoindre un espace + console d'espace** : **vérifié (2026-10-21)** —
+  accès `open`/`invite_code`/`invite_link`/`manual_approval`, approbation/refus/retrait
+  des membres, configuration des méthodes, pages publiques `/spaces` + `/spaces/[slug]`,
+  onglets console Membres/Accès. `npm test` (**242 verts / 4 skipped** = tests d'intégration
+  DB en opt-in), `npm run lint` (0 erreur), `npm run typecheck` (0 erreur),
+  `npm run build` (OK, `BUILD_ID` 17:16). Corrige au passage : apostrophes françaises
+  échappées (`&apos;`) sur `/admin/otp` + spy `mockRestore` dans `auth-audit.test.ts`.
   Restent hors périmètre : modération d'espace (F20) et page dédiée `space_admin` hors
   `/admin` plateforme (voir `docs/backlog.md`).
 - [ ] **Comptes (infos de connexion + suppression)** : l'API admin Better Auth exige une
