@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
+# — dependencies (unanchored : couvre aussi les worktrees) —
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -10,50 +10,81 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+# — testing —
+coverage/
+test-results/
+playwright-report/
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
+# — next.js / build —
+.next/
+out/
+build/
+dist/
+.turbo/
+.nx/
 *.tsbuildinfo
 next-env.d.ts
 
-# — règles projet (sécurité) —
-.neon
-.env
-.env.*
+# — env files —
+.env*
 !.env.example
-.secrets/
+.env.secrets
 
-# Local
+# — secrets & certificats (TURN WebRTC, TLS) —
+.secrets/
+.neon
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+*.keystore
+secrets.json
+
+# — bases / dumps locaux —
+*.db
+*.sqlite
+*.sqlite3
+dump*.sql
+
+# — éditeurs & sauvegardes —
+.vscode/*
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+*.bak
+*.orig
+
+# — systèmes (Windows + macOS) —
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# — logs —
+*.log
+
+# — vercel —
+.vercel
+
+# — OpenCode / Claude locaux (jamais de secrets) —
 CLAUDE.local.md
 AGENT.local.md
 AGENTS.local.md
+AGENT.md
 .claude/settings.local.json
 .claude/worktrees/
 .opencode/node_modules/
 .opencode/worktrees/
+.opencode/settings.local.json
+.opencode/auth.json
+
+# — docker (override local) —
+docker-compose.override.yml
 
 # — boucle de prompts (jamais suivie par git/github) —
 docs/prompt-loop/
@@ -63,12 +94,3 @@ docs/prompt-loop/
 .claude/commands/loop.md
 .opencode/agents/prompt-loop.md
 .opencode/commands/loop.md
-
-# Ajouté depuis reseau-step (repromotion build/tests)
-.next/
-dist/
-coverage/
-.DS_Store
-*.log
-AGENT.local.md
-AGENT.md
