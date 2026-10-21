@@ -15,6 +15,11 @@ autoritaire reste `.claude/rules/` (également importée par `CLAUDE.md`).
 - `testing.md` — Vitest (unitaires/intégration), tests d'intégration hors ligne, worktree
   neuf → `next typegen` avant `typecheck`, base réelle en opt-in sur la branche **dev**,
   traçabilité des fiches (miroir de `.claude/rules/testing.md`).
+- Deux règles à lire **sans miroir** (dans `.claude/rules/`) :
+  `database.md` — **migrations Neon via MCP** (`drizzle-kit migrate` ne persiste pas,
+  hash SHA-256 à écrire dans `drizzle.__drizzle_migrations`) + `paths` alignés sur
+  `src/db/` et `drizzle/` ; `nextjs.md` — apostrophes françaises en JSX = erreur
+  `react/no-unescaped-entities`, écrire `&apos;`.
 - Le reste : `.claude/rules/` (`api-rest.md`, `architecture.md`,
   `base-de-donnees.md`, `chiffrement-e2e.md`, `conventions.md`, `database.md`,
   `devops-render.md`, `donnees-personnelles.md`, `frontend-ux.md`, `git-workflow.md`,

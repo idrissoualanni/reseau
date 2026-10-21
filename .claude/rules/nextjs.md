@@ -27,6 +27,10 @@ description: Pièges Next.js 16 / React 19 vérifiés sur ce projet
 - **Lint React 19** : `react-hooks/set-state-in-effect` refuse `setState` dans un
   `useEffect` (motif « mounted »). Pour un rendu dépendant du thème, utiliser la variante
   CSS `dark:` ; sinon `useSyncExternalStore` (aussi pour `matchMedia` / store externe).
+- **`react/no-unescaped-entities` + UI française** : une apostrophe dans du texte JSX
+  (`qu'un`, `l'envoie`) est une **erreur** lint, pas un avertissement. Écrire `&apos;`
+  (ou placer la chaîne dans un attribut/une constante). Vérifié le 2026-10-21 sur
+  `/admin/otp` — `npm run lint` échoue donc sur tout nouveau texte français non échappé.
 - **`useMemo` doit être pur** : pas de `Math.random()` ni d'entrée non déterministe.
   Pour un skeleton de largeur aléatoire, utiliser une largeur fixe ou une constante
   prévisible — sinon le rendu est instable.
