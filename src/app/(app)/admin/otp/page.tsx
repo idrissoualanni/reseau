@@ -20,8 +20,9 @@ export default async function AdminOtpEventsPage() {
   return (
     <div className="space-y-4">
       <p className="text-muted-foreground text-sm">
-        Chaque ligne indique qu'un code a été <strong>envoyé</strong>. Le code n'est jamais
-        conservé : Neon Auth le génère et l'envoie directement à l'utilisateur.
+        Chaque ligne indique qu&apos;un code a été <strong>envoyé</strong>. Le code
+        n&apos;est jamais conservé : Neon Auth le génère et l&apos;envoie directement
+        à l&apos;utilisateur.
       </p>
 
       {events.length === 0 ? (

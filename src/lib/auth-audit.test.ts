@@ -84,16 +84,16 @@ describe("recordOtpSend (F17)", () => {
 
   it("best-effort : une panne d'audit ne remonte jamais", async () => {
     audit.insertOtpEvent.mockRejectedValue(new Error("db down"));
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     await expect(
       recordOtpSend({ email: "awa@example.com", type: "email-verification", ok: true }),
     ).resolves.toBeUndefined();
 
     // Signal générique uniquement : jamais l'e-mail ni un code.
-    expect(console.error).toHaveBeenCalledWith("otp_audit_insert_failed");
-    expect(console.error).not.toHaveBeenCalledWith(expect.stringContaining("awa@example.com"));
-    console.error.mockRestore();
+    expect(spy).toHaveBeenCalledWith("otp_audit_insert_failed");
+    expect(spy).not.toHaveBeenCalledWith(expect.stringContaining("awa@example.com"));
+    spy.mockRestore();
   });
 });
 
