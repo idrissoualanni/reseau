@@ -38,6 +38,12 @@
 - [ ] **Vidéos dans le fil** : format décidé (MP4/H.264, 60 s, 50 Mo, Cloudflare
   Stream) — `docs/open-decisions.md` § fil libre. Hors V1.
 
+## Projets V1.5 — Fonctionnalités sociales (F18/F19/F20) — **Base de données migrée (2026-10-25)**
+- [x] **Migration BDD** : types `project_type_enum`, `project_reaction_type_enum`, tables `project_reactions`, `project_comments`, `project_followers`, `project_updates`, indexes partiels, trigramme — **appliquée sur Neon dev via MCP**
+- [ ] **F18 — Catalogue Projets** : `/projects` global, filtres (compétences, type, auteur, recherche trigramme), pagination curseur
+- [ ] **F19 — Social Projets** : Réactions (4 types), commentaires imbriqués (max 3 niveaux), suivre/ne plus suivre, notifications WebSocket
+- [ ] **F20 — Évolutions Projet (Updates)** : Auteur seul, texte + image (bucket `projet`), notifications followers temps réel
+
 ## Messagerie (V2 — phase 4)
 - [ ] **Messages privés chiffrés E2E** : le serveur ne voit jamais de contenu en
   clair ni de clé privée (règle non négociable).
@@ -76,7 +82,7 @@
   du domaine autorisé) — enum `space_access_kind`, hors périmètre F15, à examiner en V2.
 
 ## Idées en attente (non triées)
-- [ ] **Likes/réactions** sur les posts (V1.5+).
+- [ ] **Likes/réactions** sur les **posts** (V1.5+) — **voir F19 pour projets**.
 - [ ] **Mentions** dans les commentaires.
 - [ ] **Brouillon local** du post (composition `/posts/new`) — V1.5.
 - [ ] **Recadrage / zoom d'image** à la composition — V1.5 (hors périmètre F12).

@@ -44,6 +44,7 @@ erDiagram
 | cover_key | text null | une image, clé Neon Storage |
 | status | enum(`draft`,`published`) | défaut `draft` |
 | published_at | timestamptz null | posé à la publication |
+| type | enum(`personal`,`team`,`open_source`,`research`,`coursework`) | défaut `personal` (F18) |
 | created_at, updated_at | timestamptz | |
 
 ### `project_skills`
@@ -69,6 +70,16 @@ CREATE INDEX projects_published_idx ON projects (published_at DESC, id DESC) WHE
 CREATE INDEX projects_author_idx ON projects (author_id, created_at DESC);
 CREATE INDEX project_skills_skill_idx ON project_skills (skill_id, project_id);
 
+-- Index partiels par type pour filtres catalogue (F18)
+CREATE INDEX projects_published_personal_idx ON projects (published_at DESC, id DESC) WHERE status = 'published' AND type = 'personal';
+CREATE INDEX projects_published_team_idx ON projects (published_at DESC, id DESC) WHERE status = 'published' AND type = 'team';
+CREATE INDEX projects_published_open_source_idx ON projects (published_at DESC, id DESC) WHERE status = 'published' AND type = 'open_source';
+CREATE INDEX projects_published_research_idx ON projects (published_at DESC, id DESC) WHERE status = 'published' AND type = 'research';
+CREATE INDEX projects_published_coursework_idx ON projects (published_at DESC, id DESC) WHERE status = 'published' AND type = 'coursework';
+
+-- Recherche texte projet (F18) : trigramme sur titre + body
+CREATE INDEX projects_search_trgm ON projects USING gin ((title || ' ' || body) gin_trgm_ops);
+
 -- Profils : recherche par nom (optionnelle en V1)
 CREATE UNIQUE INDEX profiles_username_uq ON profiles (username);
 CREATE INDEX profiles_display_name_trgm ON profiles USING gin (display_name gin_trgm_ops);
@@ -78,7 +89,7 @@ Les extensions et index GIN s'écrivent dans une migration Drizzle **SQL personn
 ## Tables réservées (documentées, NON migrées en V1)
 | Version | Tables |
 |---|---|
-| V1.5 | `spaces`, `space_access_methods` (type, config JSON, actif), `memberships` (profile, space, rôle, `verification_level`, `verified_via`), `feed_posts` (type texte/image/vidéo, visibilité), `media_assets` (vidéos : statut, durée, poids), `structured_posts` (appris/construit/participé/obtenu), `skill_evidence` (artefact, niveau `verifiable`), `skill_suggestions` (proposée/acceptée/refusée), `cv_documents` (sections JSON, `edited` par section), `portfolios` |
+| V1.5 | `spaces`, `space_access_methods` (type, config JSON, actif), `memberships` (profile, space, rôle, `verification_level`, `verified_via`), `feed_posts` (type texte/image/vidéo, visibilité), `media_assets` (vidéos : statut, durée, poids), `structured_posts` (appris/construit/participé/obtenu), `skill_evidence` (artefact, niveau `verifiable`), `skill_suggestions` (proposée/acceptée/refusée), `cv_documents` (sections JSON, `edited` par section), `portfolios`, **`project_reactions`, `project_comments`, `project_followers`, `project_updates`** |
 | V2 | `connections`, `conversations`, `messages` (chiffrés : le serveur ne stocke que du chiffré), `device_keys` (clé publique) |
 | V3 | `recruiter_searches`, `space_stats`, `resources`, `mentorships` |
 
@@ -110,5 +121,58 @@ reçoit jamais.
 
 Index : `auth_otp_audit_created_idx (created_at DESC, id DESC)` (liste bornée admin),
 `auth_otp_audit_email_idx (email)`. Migration additive `0008_auth_otp_audit.sql`.
+
+## Tables V1.5 — Fonctionnalités sociales projets (F18/F19/F20)
+
+### `project_reactions` (F19 — réactions)
+Un membre = 1 réaction par type par projet (toggle on/off).
+
+| Colonne | Type | Règle |
+|---|---|---|
+| project_id | uuid FK → projects | PK partielle, cascade delete |
+| profile_id | uuid FK → profiles | PK partielle, cascade delete |
+| type | enum(`like`,`celebrate`,`insight`,`curious`) | PK partielle |
+| created_at | timestamptz | défaut `now()` |
+
+PK : `(project_id, profile_id, type)`. Index : `project_reactions_project_idx`, `project_reactions_profile_idx`.
+
+### `project_comments` (F19 — commentaires imbriqués)
+Commentaires et réponses sur un projet publié. `parent_id` NULL = commentaire racine, non-NULL = réponse.
+
+| Colonne | Type | Règle |
+|---|---|---|
+| id | uuid PK | `gen_random_uuid()` |
+| project_id | uuid FK → projects | cascade delete |
+| parent_id | uuid FK → project_comments | cascade delete, NULL pour racine |
+| author_id | uuid FK → profiles | cascade delete |
+| body | text not null | 1–1000 car., texte brut |
+| created_at, updated_at | timestamptz | défaut `now()` |
+
+Index : `project_comments_project_idx (project_id, created_at DESC, id DESC)`, `project_comments_parent_idx (parent_id)`.
+
+### `project_followers` (F19 — suivi)
+Membres suivant un projet pour notifications temps réel.
+
+| Colonne | Type | Règle |
+|---|---|---|
+| project_id | uuid FK → projects | PK partielle, cascade delete |
+| profile_id | uuid FK → profiles | PK partielle, cascade delete |
+| created_at | timestamptz | défaut `now()` |
+
+PK : `(project_id, profile_id)`. Index : `project_followers_profile_idx`.
+
+### `project_updates` (F20 — évolutions/updates)
+Mises à jour d'avancement créées par l'auteur du projet uniquement.
+
+| Colonne | Type | Règle |
+|---|---|---|
+| id | uuid PK | `gen_random_uuid()` |
+| project_id | uuid FK → projects | cascade delete |
+| author_id | uuid FK → profiles | cascade delete |
+| body | text not null | 1–5000 car., texte brut |
+| image_key | text null | clé Neon Storage (bucket `projet`) |
+| created_at, updated_at | timestamptz | défaut `now()` |
+
+Index : `project_updates_project_idx (project_id, created_at DESC, id DESC)`, `project_updates_author_idx (author_id)`.
 
 **Supprimé du cadrage initial** : table `endorsements` (validation par pairs/enseignants).
