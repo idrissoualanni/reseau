@@ -4,6 +4,26 @@
 
 export type ProofLevel = "declared" | "demonstrated";
 
+// ─── V1.5 — Enums pour validation Zod (utilisés dans validation/project.ts) ──────
+
+export const projectTypeValues = [
+  "personal",
+  "team",
+  "open_source",
+  "research",
+  "coursework",
+] as const;
+
+export const projectReactionTypeValues = [
+  "like",
+  "celebrate",
+  "insight",
+  "curious",
+] as const;
+
+export type ProjectType = (typeof projectTypeValues)[number];
+export type ProjectReactionType = (typeof projectReactionTypeValues)[number];
+
 export type Profile = {
   id: string;
   userId: string;
@@ -27,6 +47,8 @@ export type ProfileSkill = Skill & { proofLevel: ProofLevel };
 
 export type ProjectStatus = "draft" | "published";
 
+export type ProjectType = (typeof projectTypeValues)[number];
+
 export type Project = {
   id: string;
   authorId: string;
@@ -35,6 +57,7 @@ export type Project = {
   coverKey: string | null;
   status: ProjectStatus;
   publishedAt: Date | null;
+  type: ProjectType;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -177,4 +200,59 @@ export type AdminOtpEventRecord = {
   outcome: string;
   errorCode: string | null;
   createdAt: Date;
+};
+
+// ─── V1.5 — Fonctionnalités sociales projets (F19) ──────────────────────────
+
+export type ProjectReactionType = (typeof projectReactionTypeValues)[number];
+
+export type ProjectReaction = {
+  projectId: string;
+  profileId: string;
+  type: ProjectReactionType;
+  createdAt: Date;
+};
+
+export type ProjectReactionCounts = {
+  type: ProjectReactionType;
+  count: number;
+  hasReacted: boolean;
+};
+
+export type ProjectComment = {
+  id: string;
+  projectId: string;
+  parentId: string | null;
+  authorId: string;
+  body: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type ProjectCommentWithAuthor = ProjectComment & {
+  author: ProfileRef;
+  replies: ProjectCommentWithAuthor[];
+  depth: number;
+};
+
+export type ProjectFollower = {
+  projectId: string;
+  profileId: string;
+  createdAt: Date;
+};
+
+// ─── V1.5 — Évolutions de projet / Updates (F20) ────────────────────────────
+
+export type ProjectUpdate = {
+  id: string;
+  projectId: string;
+  authorId: string;
+  body: string;
+  imageKey: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type ProjectUpdateWithAuthor = ProjectUpdate & {
+  author: ProfileRef;
 };
