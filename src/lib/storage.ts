@@ -38,6 +38,11 @@ function bucketForKey(key: string): string {
   return PROFILE_AVATAR_BUCKET;
 }
 
+// Clé de stockage d'une mise à jour de projet : `projects/{profileId}/updates/...`.
+export function projectUpdatePrefix(profileId: string): string {
+  return `projects/${profileId}/updates/`;
+}
+
 // URL publique d'une clé (bucket public_read), ou `null` si stockage absent.
 export function getPublicUrl(key: string): string | null {
   if (!key) return null;
@@ -97,6 +102,21 @@ export async function presignAvatarUpload(
 // URL présignée PUT pour uploader une couverture de projet (F06). Le bucket
 // `projet` est public_read : lecture anonyme, écriture authentifiée présignée.
 export async function presignProjectCoverUpload(
+  key: string,
+  contentType: string,
+  expiresIn = 900,
+): Promise<string> {
+  const command = new PutObjectCommand({
+    Bucket: PROJECT_IMAGE_BUCKET,
+    Key: key,
+    ContentType: contentType,
+  });
+  return getSignedUrl(getS3(), command, { expiresIn });
+}
+
+// URL présignée PUT pour uploader une image de mise à jour de projet (F20).
+// Même bucket `projet`, clé sous `projects/{profileId}/updates/`.
+export async function presignProjectUpdateUpload(
   key: string,
   contentType: string,
   expiresIn = 900,

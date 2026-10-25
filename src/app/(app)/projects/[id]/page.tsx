@@ -10,19 +10,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/avatar";
 import { SkillBadge } from "@/components/skill-badge";
 import { NotFoundError } from "@/lib/errors";
+import { ProjectTabs } from "@/components/projects/project-tabs";
 
-// Détail d'un projet publié (F07) : accessible aux membres connectés.
-// Un brouillon non visible d'un tiers → 404. L'auteur voit le projet s'il
-// passe par la route visible (le cas d'usage filtre par visibilité). L'édition
-// utilise une route séparée (`/me/projects/[id]/edit`) pour les brouillons.
+// Détail d'un projet publié (F07) + onglets V1.5 (F19/F20) : Aperçu | Activité | Discussion | Suiveurs
 export const instant = false;
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireSession();
   const profile = await getOwnProfile(session.user.id);
   if (!profile) {
-    // Sécurise la route sans importer redirect inutilément ici ; redirection
-    // via la session/profil est déjà gérée par la page feed/edit. Pour la route
-    // publique, la page est protégée par requireSession + guard profil.
     throw new Error("profil requis");
   }
 
@@ -44,8 +39,11 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     throw error;
   }
 
+  const isAuthor = project.authorId === profile.id;
+
   return (
     <PageShell width="feed">
+      {/* Onglet Aperçu - contenu principal */}
       <Card>
         <CardContent className="space-y-6 p-6">
           <header className="space-y-2">
@@ -93,6 +91,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           ) : null}
         </CardContent>
       </Card>
+
+      {/* V1.5 - Onglets sociaux : Activité, Discussion, Suiveurs */}
+      <ProjectTabs projectId={project.id} isAuthor={isAuthor} />
     </PageShell>
   );
 }

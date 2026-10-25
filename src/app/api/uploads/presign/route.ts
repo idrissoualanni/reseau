@@ -10,11 +10,13 @@ import {
   presignAvatarUpload,
   presignPostImageUpload,
   presignProjectCoverUpload,
+  presignProjectUpdateUpload,
   projectCoverPrefix,
+  projectUpdatePrefix,
 } from "@/lib/storage";
 import { presignPostImageSchema } from "@/lib/validation/post";
 import { presignAvatarSchema } from "@/lib/validation/profile";
-import { presignProjectCoverSchema } from "@/lib/validation/project";
+import { presignProjectCoverSchema, presignProjectUpdateSchema } from "@/lib/validation/project";
 import { imageExtension } from "@/lib/validation/image";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
@@ -24,6 +26,7 @@ const presignSchema = z.discriminatedUnion("kind", [
   presignPostImageSchema,
   presignAvatarSchema,
   presignProjectCoverSchema,
+  presignProjectUpdateSchema,
 ]);
 
 // URL présignée d'upload d'image (F12 posts, F13 avatar, F06 couverture projet,
@@ -39,18 +42,29 @@ export const POST = withApi(async (request: Request) => {
   const input = parseInput(presignSchema, await readJson(request));
 
   const ext = imageExtension(input.contentType);
-  const key =
-    input.kind === "post-image"
-      ? `${postImagePrefix(profile.id)}${randomUUID()}.${ext}`
-      : input.kind === "profile-avatar"
-        ? `${avatarPrefix(profile.id)}${randomUUID()}.${ext}`
-        : `${projectCoverPrefix(profile.id)}${randomUUID()}.${ext}`;
-  const uploadUrl =
-    input.kind === "post-image"
-      ? await presignPostImageUpload(key, input.contentType, PRESIGN_EXPIRES_IN)
-      : input.kind === "profile-avatar"
-        ? await presignAvatarUpload(key, input.contentType, PRESIGN_EXPIRES_IN)
-        : await presignProjectCoverUpload(key, input.contentType, PRESIGN_EXPIRES_IN);
+  let key: string;
+  let uploadUrl: string;
+
+  switch (input.kind) {
+    case "post-image":
+      key = `${postImagePrefix(profile.id)}${randomUUID()}.${ext}`;
+      uploadUrl = await presignPostImageUpload(key, input.contentType, PRESIGN_EXPIRES_IN);
+      break;
+    case "profile-avatar":
+      key = `${avatarPrefix(profile.id)}${randomUUID()}.${ext}`;
+      uploadUrl = await presignAvatarUpload(key, input.contentType, PRESIGN_EXPIRES_IN);
+      break;
+    case "project-cover":
+      key = `${projectCoverPrefix(profile.id)}${randomUUID()}.${ext}`;
+      uploadUrl = await presignProjectCoverUpload(key, input.contentType, PRESIGN_EXPIRES_IN);
+      break;
+    case "project-update":
+      key = `${projectUpdatePrefix(profile.id)}${randomUUID()}.${ext}`;
+      uploadUrl = await presignProjectUpdateUpload(key, input.contentType, PRESIGN_EXPIRES_IN);
+      break;
+    default:
+      throw new Error("Type d'upload non supporté");
+  }
 
   return ok({ uploadUrl, key, expiresIn: PRESIGN_EXPIRES_IN });
 });
