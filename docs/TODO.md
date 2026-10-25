@@ -156,6 +156,19 @@
   commentaires imbriqués (indentation max 3 niveaux), suppressions en cascade,
   126 tests verts.
 
+## V1.5 — Fonctionnalités projets (F18/F19/F20) — **LOCAL DONE (2026-10-25)**
+- [x] **Base de données** : migration `0009_v15_project_features.sql` appliquée sur Neon dev
+  (types `project_type_enum`, `project_reaction_type_enum`, tables `project_reactions`,
+  `project_comments`, `project_followers`, `project_updates`, indexes partiels + trigramme)
+- [x] **Backend GraphQL** : queries `projectsV15`, mutations 8 (reactions, comments, follow, updates),
+  DataLoaders pour reactions/comments/followers/updates, schémas validés
+- [x] **Frontend UI** : `ProjectTabs` (4 onglets), `ProjectReactions` (4 types), `ProjectComments`
+  (imbriqués 3 niveaux), `ProjectFollowers`, `ProjectActivity` (composer + liste),
+  `ProjectsCatalog` (`/projects` filtres), `ImageUploader` (project-update)
+- [x] **Tests** : unitaires (use cases), intégration GraphQL, E2E Playwright
+- [x] **Documentation** : fiches UX `projects-catalog.md`, `project-detail-tabs.md`, `project-updates.md`
+- [ ] **Déploiement Render dev** : secrets + trigger deploy + sondes `/api/health` + WebSocket
+
 ## V1.5 — Administration plateforme (worktree `v1.5-admin`)
 - [x] **F14 socle espaces, F16 rôles, F17 console plateforme** : **livré (2026-10-11)** —
   schéma (`spaces`, `space_access_methods`, `memberships`, `space_access_log`),

@@ -38,11 +38,16 @@
 - [ ] **Vidéos dans le fil** : format décidé (MP4/H.264, 60 s, 50 Mo, Cloudflare
   Stream) — `docs/open-decisions.md` § fil libre. Hors V1.
 
-## Projets V1.5 — Fonctionnalités sociales (F18/F19/F20) — **Base de données migrée (2026-10-25)**
+## Projets V1.5 — Fonctionnalités sociales (F18/F19/F20) — **CODE LOCAL DONE (2026-10-25)**
 - [x] **Migration BDD** : types `project_type_enum`, `project_reaction_type_enum`, tables `project_reactions`, `project_comments`, `project_followers`, `project_updates`, indexes partiels, trigramme — **appliquée sur Neon dev via MCP**
-- [ ] **F18 — Catalogue Projets** : `/projects` global, filtres (compétences, type, auteur, recherche trigramme), pagination curseur
-- [ ] **F19 — Social Projets** : Réactions (4 types), commentaires imbriqués (max 3 niveaux), suivre/ne plus suivre, notifications WebSocket
-- [ ] **F20 — Évolutions Projet (Updates)** : Auteur seul, texte + image (bucket `projet`), notifications followers temps réel
+- [x] **F18 — Catalogue Projets** : `/projects` global, filtres (compétences, type, auteur, recherche trigramme), pagination curseur
+- [x] **F19 — Social Projets** : Réactions (4 types), commentaires imbriqués (max 3 niveaux), suivre/ne plus suivre, notifications WebSocket
+- [x] **F20 — Évolutions Projet (Updates)** : Auteur seul, texte + image (bucket `projet`), notifications followers temps réel
+- [x] **Backend GraphQL** : query `projectsV15`, 8 mutations, DataLoaders complets
+- [x] **Frontend** : `ProjectTabs`, `ProjectReactions`, `ProjectComments`, `ProjectFollowers`, `ProjectActivity`, `ProjectsCatalog`, `ImageUploader`
+- [x] **Tests** : unitaires, intégration GraphQL, E2E Playwright
+- [x] **Fiches UX** : `projects-catalog.md`, `project-detail-tabs.md`, `project-updates.md`
+- [ ] **Déploiement Render dev** : secrets + WebSocket + sondes
 
 ## Messagerie (V2 — phase 4)
 - [ ] **Messages privés chiffrés E2E** : le serveur ne voit jamais de contenu en
