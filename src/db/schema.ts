@@ -24,6 +24,23 @@ export const proofLevel = pgEnum("proof_level", ["declared", "demonstrated"]);
 // Statut d'un projet : `draft` (privé) ou `published` (visible).
 export const projectStatus = pgEnum("project_status", ["draft", "published"]);
 
+// Type de projet (F18 — catalogue) : personal, team, open_source, research, coursework.
+export const projectType = pgEnum("project_type", [
+  "personal",
+  "team",
+  "open_source",
+  "research",
+  "coursework",
+]);
+
+// Types de réaction sur un projet (F19 — social).
+export const projectReactionType = pgEnum("project_reaction_type", [
+  "like",
+  "celebrate",
+  "insight",
+  "curious",
+]);
+
 // Profil public rattaché à un compte Neon Auth (`user_id` = id Auth, unique).
 export const profiles = pgTable(
   "profiles",
@@ -100,6 +117,8 @@ export const projects = pgTable(
     coverKey: text("cover_key"),
     status: projectStatus("status").notNull().default("draft"),
     publishedAt: timestamp("published_at", { withTimezone: true }),
+    // Type de projet (F18) : personal, team, open_source, research, coursework.
+    type: projectType("type").notNull().default("personal"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
@@ -112,6 +131,22 @@ export const projects = pgTable(
     index("projects_author_idx")
       .on(t.authorId, t.publishedAt.desc(), t.id.desc())
       .where(sql`${t.status} = 'published'`),
+    // Index partiels par type pour performance filtres catalogue (F18).
+    index("projects_published_personal_idx")
+      .on(t.publishedAt.desc(), t.id.desc())
+      .where(sql`${t.status} = 'published' and ${t.type} = 'personal'`),
+    index("projects_published_team_idx")
+      .on(t.publishedAt.desc(), t.id.desc())
+      .where(sql`${t.status} = 'published' and ${t.type} = 'team'`),
+    index("projects_published_open_source_idx")
+      .on(t.publishedAt.desc(), t.id.desc())
+      .where(sql`${t.status} = 'published' and ${t.type} = 'open_source'`),
+    index("projects_published_research_idx")
+      .on(t.publishedAt.desc(), t.id.desc())
+      .where(sql`${t.status} = 'published' and ${t.type} = 'research'`),
+    index("projects_published_coursework_idx")
+      .on(t.publishedAt.desc(), t.id.desc())
+      .where(sql`${t.status} = 'published' and ${t.type} = 'coursework'`),
     check(
       "projects_status_published_at_check",
       sql`(${t.status} = 'published' and ${t.publishedAt} is not null) or (${t.status} = 'draft' and ${t.publishedAt} is null)`,
@@ -354,5 +389,101 @@ export const authOtpAudit = pgTable(
       sql`${t.type} in ('email-verification','forgot-password')`,
     ),
     check("auth_otp_audit_outcome_check", sql`${t.outcome} in ('sent','failed')`),
+  ],
+);
+
+// ─── V1.5 — Fonctionnalités sociales projets (F19) ──────────────────────────
+
+// Réactions sur un projet : like, celebrate, insight, curious (un par type/user/projet).
+export const projectReactions = pgTable(
+  "project_reactions",
+  {
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    profileId: uuid("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    type: projectReactionType("type").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.projectId, t.profileId, t.type] }),
+    index("project_reactions_project_idx").on(t.projectId),
+    index("project_reactions_profile_idx").on(t.profileId),
+  ],
+);
+
+// Commentaires et réponses sur un projet (F19) : parent_id NULL = commentaire racine,
+// non-NULL = réponse (imbriquée, suppression en cascade).
+export const projectComments = pgTable(
+  "project_comments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    parentId: uuid("parent_id").references((): AnyPgColumn => projectComments.id, {
+      onDelete: "cascade",
+    }),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    index("project_comments_project_idx").on(t.projectId, t.createdAt.desc(), t.id.desc()),
+    index("project_comments_parent_idx").on(t.parentId),
+    check("project_comments_body_check", sql`char_length(${t.body}) between 1 and 1000`),
+  ],
+);
+
+// Suiveurs d'un projet (F19) : notifications temps réel sur updates/commentaires.
+export const projectFollowers = pgTable(
+  "project_followers",
+  {
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    profileId: uuid("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.projectId, t.profileId] }),
+    index("project_followers_profile_idx").on(t.profileId),
+  ],
+);
+
+// ─── V1.5 — Évolutions de projet / Updates (F20) ────────────────────────────
+
+// Mises à jour d'avancement d'un projet (créées par l'auteur uniquement).
+export const projectUpdates = pgTable(
+  "project_updates",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    // Clé image optionnelle (bucket `projet`) : projects/{profileId}/updates/{uuid}.{ext}
+    imageKey: text("image_key"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    index("project_updates_project_idx").on(t.projectId, t.createdAt.desc(), t.id.desc()),
+    index("project_updates_author_idx").on(t.authorId),
+    check("project_updates_body_check", sql`char_length(${t.body}) between 1 and 5000`),
   ],
 );

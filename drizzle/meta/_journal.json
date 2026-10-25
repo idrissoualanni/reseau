@@ -64,6 +64,13 @@
       "when": 1791864280951,
       "tag": "0008_auth_otp_audit",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793000000000,
+      "tag": "0009_v15_project_features",
+      "breakpoints": true
     }
   ]
 }
