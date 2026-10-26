@@ -5,6 +5,7 @@ import {
   deleteMessageReaction,
   findConversationByDirectKey,
   findConversationById,
+  findConversationSummary,
   findMessageById,
   findMessageByClientId,
   findParticipant,
@@ -61,7 +62,7 @@ async function requireConversationMember(
 export async function startDirectConversation(
   ctx: UseCaseContext,
   participantId: string,
-): Promise<ConversationSummary> {
+): Promise<{ summary: ConversationSummary; wasCreated: boolean }> {
   if (participantId === ctx.profileId) {
     throw new RuleViolationError("Impossible de démarrer une conversation avec soi-même.");
   }
@@ -70,9 +71,11 @@ export async function startDirectConversation(
 
   const directKey = directKeyFor(ctx.profileId, participantId);
   let conversation = await findConversationByDirectKey(directKey);
+  let wasCreated = false;
   if (!conversation) {
     try {
       conversation = await insertDirectConversation(ctx.profileId, [ctx.profileId, participantId], directKey);
+      wasCreated = true;
     } catch (error) {
       // Course sur la contrainte unique : relire la conversation gagnante.
       conversation = await findConversationByDirectKey(directKey);
@@ -80,11 +83,9 @@ export async function startDirectConversation(
     }
   }
 
-  const summary = (await listConversationsForProfile(ctx.profileId)).find(
-    (item) => item.conversation.id === conversation.id,
-  );
+  const summary = await findConversationSummary(conversation.id, ctx.profileId);
   if (!summary) throw new NotFoundError("Conversation introuvable.");
-  return summary;
+  return { summary, wasCreated };
 }
 
 export async function listMyConversations(ctx: UseCaseContext): Promise<ConversationSummary[]> {
@@ -138,7 +139,12 @@ export async function sendMessage(
   await requireConversationMember(ctx, conversationId);
 
   const existing = await findMessageByClientId(ctx.profileId, input.clientId);
-  if (existing) return existing;
+  if (existing) {
+    if (existing.conversationId !== conversationId) {
+      throw new ConflictError("Identifiant de message déjà utilisé.");
+    }
+    return existing;
+  }
 
   const senderKey = await findProfileKey(ctx.profileId);
   if (!senderKey) {
@@ -226,10 +232,19 @@ export async function publishOwnKey(
   input: PublishProfileKeyInput,
 ): Promise<ProfileKey> {
   const existing = await findProfileKey(ctx.profileId);
-  if (existing && existing.keyId !== input.keyId) {
-    throw new ConflictError(
-      "Une clé est déjà configurée ; la réinitialisation n'est pas disponible en V2.",
-    );
+  if (existing) {
+    const sameKey =
+      existing.keyId === input.keyId &&
+      existing.publicKeyJwk.kty === input.publicKeyJwk.kty &&
+      existing.publicKeyJwk.crv === input.publicKeyJwk.crv &&
+      existing.publicKeyJwk.x === input.publicKeyJwk.x &&
+      existing.publicKeyJwk.y === input.publicKeyJwk.y;
+    if (!sameKey) {
+      throw new ConflictError(
+        "Une clé est déjà configurée ; la réinitialisation n'est pas disponible en V2.",
+      );
+    }
+    return existing;
   }
   return upsertProfileKey({
     profileId: ctx.profileId,
@@ -282,7 +297,12 @@ export async function saveConversationKeys(
   const publicKeys = await listProfileKeys([...participantIds]);
   const publicKeyById = new Map(publicKeys.map((key) => [key.profileId, key]));
 
+  const providedIds = new Set<string>();
   for (const key of keys) {
+    if (providedIds.has(key.profileId)) {
+      throw new RuleViolationError("Un participant ne peut avoir qu'une clé par lot.");
+    }
+    providedIds.add(key.profileId);
     if (!participantIds.has(key.profileId)) {
       throw new ForbiddenError("Ce profil ne participe pas à la conversation.");
     }
@@ -292,6 +312,12 @@ export async function saveConversationKeys(
     }
     if (publicKey.keyId !== key.keyId) {
       throw new RuleViolationError("La clé enveloppée ne correspond pas à la clé publique.");
+    }
+  }
+
+  for (const participantId of participantIds) {
+    if (!providedIds.has(participantId)) {
+      throw new RuleViolationError("Toutes les clés des participants doivent être fournies.");
     }
   }
 

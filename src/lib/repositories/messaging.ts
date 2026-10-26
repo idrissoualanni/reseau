@@ -211,6 +211,61 @@ async function listLastMessages(conversationIds: string[]): Promise<Map<string, 
   return new Map(entries.filter((entry): entry is [string, EncryptedMessage] => entry[1] !== null));
 }
 
+export async function findConversationSummary(
+  conversationId: string,
+  profileId: string,
+): Promise<ConversationSummary | null> {
+  const [row] = await db
+    .select({ conversation: conversations, participant: conversationParticipants })
+    .from(conversations)
+    .innerJoin(
+      conversationParticipants,
+      eq(conversationParticipants.conversationId, conversations.id),
+    )
+    .where(
+      and(
+        eq(conversations.id, conversationId),
+        eq(conversationParticipants.profileId, profileId),
+      ),
+    )
+    .limit(1);
+  if (!row) return null;
+
+  const [participantRows, lastMessage, unreadRows] = await Promise.all([
+    db
+      .select({ participant: conversationParticipants, profile: profiles })
+      .from(conversationParticipants)
+      .innerJoin(profiles, eq(profiles.id, conversationParticipants.profileId))
+      .where(eq(conversationParticipants.conversationId, conversationId)),
+    db
+      .select()
+      .from(messages)
+      .where(eq(messages.conversationId, conversationId))
+      .orderBy(desc(messages.createdAt), desc(messages.id))
+      .limit(1),
+    db
+      .select({ unread: count() })
+      .from(messages)
+      .where(
+        and(
+          eq(messages.conversationId, conversationId),
+          ne(messages.senderId, profileId),
+          gt(messages.createdAt, row.participant.lastReadAt),
+        ),
+      ),
+  ]);
+
+  return {
+    conversation: toConversation(row.conversation),
+    participants: participantRows.map((participantRow) => ({
+      participant: toParticipant(participantRow.participant),
+      profile: toProfileRef(participantRow.profile),
+    })),
+    lastMessage: lastMessage[0] ? toMessage(lastMessage[0]) : null,
+    unreadCount: Number(unreadRows[0]?.unread ?? 0),
+  };
+}
+
 export async function listConversationsForProfile(
   profileId: string,
   limit = 50,
@@ -347,7 +402,7 @@ export async function insertMessage(input: NewMessage): Promise<EncryptedMessage
   } catch (error) {
     if (isUniqueViolation(error)) {
       const existing = await findMessageByClientId(input.senderId, input.clientId);
-      if (existing) return existing;
+      if (existing && existing.conversationId === input.conversationId) return existing;
     }
     throw error;
   }
@@ -439,11 +494,7 @@ export async function upsertProfileKey(input: {
     .values(input)
     .onConflictDoUpdate({
       target: profileKeys.profileId,
-      set: {
-        keyId: input.keyId,
-        publicKeyJwk: input.publicKeyJwk,
-        rotatedAt: new Date(),
-      },
+      set: { publicKeyJwk: input.publicKeyJwk },
     })
     .returning();
   if (!row) throw new Error("Clé publique non enregistrée.");

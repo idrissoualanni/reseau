@@ -64,6 +64,11 @@ export const markConversationReadSchema = z
   })
   .strict();
 
+export const listMessagesQuerySchema = z.object({
+  first: z.coerce.number().int().min(1).max(50).default(50),
+  after: z.string().max(200).optional(),
+});
+
 export const publishProfileKeySchema = z
   .object({
     keyId: keyIdSchema,

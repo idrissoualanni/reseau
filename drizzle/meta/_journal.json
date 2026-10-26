@@ -78,6 +78,13 @@
       "when": 1793000001000,
       "tag": "0010_post_likes",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793000002000,
+      "tag": "0011_v2_messaging",
+      "breakpoints": true
     }
   ]
 }
