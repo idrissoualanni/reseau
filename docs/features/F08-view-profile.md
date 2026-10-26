@@ -6,9 +6,9 @@
 
 ## Règles métier
 1. URL stable : `/u/[username]`. Accessible aux membres connectés.
-2. Contenu : avatar, nom, `username`, bio, établissement, filière, **compétences avec badge de niveau** (`declared`/`demonstrated`), **projets publiés** (liste paginée, plus récents d'abord).
+2. Contenu : avatar, nom, `username`, bio, établissement, filière, **compétences avec badge de niveau** (`declared`/`demonstrated`), **projets publiés** (liste paginée, plus récents d'abord) et **posts** de l'auteur.
 3. Tri des compétences : niveau décroissant, puis nom.
-4. Un membre voit en plus des boutons de gestion sur **son propre** profil (modifier, nouveau projet).
+4. Un membre voit en plus des boutons de gestion sur **son propre** profil (modifier, nouveau projet, gérer projets/posts, nouveau post).
 5. Aucun projet brouillon n'est visible d'un tiers.
 6. `username` inconnu → page « Profil introuvable ».
 7. Les e-mails et identifiants internes ne sont **jamais** exposés.
@@ -23,7 +23,7 @@ Rendu serveur : appel direct du cas d'usage `getProfileByUsername`. REST client 
 `profiles`, `user_skills`, `skills`, `projects`.
 
 ## Critères d'acceptation
-- [ ] Le profil d'un autre membre s'affiche avec compétences, badges et projets publiés.
+- [ ] Le profil d'un autre membre s'affiche avec compétences, badges, projets publiés et posts.
 - [ ] Le profil n'expose ni e-mail ni identifiant interne (vérifié dans la réponse).
 - [ ] Un username inconnu affiche « Profil introuvable » (404).
 - [ ] Sur son propre profil, un membre voit les actions de gestion ; sur un autre, non.

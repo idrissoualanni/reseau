@@ -15,6 +15,19 @@
   `git push origin --delete v1.5-projects-db v1.5-projects-api v1.5-projects-ui`
   (commits déjà dans `dev`).
 
+## Contenu V1.5 — livré (2026-10-26)
+- [x] `post_likes` + `togglePostLike` + `likeCount`/`hasLiked`.
+- [x] Édition/suppression des posts, `/me/posts`, `/posts/[id]/edit`.
+- [x] `attachment` pour les images de post, `badge` pour brouillon/publié.
+- [x] Type de projet éditable + filtres `/me/projects`.
+- [x] Hub `/me/profile` (projets, posts, brouillons) + `/me/profile/edit`.
+- [x] Posts sur le profil public et navigation « Mon profil » vers `/u/{username}`.
+- [ ] **Vérification navigateur authentifiée** des parcours ci-dessus sur le dev Render
+  — **intervention utilisateur** (session réelle).
+- [x] **`0010_post_likes.sql` appliquée sur Neon dev** (2026-10-26) : table
+  `post_likes` créée, contrainte `project_updates_body_check` passée à 0–5000,
+  migration enregistrée dans `drizzle.__drizzle_migrations`.
+
 ## Auth & comptes (F01–F02)
 - [ ] **Turnstile — EN ATTENTE.** Retiré temporairement (pas de domaine, pas de clés réelles).
   Créer un widget Cloudflare Turnstile dès qu'un domaine existe (Vercel staging + prod), puis
@@ -69,7 +82,11 @@
   l'API Render. Remis à `https://reseau-3tuk.onrender.com` ; `NEXT_PUBLIC_GRAPHQL_URL` renseigné
   (`https://reseau-3tuk.onrender.com/api/graphql`). Rebuild dev déclenché (les `NEXT_PUBLIC_*`
   sont inlinées au build).
-- [ ] **Supprimer le service `srv-db46e4btqb8s73e8bsd0`** (ancien, hors `reseau`).
+- [x] **Service `srv-db46e4btqb8s73e8bsd0` supprimé** (vérifié 2026-10-26 : API Render → 404).
+- [ ] **`schema.graphql` désynchronisé** : le golden file n'inclut pas les types V1.5
+  (réactions/commentaires projet) ni les j'aime de posts. Régénérer avec
+  `npm run graphql:export` après installation des dépendances, puis relancer
+  `npm run graphql:check`.
 - [ ] **Branche de déploiement** : ne JAMAIS déployer depuis `main` ; déployer depuis `dev`.
 - [x] **Push de `dev`** : **synchronisé (2026-10-21)** — `git status -sb` = `dev...origin/dev`
   avec **0 commit en attente** (`242916a`), 3 branches (`admin-console`, `v1.5-admin-role`,

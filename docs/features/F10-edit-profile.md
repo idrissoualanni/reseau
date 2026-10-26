@@ -13,7 +13,8 @@
 6. Les compétences se gèrent depuis la même page (F04).
 
 ## Écrans / routes
-`/me/profile` (formulaire + compétences). Fiche UX : `docs/ux/profile-edit.md`.
+`/me/profile/edit` (formulaire + compétences). `/me/profile` est le hub privé
+(projets, posts, brouillons, liens de gestion). Fiche UX : `docs/ux/profile-edit.md`.
 
 ## API
 REST : `PATCH /api/me/profile` `{ display_name?, bio?, school_name?, field_of_study?, avatar_key? | null }` → profil mis à jour.

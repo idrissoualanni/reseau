@@ -18,6 +18,7 @@
 - `/posts` (fil) : carte de post avec image (si présente).
 - `/posts/new` (composition dédiée) : sélecteur d'image + **aperçu fidèle** du cadrage final (même rendu que le fil).
 - `/posts/[id]` (détail) : image du post affichée au-dessus du texte.
+- `/posts/[id]/edit` : image actuelle dans un `attachment`, remplacement ou retrait.
 - Fiche UX : `docs/ux/posts.md` (mise à jour).
 
 ## API
@@ -56,4 +57,4 @@
 - E2E : composer → upload → publier → image visible.
 
 ## Hors périmètre
-Multi-images, recadrage, galerie, vidéos (V1.5+), nettoyage des fichiers orphelins (V1.5), suppressions d'images à chaud.
+Multi-images, recadrage, galerie, vidéos (V1.5+), nettoyage des fichiers orphelins (V1.5).

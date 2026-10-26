@@ -5,6 +5,10 @@ Mis à jour par `/changelog` à chaque fusion `dev` → `main`.
 
 ## [Non publié]
 ### Ajouté
+- V1.5 — gestion de contenu : édition/suppression des posts (`/posts/[id]/edit`,
+  `/me/posts`), j'aime persistants (`post_likes`, `togglePostLike`, `likeCount`/`hasLiked`),
+  pièces jointes via `attachment`, type de projet éditable et filtres, hub privé
+  `/me/profile` (projets, posts, brouillons) et `/me/profile/edit`, posts sur le profil public.
 - Cadrage du projet, documentation et configuration `.claude/`.
 - Lot 0 — Fondations UI : tokens clair/sombre (accent violet), composants de base
   (`Button`, `Input`, `Label`, `Card`, `Badge`, `Skeleton`), composants maison

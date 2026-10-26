@@ -58,12 +58,14 @@ type Mutation {
 Table `project_updates` (migration `0009_v15_project_features.sql`) :
 
 - `id`, `project_id` (cascade), `author_id` (cascade), `body`, `image_key`, `created_at`, `updated_at`.
+- Contrainte `project_updates_body_check` : `char_length(body) BETWEEN 0 AND 5000`
+  (migration `0010_post_likes.sql`), pour autoriser une mise à jour image seule.
 - Bucket `projet`, clé publique `projects/{profileId}/updates/{uuid}.{ext}`.
 
 ## Validation (Zod)
 
 - `projectId` : UUID.
-- `body` : optionnel, trim, 1–5000 si fourni.
+- `body` : optionnel, trim, 0–5000 (vide autorisé seulement si une image est fournie).
 - `imageKey` : optionnel/nullable, regex `projects/{uuid}/updates/{fichier}`.
 - Au moins un des deux champs (`body` ou `imageKey`) est requis.
 
