@@ -515,18 +515,18 @@ export async function deleteProjectFollower(projectId: string, profileId: string
   return rows.length > 0;
 }
 
-export async function findProjectFollowersByProjectId(
+export async function listProjectFollowersByProjectId(
   projectId: string,
   limit: number,
   cursor?: Cursor,
 ): Promise<ProjectFollower[]> {
   const conditions: SQL[] = [eq(projectFollowers.projectId, projectId)];
-  if (cursor) conditions.push(afterTuple(projectFollowers.createdAt, projectFollowers.id, cursor));
+  if (cursor) conditions.push(afterTuple(projectFollowers.createdAt, projectFollowers.profileId, cursor));
   const rows = await db
     .select()
     .from(projectFollowers)
     .where(and(...conditions))
-    .orderBy(desc(projectFollowers.createdAt), desc(projectFollowers.id))
+    .orderBy(desc(projectFollowers.createdAt), desc(projectFollowers.profileId))
     .limit(limit);
   return rows.map(toProjectFollower);
 }

@@ -55,7 +55,6 @@ import {
   isProjectFollowedByProfile,
   listProjectCommentsByProjectId,
   listProjectCommentRepliesByParentId,
-  listProjectFollowersByProjectId,
   listProjectUpdatesByProjectId,
 } from "@/lib/repositories/projects";
 

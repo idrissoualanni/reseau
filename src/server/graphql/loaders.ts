@@ -167,11 +167,17 @@ export function createLoaders(): Loaders {
     projectCommentsByProjectId: new DataLoader<{ projectId: string; first: number; after?: string }, { edges: { cursor: string; node: ProjectCommentWithAuthor }[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } }>(async (keys) => {
       const results = await Promise.all(
         keys.map(async (key) => {
-          const comments = await listProjectCommentsByProjectId(key.projectId, key.first, key.after ? { sortAt: new Date(key.after.split(":")[0]), id: key.after.split(":")[1] } : undefined);
+          const comments = await listProjectCommentsByProjectId(
+            key.projectId,
+            key.first + 1,
+            key.after ? decodeCursor(key.after) : undefined,
+          );
+          const hasCommentsNextPage = comments.length > key.first;
+          const commentsPage = hasCommentsNextPage ? comments.slice(0, key.first) : comments;
           
           // Pour chaque commentaire, charger l'auteur et les réponses
           const commentsWithAuthors = await Promise.all(
-            comments.map(async (comment) => {
+            commentsPage.map(async (comment) => {
               const [author] = await findProfileSummariesByIds([comment.authorId]);
               const replies = await listProjectCommentRepliesByParentId(comment.id);
               const repliesWithAuthors = await Promise.all(
@@ -201,7 +207,7 @@ export function createLoaders(): Loaders {
           return {
             edges,
             pageInfo: {
-              hasNextPage: edges.length > key.first,
+              hasNextPage: hasCommentsNextPage,
               endCursor: edges.at(-1)?.cursor ?? null,
             },
           };
@@ -243,10 +249,16 @@ export function createLoaders(): Loaders {
     projectFollowersByProjectId: new DataLoader<{ projectId: string; first: number; after?: string }, { edges: { cursor: string; node: ProjectFollowerWithProfile }[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } }>(async (keys) => {
       const results = await Promise.all(
         keys.map(async (key) => {
-          const followers = await listProjectFollowersByProjectId(key.projectId, key.first, key.after ? { sortAt: new Date(key.after.split(":")[0]), id: key.after.split(":")[1] } : undefined);
-          
+          const followers = await listProjectFollowersByProjectId(
+            key.projectId,
+            key.first + 1,
+            key.after ? decodeCursor(key.after) : undefined,
+          );
+          const hasFollowersNextPage = followers.length > key.first;
+          const followersPage = hasFollowersNextPage ? followers.slice(0, key.first) : followers;
+
           const followersWithProfiles = await Promise.all(
-            followers.map(async (follower) => {
+            followersPage.map(async (follower) => {
               const [profile] = await findProfileSummariesByIds([follower.profileId]);
               return {
                 ...follower,
@@ -262,7 +274,7 @@ export function createLoaders(): Loaders {
           return {
             edges,
             pageInfo: {
-              hasNextPage: edges.length > key.first,
+              hasNextPage: hasFollowersNextPage,
               endCursor: edges.at(-1)?.cursor ?? null,
             },
           };
@@ -279,10 +291,16 @@ export function createLoaders(): Loaders {
     projectUpdatesByProjectId: new DataLoader<{ projectId: string; first: number; after?: string }, { edges: { cursor: string; node: ProjectUpdateWithAuthor }[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } }>(async (keys) => {
       const results = await Promise.all(
         keys.map(async (key) => {
-          const updates = await listProjectUpdatesByProjectId(key.projectId, key.first, key.after ? { sortAt: new Date(key.after.split(":")[0]), id: key.after.split(":")[1] } : undefined);
-          
+          const updates = await listProjectUpdatesByProjectId(
+            key.projectId,
+            key.first + 1,
+            key.after ? decodeCursor(key.after) : undefined,
+          );
+          const hasUpdatesNextPage = updates.length > key.first;
+          const updatesPage = hasUpdatesNextPage ? updates.slice(0, key.first) : updates;
+
           const updatesWithAuthors = await Promise.all(
-            updates.map(async (update) => {
+            updatesPage.map(async (update) => {
               const [author] = await findProfileSummariesByIds([update.authorId]);
               return {
                 ...update,
@@ -298,7 +316,7 @@ export function createLoaders(): Loaders {
           return {
             edges,
             pageInfo: {
-              hasNextPage: edges.length > key.first,
+              hasNextPage: hasUpdatesNextPage,
               endCursor: edges.at(-1)?.cursor ?? null,
             },
           };
