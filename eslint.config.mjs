@@ -15,6 +15,14 @@ const eslintConfig = defineConfig([
     // Worktrees des taches (imbriques) : ne pas linter leur code ni leurs builds.
     ".opencode/**",
   ]),
+  // Tests historiques Playwright/integration : pas du code applicatif.
+  {
+    files: ["tests/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;
