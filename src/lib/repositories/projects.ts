@@ -107,6 +107,7 @@ export type NewProject = {
   title: string;
   body: string;
   coverKey?: string | null;
+  type?: ProjectType;
 };
 
 export async function insertProject(input: NewProject): Promise<Project> {
@@ -148,6 +149,7 @@ export type ProjectPatch = {
   title?: string;
   body?: string;
   coverKey?: string | null;
+  type?: ProjectType;
 };
 
 export async function updateOwnedProject(

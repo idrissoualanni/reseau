@@ -183,6 +183,7 @@ const CreateProjectInput = builder.inputType("CreateProjectInput", {
     body: t.string({ required: true }),
     skillSlugs: t.stringList(),
     coverKey: t.string(),
+    type: t.field({ type: ProjectTypeEnum }),
   }),
 });
 
@@ -192,6 +193,7 @@ const UpdateProjectInput = builder.inputType("UpdateProjectInput", {
     body: t.string(),
     skillSlugs: t.stringList(),
     coverKey: t.string(),
+    type: t.field({ type: ProjectTypeEnum }),
   }),
 });
 
@@ -268,6 +270,7 @@ builder.mutationFields((t) => ({
           body: args.input.body,
           skillSlugs: args.input.skillSlugs ?? [],
           coverKey: args.input.coverKey ?? undefined,
+          type: args.input.type ?? undefined,
         });
         return createProject(useCaseCtx, input);
       }),
@@ -288,6 +291,7 @@ builder.mutationFields((t) => ({
           body: args.input.body ?? undefined,
           skillSlugs: args.input.skillSlugs ?? undefined,
           coverKey: args.input.coverKey === undefined ? undefined : args.input.coverKey,
+          type: args.input.type ?? undefined,
         });
         return updateProject(useCaseCtx, id, input);
       }),
@@ -442,26 +446,6 @@ export const ProjectUpdateConnectionRef = builder
   });
 
 // ─── Inputs V1.5 ────────────────────────────────────────────────────────────
-
-const CreateProjectInputV15 = builder.inputType("CreateProjectInput", {
-  fields: (t) => ({
-    title: t.string({ required: true }),
-    body: t.string({ required: true }),
-    skillSlugs: t.stringList(),
-    coverKey: t.string(),
-    type: t.field({ type: ProjectTypeEnum }),
-  }),
-});
-
-const UpdateProjectInputV15 = builder.inputType("UpdateProjectInput", {
-  fields: (t) => ({
-    title: t.string(),
-    body: t.string(),
-    skillSlugs: t.stringList(),
-    coverKey: t.string(),
-    type: t.field({ type: ProjectTypeEnum }),
-  }),
-});
 
 const AddProjectReactionInput = builder.inputType("AddProjectReactionInput", {
   fields: (t) => ({

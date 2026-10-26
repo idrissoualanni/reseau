@@ -121,6 +121,7 @@ export async function createProject(
     title: input.title,
     body: input.body,
     coverKey: input.coverKey ?? null,
+    type: input.type,
   });
 
   const skillIds = await resolveSkillIds(input.skillSlugs);
@@ -142,6 +143,7 @@ export async function updateProject(
   if (input.title !== undefined) patch.title = input.title;
   if (input.body !== undefined) patch.body = input.body;
   if (input.coverKey !== undefined) patch.coverKey = input.coverKey;
+  if (input.type !== undefined) patch.type = input.type;
 
   const updated = await updateOwnedProject(id, ctx.profileId, patch);
   if (!updated) throw new NotFoundError("Projet introuvable.");
