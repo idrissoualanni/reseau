@@ -342,7 +342,9 @@ export const ProjectReactionRef = builder.objectRef<ProjectReactionCounts>("Proj
 
 // ─── V1.5 — Types de commentaire projet (F19) ───────────────────────────────
 
-export const ProjectCommentRef = builder.objectRef<ProjectCommentWithAuthor>("ProjectComment").implement({
+export const ProjectCommentRef = builder.objectRef<ProjectCommentWithAuthor>("ProjectComment");
+
+ProjectCommentRef.implement({
   fields: (t) => ({
     id: t.exposeID("id"),
     body: t.exposeString("body"),
@@ -563,7 +565,10 @@ builder.mutationFields((t) => ({
           parentId: args.input.parentId ?? undefined,
           body: args.input.body,
         });
-        return createProjectComment(requireProfile(ctx), input);
+        const comment = await createProjectComment(requireProfile(ctx), input);
+        const author = await ctx.loaders.authorById.load(comment.authorId);
+        if (!author) throw new Error("Auteur introuvable.");
+        return { ...comment, author, replies: [], depth: 0 };
       }),
   }),
 
@@ -608,7 +613,10 @@ builder.mutationFields((t) => ({
           body: args.input.body,
           imageKey: args.input.imageKey ?? undefined,
         });
-        return createProjectUpdate(requireProfile(ctx), input);
+        const update = await createProjectUpdate(requireProfile(ctx), input);
+        const author = await ctx.loaders.authorById.load(update.authorId);
+        if (!author) throw new Error("Auteur introuvable.");
+        return { ...update, author };
       }),
   }),
 

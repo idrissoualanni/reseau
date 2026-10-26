@@ -62,6 +62,7 @@ function toProject(row: typeof projects.$inferSelect): Project {
     coverKey: row.coverKey,
     status: row.status,
     publishedAt: row.publishedAt,
+    type: row.type,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };

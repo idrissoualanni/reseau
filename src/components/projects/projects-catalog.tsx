@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ProjectCard } from "@/components/projects/project-card";
 import { ProjectFeed } from "@/components/projects/project-feed";
 import { EmptyState } from "@/components/empty-state";
+import type { FeedPage } from "@/lib/feed";
 import { Filter, X, Loader2, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +32,7 @@ const PROJECT_TYPE_LABELS: Record<ProjectType, string> = {
 const PROJECT_TYPES: ProjectType[] = ["personal", "team", "open_source", "research", "coursework"];
 
 type ProjectsCatalogProps = {
-  initialProjects?: { edges: { cursor: string; node: any }[]; hasNextPage: boolean; endCursor: string | null };
+  initialProjects?: FeedPage;
   initialSkillSlugs?: string[];
 };
 

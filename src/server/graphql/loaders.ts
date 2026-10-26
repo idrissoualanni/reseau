@@ -1,7 +1,7 @@
 import DataLoader from "dataloader";
 import { inArray } from "drizzle-orm";
 import { db } from "@/db/client";
-import { projectComments, projectFollowers, projectReactions, projectUpdates } from "@/db/schema";
+import { postComments, projectComments, projectFollowers, projectReactions, projectUpdates } from "@/db/schema";
 import type { Skill } from "@/lib/types";
 import {
   findProfileSummariesByIds,

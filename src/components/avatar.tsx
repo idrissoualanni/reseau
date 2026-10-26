@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 type AvatarProps = {
   name: string;
   src?: string | null;
-  size?: "md" | "lg";
+  size?: "sm" | "md" | "lg";
   className?: string;
 };
 
@@ -17,7 +17,8 @@ function initials(name: string): string {
 }
 
 export function Avatar({ name, src, size = "md", className }: AvatarProps) {
-  const dimensions = size === "lg" ? "size-16 text-xl" : "size-10 text-sm";
+  const dimensions =
+    size === "lg" ? "size-16 text-xl" : size === "sm" ? "size-8 text-xs" : "size-10 text-sm";
 
   return (
     <span

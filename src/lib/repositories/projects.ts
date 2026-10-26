@@ -3,6 +3,7 @@ import {
   desc,
   eq,
   inArray,
+  isNull,
   lt,
   or,
   sql,
@@ -20,7 +21,7 @@ import {
   profiles,
   skills,
 } from "@/db/schema";
-import type { Project, ProjectComment, ProjectFollower, ProjectReaction, ProjectType, ProjectUpdate, Skill } from "@/lib/types";
+import type { Project, ProjectComment, ProjectFollower, ProjectReaction, ProjectReactionType, ProjectType, ProjectUpdate, Skill } from "@/lib/types";
 import type { Cursor } from "@/lib/pagination";
 
 type ProjectRow = typeof projects.$inferSelect;
@@ -370,7 +371,7 @@ export async function listPublishedProjectsV15(
 export type NewProjectReaction = {
   projectId: string;
   profileId: string;
-  type: string; // projectReactionType
+  type: ProjectReactionType;
 };
 
 export async function insertProjectReaction(input: NewProjectReaction): Promise<ProjectReaction> {
@@ -386,7 +387,7 @@ export async function insertProjectReaction(input: NewProjectReaction): Promise<
 export async function deleteProjectReaction(
   projectId: string,
   profileId: string,
-  type: string,
+  type: ProjectReactionType,
 ): Promise<boolean> {
   const rows = await db
     .delete(projectReactions)
@@ -470,7 +471,7 @@ export async function listProjectCommentsByProjectId(
   limit: number,
   cursor?: Cursor,
 ): Promise<ProjectComment[]> {
-  const conditions: SQL[] = [eq(projectComments.projectId, projectId), eq(projectComments.parentId, null)];
+  const conditions: SQL[] = [eq(projectComments.projectId, projectId), isNull(projectComments.parentId)];
   if (cursor) conditions.push(afterTuple(projectComments.createdAt, projectComments.id, cursor));
   const rows = await db
     .select()

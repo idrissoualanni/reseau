@@ -2,6 +2,7 @@ import { ForbiddenError, NotFoundError, RuleViolationError } from "@/lib/errors"
 import { decodeCursor, encodeCursor } from "@/lib/pagination";
 import type { UseCaseContext, ViewerContext } from "@/lib/context";
 import type { Project, ProjectComment, ProjectFollower, ProjectReaction, ProjectReactionType, ProjectType, ProjectUpdate, Skill } from "@/lib/types";
+import { projectReactionTypeValues } from "@/lib/types";
 import { findOrCreateSkill } from "@/lib/repositories/skills";
 import {
   deleteOwnedProject,

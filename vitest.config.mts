@@ -6,6 +6,9 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     environment: "node",
+    // Tests colocalisés dans src/. `tests/` contient les specs E2E Playwright
+    // (dépendance non installée) et des intégrations hors périmètre Vitest.
+    include: ["src/**/*.test.{ts,tsx}"],
   },
   resolve: {
     alias: {

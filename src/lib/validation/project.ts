@@ -29,16 +29,16 @@ const skillSlugSchema = z
     "Compétence invalide.",
   );
 
-const skillSlugsSchema = z
-  .array(skillSlugSchema)
+const skillSlugListSchema = z.array(skillSlugSchema);
+
+const skillSlugsSchema = skillSlugListSchema
   .max(MAX_SKILLS_PER_PROJECT, `Maximum ${MAX_SKILLS_PER_PROJECT} compétences.`)
   .transform((slugs) => Array.from(new Set(slugs)));
 
 // Type de projet (F18) : personal, team, open_source, research, coursework
-const projectTypeSchema = z
-  .enum(projectTypeValues as [string, ...string[]], {
-    errorMap: () => ({ message: "Type de projet invalide." }),
-  });
+const projectTypeSchema = z.enum(projectTypeValues, {
+  message: "Type de projet invalide.",
+});
 
 // Clé de stockage d'une couverture : appartenance vérifiée par le cas d'usage
 // (préfixe `projects/{profileId}/`). Le format est contrôlé ici.
@@ -103,7 +103,7 @@ export const projectIdSchema = uuidSchema;
 export const listProjectsQuerySchema = z.object({
   first: z.coerce.number().int().min(1).max(50).default(20),
   after: z.string().max(500).optional(),
-  skillSlugs: skillSlugsSchema.max(5, "Maximum 5 compétences pour le filtre.").optional(),
+  skillSlugs: skillSlugListSchema.max(5, "Maximum 5 compétences pour le filtre.").optional(),
   projectTypes: z.array(projectTypeSchema).optional(),
   authorUsername: z
     .string()
@@ -118,7 +118,7 @@ export const listProjectsQuerySchema = z.object({
 export const addProjectReactionSchema = z
   .object({
     projectId: uuidSchema,
-    type: z.enum(projectReactionTypeValues as [string, ...string[]]),
+    type: z.enum(projectReactionTypeValues, { message: "Réaction invalide." }),
   })
   .strict();
 

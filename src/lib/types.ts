@@ -47,8 +47,6 @@ export type ProfileSkill = Skill & { proofLevel: ProofLevel };
 
 export type ProjectStatus = "draft" | "published";
 
-export type ProjectType = (typeof projectTypeValues)[number];
-
 export type Project = {
   id: string;
   authorId: string;
@@ -203,8 +201,6 @@ export type AdminOtpEventRecord = {
 };
 
 // ─── V1.5 — Fonctionnalités sociales projets (F19) ──────────────────────────
-
-export type ProjectReactionType = (typeof projectReactionTypeValues)[number];
 
 export type ProjectReaction = {
   projectId: string;
