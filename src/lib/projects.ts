@@ -223,9 +223,10 @@ export async function listMyProjects(
   ctx: UseCaseContext,
   limit: number,
   after?: string,
+  type?: ProjectType,
 ): Promise<ProjectConnectionPage> {
   const cursor = after ? decodeCursor(after) : undefined;
-  const rows = await listProjectsByAuthor(ctx.profileId, limit + 1, cursor);
+  const rows = await listProjectsByAuthor(ctx.profileId, limit + 1, cursor, type);
   return toPage(rows, limit, (project) => project.updatedAt);
 }
 

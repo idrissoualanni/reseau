@@ -247,8 +247,10 @@ export async function listProjectsByAuthor(
   authorId: string,
   limit: number,
   cursor?: Cursor,
+  type?: ProjectType,
 ): Promise<Project[]> {
   const conditions: SQL[] = [eq(projects.authorId, authorId)];
+  if (type) conditions.push(eq(projects.type, type));
   if (cursor) conditions.push(afterTuple(projects.updatedAt, projects.id, cursor));
   const rows = await db
     .select()

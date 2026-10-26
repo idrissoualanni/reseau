@@ -86,6 +86,7 @@ export async function createProjectAction(
     body: text(formData, "body"),
     skillSlugs: skillSlugs(formData),
     coverKey: coverKey(formData),
+    type: text(formData, "type") || undefined,
   });
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
 
@@ -115,6 +116,7 @@ export async function updateProjectAction(
     body: text(formData, "body"),
     skillSlugs: skillSlugs(formData),
     coverKey: coverKey(formData),
+    type: text(formData, "type") || undefined,
   });
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
 

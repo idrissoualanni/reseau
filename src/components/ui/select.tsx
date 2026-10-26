@@ -74,14 +74,20 @@ function SelectTrigger({
   );
 }
 
-function SelectValue({ placeholder }: { placeholder?: string }) {
+function SelectValue({
+  placeholder,
+  getLabel,
+}: {
+  placeholder?: string;
+  getLabel?: (value: string) => string;
+}) {
   const { value, multiple } = useSelectContext();
   const label =
     value.length === 0
       ? placeholder
       : multiple
         ? `${value.length} sélectionné${value.length > 1 ? "s" : ""}`
-        : value[0];
+        : (getLabel?.(value[0]) ?? value[0]);
   return (
     <span data-slot="select-value" className="truncate text-left">
       {label}

@@ -11,6 +11,8 @@ import { EmptyState } from "@/components/empty-state";
 import type { FeedPage } from "@/lib/feed";
 import { Filter, X, Loader2, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PROJECT_TYPES, PROJECT_TYPE_LABELS } from "@/lib/project-types";
+import type { ProjectType } from "@/lib/types";
 
 type ProjectFilters = {
   search: string;
@@ -18,18 +20,6 @@ type ProjectFilters = {
   projectTypes: string[];
   authorUsername: string;
 };
-
-type ProjectType = "personal" | "team" | "open_source" | "research" | "coursework";
-
-const PROJECT_TYPE_LABELS: Record<ProjectType, string> = {
-  personal: "Personnel",
-  team: "Équipe",
-  open_source: "Open Source",
-  research: "Recherche",
-  coursework: "Cours",
-};
-
-const PROJECT_TYPES: ProjectType[] = ["personal", "team", "open_source", "research", "coursework"];
 
 type ProjectsCatalogProps = {
   initialProjects?: FeedPage;

@@ -6,6 +6,15 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FormField } from "@/components/form-field";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PROJECT_TYPES, PROJECT_TYPE_LABELS } from "@/lib/project-types";
 import { TextareaField } from "@/components/textarea-field";
 import { ProjectSkillsInput } from "@/components/projects/project-skills-input";
 import { ProjectCoverUpload } from "@/components/projects/project-cover-upload";
@@ -18,7 +27,7 @@ import {
   MAX_PROJECT_BODY,
   MAX_PROJECT_TITLE,
 } from "@/lib/validation/project";
-import type { Project, Skill } from "@/lib/types";
+import type { Project, ProjectType, Skill } from "@/lib/types";
 
 type ProjectFormProps = {
   mode: "create" | "edit";
@@ -40,6 +49,7 @@ export function ProjectForm({ mode, project, initialSkills = [], coverUrl = null
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverRemoved, setCoverRemoved] = useState(false);
   const [coverError, setCoverError] = useState<string | null>(null);
+  const [projectType, setProjectType] = useState<ProjectType>(project?.type ?? "personal");
 
   const canPublish = title.trim().length >= 3;
 
@@ -108,6 +118,34 @@ export function ProjectForm({ mode, project, initialSkills = [], coverUrl = null
             hint={`${MAX_PROJECT_TITLE} caractères maximum.`}
             required
           />
+
+          <div className="space-y-2">
+            <Label htmlFor="project-type">Type de projet</Label>
+            <input type="hidden" name="type" value={projectType} />
+            <Select
+              value={[projectType]}
+              onValueChange={(value) =>
+                setProjectType((value[0] as ProjectType | undefined) ?? "personal")
+              }
+            >
+              <SelectTrigger id="project-type" className="w-full">
+                <SelectValue
+                  placeholder="Choisir un type"
+                  getLabel={(value) => PROJECT_TYPE_LABELS[value as ProjectType]}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {PROJECT_TYPES.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {PROJECT_TYPE_LABELS[type]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {state.fieldErrors?.type ? (
+              <p className="text-destructive text-sm">{state.fieldErrors.type}</p>
+            ) : null}
+          </div>
 
           <TextareaField
             name="body"

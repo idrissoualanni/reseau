@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SkillBadge } from "@/components/skill-badge";
+import { PROJECT_TYPE_LABELS } from "@/lib/project-types";
 import {
   deleteProjectAction,
   publishProjectAction,
@@ -66,8 +67,9 @@ export function ProjectListItem({ project, skills }: ProjectListItemProps) {
             >
               {project.title}
             </Link>
-            <p className="text-muted-foreground text-xs">
-              Modifié le {formatDate(project.updatedAt)}
+            <p className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
+              <span>Modifié le {formatDate(project.updatedAt)}</span>
+              <Badge variant="secondary">{PROJECT_TYPE_LABELS[project.type]}</Badge>
             </p>
           </div>
           {published ? (
