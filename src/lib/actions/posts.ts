@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requireSession } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
 import { getOwnProfile } from "@/lib/profile";
+import { getPublicUrl } from "@/lib/storage";
 import { loadPostsFeed, type PostFeedPage } from "@/lib/posts-feed";
 import {
   addComment,
@@ -14,6 +15,11 @@ import {
   createPostSchema,
   deleteComment,
   deletePost,
+  listOwnPosts,
+  togglePostLike,
+  updatePost,
+  updatePostSchema,
+  type PostLikeResult,
 } from "@/lib/posts";
 import { postIdSchema } from "@/lib/validation/post";
 
@@ -75,6 +81,71 @@ export async function createPostAction(
   redirect(`/posts#post-${result.post.id}`);
 }
 
+// Édition d'un post : champ imageKey absent = conserver, vide = retirer,
+// valeur = remplacer (la clé est vérifiée par le cas d'usage).
+export async function updatePostAction(
+  _prev: PostFormState,
+  formData: FormData,
+): Promise<PostFormState> {
+  const ctx = await requireUseCaseContext();
+  const rawImageKey = formData.get("imageKey");
+  const imageKey =
+    rawImageKey === null ? undefined : String(rawImageKey) || null;
+
+  const parsed = updatePostSchema.safeParse({
+    id: String(formData.get("id") ?? ""),
+    body: String(formData.get("body") ?? ""),
+    imageKey,
+  });
+  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
+
+  try {
+    await updatePost(ctx, parsed.data);
+  } catch (error) {
+    return toErrorState(error);
+  }
+
+  revalidatePath("/posts");
+  revalidatePath("/me/posts");
+  revalidatePath(`/posts/${parsed.data.id}`);
+  redirect(`/posts/${parsed.data.id}`);
+}
+
+// Suppression depuis l'espace de gestion : retour explicite à la liste.
+export async function deletePostAndRedirectAction(formData: FormData): Promise<PostFormState> {
+  const ctx = await requireUseCaseContext();
+  const parsedId = postIdSchema.safeParse(String(formData.get("id") ?? ""));
+  if (!parsedId.success) return { error: "Identifiant invalide." };
+
+  try {
+    await deletePost(ctx, parsedId.data);
+  } catch (error) {
+    return toErrorState(error);
+  }
+
+  revalidatePath("/posts");
+  revalidatePath("/me/posts");
+  redirect("/me/posts");
+}
+
+export async function togglePostLikeAction(
+  postId: string,
+): Promise<{ ok: true; data: PostLikeResult } | { ok: false; error: string }> {
+  const ctx = await requireUseCaseContext();
+  const parsed = postIdSchema.safeParse(postId);
+  if (!parsed.success) return { ok: false, error: "Identifiant invalide." };
+
+  try {
+    const data = await togglePostLike(ctx, parsed.data);
+    revalidatePath("/posts");
+    revalidatePath(`/posts/${parsed.data}`);
+    return { ok: true, data };
+  } catch (error) {
+    const state = toErrorState(error);
+    return { ok: false, error: state.error ?? "Une erreur est survenue." };
+  }
+}
+
 export async function deletePostAction(formData: FormData): Promise<PostFormState> {
   const ctx = await requireUseCaseContext();
   const id = String(formData.get("id") ?? "");
@@ -132,6 +203,45 @@ export async function deleteCommentAction(formData: FormData): Promise<PostFormS
 const feedCursorSchema = z.object({
   after: z.string().optional(),
 });
+
+export type OwnPostSummary = {
+  id: string;
+  body: string;
+  imageUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export async function loadOwnPostsPage(input: {
+  after?: string;
+}): Promise<{
+  posts: OwnPostSummary[];
+  hasNextPage: boolean;
+  endCursor: string | null;
+}> {
+  const parsed = feedCursorSchema.safeParse(input);
+  if (!parsed.success) return { posts: [], hasNextPage: false, endCursor: null };
+
+  const session = await requireSession();
+  const profile = await getOwnProfile(session.user.id);
+  if (!profile) redirect("/onboarding/profile");
+
+  const page = await listOwnPosts(
+    { userId: session.user.id, profileId: profile.id },
+    { limit: 20, after: parsed.data.after },
+  );
+  return {
+    posts: page.posts.map((post) => ({
+      id: post.id,
+      body: post.body,
+      imageUrl: post.imageKey ? getPublicUrl(post.imageKey) : null,
+      createdAt: post.createdAt.toISOString(),
+      updatedAt: post.updatedAt.toISOString(),
+    })),
+    hasNextPage: page.hasNextPage,
+    endCursor: page.endCursor,
+  };
+}
 
 // « Voir plus » du fil de posts (F11) : renvoie la page suivante, sérialisée
 // (dates en ISO), avec les auteurs et commentaires préchargés par lots.

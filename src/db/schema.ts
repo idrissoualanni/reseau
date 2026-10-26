@@ -25,7 +25,7 @@ export const proofLevel = pgEnum("proof_level", ["declared", "demonstrated"]);
 export const projectStatus = pgEnum("project_status", ["draft", "published"]);
 
 // Type de projet (F18 — catalogue) : personal, team, open_source, research, coursework.
-export const projectType = pgEnum("project_type", [
+export const projectType = pgEnum("project_type_enum", [
   "personal",
   "team",
   "open_source",
@@ -34,7 +34,7 @@ export const projectType = pgEnum("project_type", [
 ]);
 
 // Types de réaction sur un projet (F19 — social).
-export const projectReactionType = pgEnum("project_reaction_type", [
+export const projectReactionType = pgEnum("project_reaction_type_enum", [
   "like",
   "celebrate",
   "insight",
@@ -222,6 +222,24 @@ export const postComments = pgTable(
     index("post_comments_post_idx").on(t.postId, t.createdAt.desc(), t.id.desc()),
     index("post_comments_parent_idx").on(t.parentId),
     check("post_comments_body_check", sql`char_length(${t.body}) between 1 and 1000`),
+  ],
+);
+
+// J'aime d'un post (F11 V1.5) : une seule ligne par membre et par post.
+export const postLikes = pgTable(
+  "post_likes",
+  {
+    postId: uuid("post_id")
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    profileId: uuid("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.postId, t.profileId] }),
+    index("post_likes_profile_idx").on(t.profileId, t.createdAt.desc()),
   ],
 );
 
@@ -484,6 +502,6 @@ export const projectUpdates = pgTable(
   (t) => [
     index("project_updates_project_idx").on(t.projectId, t.createdAt.desc(), t.id.desc()),
     index("project_updates_author_idx").on(t.authorId),
-    check("project_updates_body_check", sql`char_length(${t.body}) between 1 and 5000`),
+    check("project_updates_body_check", sql`char_length(${t.body}) between 0 and 5000`),
   ],
 );

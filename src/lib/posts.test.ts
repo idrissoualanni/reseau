@@ -8,6 +8,14 @@ vi.mock("@/lib/repositories/posts", () => ({
   insertComment: vi.fn(),
   findCommentById: vi.fn(),
   deleteCommentById: vi.fn(),
+  listPostsByAuthor: vi.fn(),
+  updatePostById: vi.fn(),
+  insertPostLike: vi.fn(),
+  deletePostLike: vi.fn(),
+  countPostLikes: vi.fn(),
+  isPostLikedByProfile: vi.fn(),
+  countLikesForPosts: vi.fn(),
+  listLikedPostIds: vi.fn(),
 }));
 
 import { NotFoundError, ValidationError } from "@/lib/errors";
@@ -22,8 +30,12 @@ import {
   createPostSchema,
   deleteComment,
   deletePost,
+  getOwnPost,
   getPost,
+  listOwnPosts,
   listPosts,
+  togglePostLike,
+  updatePost,
 } from "@/lib/posts";
 import {
   MAX_POST_IMAGE_BYTES,
@@ -211,6 +223,98 @@ describe("deletePost (F11)", () => {
     repo.deletePostById.mockResolvedValue(false);
 
     await expect(deletePost(ctx, "post-1")).rejects.toThrow(NotFoundError);
+  });
+});
+
+describe("updatePost (F11)", () => {
+  it("met à jour le post du lecteur", async () => {
+    repo.findPostById.mockResolvedValue(post());
+    repo.updatePostById.mockResolvedValue(post({ body: "Texte corrigé." }));
+
+    const updated = await updatePost(ctx, {
+      id: "post-1",
+      body: "Texte corrigé.",
+    });
+
+    expect(repo.updatePostById).toHaveBeenCalledWith(
+      "post-1",
+      "p1",
+      "Texte corrigé.",
+      undefined,
+    );
+    expect(updated.body).toBe("Texte corrigé.");
+  });
+
+  it("refuse le post d'un autre auteur", async () => {
+    repo.findPostById.mockResolvedValue(post({ authorId: "p2" }));
+
+    await expect(
+      updatePost(ctx, { id: "post-1", body: "Hack." }),
+    ).rejects.toThrow(NotFoundError);
+    expect(repo.updatePostById).not.toHaveBeenCalled();
+  });
+
+  it("refuse une clé d'image hors du préfixe du lecteur", async () => {
+    repo.findPostById.mockResolvedValue(post());
+
+    await expect(
+      updatePost(ctx, {
+        id: "post-1",
+        body: "Texte.",
+        imageKey: "posts/other/img.jpg",
+      }),
+    ).rejects.toThrow(ValidationError);
+  });
+});
+
+describe("getOwnPost (F11)", () => {
+  it("renvoie NOT_FOUND pour un post d'un autre", async () => {
+    repo.findPostById.mockResolvedValue(post({ authorId: "p2" }));
+    await expect(getOwnPost(ctx, "post-1")).rejects.toThrow(NotFoundError);
+  });
+});
+
+describe("listOwnPosts (F11)", () => {
+  it("pagine les posts de l'auteur connecté", async () => {
+    repo.listPostsByAuthor.mockResolvedValue([
+      post(),
+      post({ id: "post-2", createdAt: new Date("2025-12-01T00:00:00Z") }),
+    ]);
+
+    const page = await listOwnPosts(ctx, { limit: 1 });
+
+    expect(repo.listPostsByAuthor).toHaveBeenCalledWith("p1", 1, undefined);
+    expect(page.posts).toHaveLength(1);
+    expect(page.hasNextPage).toBe(true);
+  });
+});
+
+describe("togglePostLike (F11)", () => {
+  it("ajoute un j'aime quand il n'existe pas", async () => {
+    repo.findPostById.mockResolvedValue(post());
+    repo.isPostLikedByProfile.mockResolvedValue(false);
+    repo.countPostLikes.mockResolvedValue(1);
+
+    const result = await togglePostLike(ctx, "post-1");
+
+    expect(repo.insertPostLike).toHaveBeenCalledWith("post-1", "p1");
+    expect(result).toEqual({ postId: "post-1", likeCount: 1, hasLiked: true });
+  });
+
+  it("retire un j'aime existant", async () => {
+    repo.findPostById.mockResolvedValue(post());
+    repo.isPostLikedByProfile.mockResolvedValue(true);
+    repo.countPostLikes.mockResolvedValue(0);
+
+    const result = await togglePostLike(ctx, "post-1");
+
+    expect(repo.deletePostLike).toHaveBeenCalledWith("post-1", "p1");
+    expect(result).toEqual({ postId: "post-1", likeCount: 0, hasLiked: false });
+  });
+
+  it("refuse un post inexistant", async () => {
+    repo.findPostById.mockResolvedValue(null);
+    await expect(togglePostLike(ctx, "post-x")).rejects.toThrow(NotFoundError);
   });
 });
 

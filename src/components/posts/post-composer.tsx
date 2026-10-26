@@ -3,6 +3,15 @@
 import { useActionState, useRef, useState } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Attachment,
+  AttachmentAction,
+  AttachmentActions,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentMedia,
+  AttachmentTitle,
+} from "@/components/ui/attachment";
 import { TextareaField } from "@/components/textarea-field";
 import { createPostAction, type PostFormState } from "@/lib/actions/posts";
 import { MAX_POST_BODY } from "@/lib/posts";
@@ -107,26 +116,23 @@ export function PostComposer() {
 
       {previewUrl ? (
         <figure className="space-y-2">
-          <div className="relative">
-            {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local avant upload */}
-            <img
-              src={previewUrl}
-              alt="Aperçu de l'image du post"
-              className="bg-muted max-h-96 w-full rounded-xl object-cover"
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={clearImage}
-              aria-label="Retirer l'image"
-              className="absolute top-2 right-2"
-            >
-              <X />
-            </Button>
-          </div>
+          <Attachment state="idle" className="w-full">
+            <AttachmentMedia variant="image">
+              {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local avant upload */}
+              <img src={previewUrl} alt="Aperçu de l'image du post" />
+            </AttachmentMedia>
+            <AttachmentContent>
+              <AttachmentTitle>{selected?.name ?? "Image du post"}</AttachmentTitle>
+              <AttachmentDescription>Image jointe · 10 Mo maximum</AttachmentDescription>
+            </AttachmentContent>
+            <AttachmentActions>
+              <AttachmentAction type="button" onClick={clearImage} aria-label="Retirer l'image">
+                <X />
+              </AttachmentAction>
+            </AttachmentActions>
+          </Attachment>
           <figcaption className="text-muted-foreground text-xs">
-            Aperçu : voici comment l&apos;image apparaîtra dans le fil.
+            L&apos;image apparaîtra sous le texte dans le fil.
           </figcaption>
         </figure>
       ) : null}

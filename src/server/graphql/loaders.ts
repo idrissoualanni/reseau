@@ -8,7 +8,12 @@ import {
   type ProfileSummaryRow,
 } from "@/lib/repositories/profiles";
 import { listProjectSkillsForProjects } from "@/lib/repositories/projects";
-import { listCommentsForPosts, type CommentRow } from "@/lib/repositories/posts";
+import {
+  countLikesForPosts,
+  listCommentsForPosts,
+  listLikedPostIds,
+  type CommentRow,
+} from "@/lib/repositories/posts";
 import {
   countProjectFollowersByProjectId,
   countProjectReactionsByProjectId,
@@ -71,6 +76,8 @@ export type Loaders = {
   skillsByProjectId: DataLoader<string, Skill[]>;
   commentsByPostId: DataLoader<string, CommentRow[]>;
   repliesByCommentId: DataLoader<string, CommentRow[]>;
+  postLikeCountById: DataLoader<string, number>;
+  postLikedByProfile: DataLoader<{ postId: string; profileId: string }, boolean>;
 
   // V1.5 — Projets
   projectReactionsByProjectId: DataLoader<{ projectId: string; profileId: string | null }, ProjectReactionCounts[]>;
@@ -110,6 +117,29 @@ export function createLoaders(): Loaders {
       const byId = new Map(rows.map((row) => [row.id, row]));
       return ids.map((id) => byId.get(id) ?? null);
     }),
+
+    postLikeCountById: new DataLoader<string, number>(async (postIds) => {
+      const counts = await countLikesForPosts([...postIds]);
+      return postIds.map((id) => counts.get(id) ?? 0);
+    }),
+
+    postLikedByProfile: new DataLoader<{ postId: string; profileId: string }, boolean>(
+      async (keys) => {
+        const byProfile = new Map<string, string[]>();
+        for (const key of keys) {
+          const list = byProfile.get(key.profileId) ?? [];
+          list.push(key.postId);
+          byProfile.set(key.profileId, list);
+        }
+        const liked = new Map<string, Set<string>>();
+        await Promise.all(
+          [...byProfile.entries()].map(async ([profileId, postIds]) => {
+            liked.set(profileId, await listLikedPostIds(postIds, profileId));
+          }),
+        );
+        return keys.map((key) => liked.get(key.profileId)?.has(key.postId) ?? false);
+      },
+    ),
 
     skillsByProjectId: new DataLoader<string, Skill[]>(async (projectIds) => {
       const rows = await listProjectSkillsForProjects([...projectIds]);

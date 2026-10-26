@@ -9,6 +9,10 @@ import {
   deletePost,
   getPost,
   listPosts,
+  togglePostLike,
+  updatePost,
+  updatePostSchema,
+  type PostLikeResult,
 } from "@/lib/posts";
 import { listPostsQuerySchema, postIdSchema } from "@/lib/validation/post";
 import { getPublicUrl } from "@/lib/storage";
@@ -42,6 +46,17 @@ export const PostRef = builder.objectRef<Post>("Post").implement({
     comments: t.field({
       type: [PostCommentRef],
       resolve: (post, _args, ctx) => ctx.loaders.commentsByPostId.load(post.id),
+    }),
+    likeCount: t.int({
+      description: "Nombre de j'aime sur le post.",
+      resolve: (post, _args, ctx) => ctx.loaders.postLikeCountById.load(post.id),
+    }),
+    hasLiked: t.boolean({
+      description: "Vrai si le membre connecté a aimé ce post.",
+      resolve: (post, _args, ctx) =>
+        ctx.profileId
+          ? ctx.loaders.postLikedByProfile.load({ postId: post.id, profileId: ctx.profileId })
+          : false,
     }),
   }),
 });
@@ -96,6 +111,24 @@ const CreatePostInput = builder.inputType("CreatePostInput", {
   }),
 });
 
+const UpdatePostInput = builder.inputType("UpdatePostInput", {
+  fields: (t) => ({
+    body: t.string({ required: true }),
+    imageKey: t.string(),
+  }),
+});
+
+// Retour d'un j'aime : état courant pour mettre à jour l'UI sans relire le post.
+const PostLikePayloadRef = builder
+  .objectRef<PostLikeResult>("PostLikePayload")
+  .implement({
+    fields: (t) => ({
+      postId: t.exposeID("postId"),
+      likeCount: t.exposeInt("likeCount"),
+      hasLiked: t.exposeBoolean("hasLiked"),
+    }),
+  });
+
 const CreateCommentInput = builder.inputType("CreateCommentInput", {
   fields: (t) => ({
     postId: t.string({ required: true }),
@@ -142,6 +175,33 @@ builder.mutationFields((t) => ({
           imageKey: args.input.imageKey ?? undefined,
         });
         return createPost(requireProfile(ctx), input);
+      }),
+  }),
+
+  updatePost: t.field({
+    type: PostRef,
+    args: {
+      id: t.arg.id({ required: true }),
+      input: t.arg({ type: UpdatePostInput, required: true }),
+    },
+    resolve: (_root, args, ctx) =>
+      run(async () => {
+        const input = validateInput(updatePostSchema, {
+          id: String(args.id),
+          body: args.input.body,
+          imageKey: args.input.imageKey,
+        });
+        return updatePost(requireProfile(ctx), input);
+      }),
+  }),
+
+  togglePostLike: t.field({
+    type: PostLikePayloadRef,
+    args: { id: t.arg.id({ required: true }) },
+    resolve: (_root, args, ctx) =>
+      run(async () => {
+        const id = validateInput(postIdSchema, String(args.id));
+        return togglePostLike(requireProfile(ctx), id);
       }),
   }),
 

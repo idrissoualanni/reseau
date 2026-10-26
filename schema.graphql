@@ -26,7 +26,9 @@ type Mutation {
   deletePost(id: ID!): Boolean
   deleteProject(id: ID!): Boolean
   publishProject(coverKey: String, id: ID!): Project
+  togglePostLike(id: ID!): PostLikePayload
   unpublishProject(id: ID!): Project
+  updatePost(id: ID!, input: UpdatePostInput!): Post
   updateProject(id: ID!, input: UpdateProjectInput!): Project
 }
 
@@ -44,8 +46,14 @@ type Post {
   createdAt: DateTime
   id: ID
 
+  """Vrai si le membre connecté a aimé ce post."""
+  hasLiked: Boolean
+
   """URL publique de l'image du post, quand elle existe."""
   imageUrl: String
+
+  """Nombre de j'aime sur le post."""
+  likeCount: Int
   updatedAt: DateTime
 }
 
@@ -66,6 +74,13 @@ type PostConnection {
 type PostEdge {
   cursor: String
   node: Post
+}
+
+"""État courant d'un j'aime de post."""
+type PostLikePayload {
+  hasLiked: Boolean!
+  likeCount: Int!
+  postId: ID!
 }
 
 """Résumé public d'un membre."""
@@ -118,6 +133,11 @@ type Skill {
   id: ID
   name: String
   slug: String
+}
+
+input UpdatePostInput {
+  body: String!
+  imageKey: String
 }
 
 input UpdateProjectInput {

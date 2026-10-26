@@ -13,6 +13,10 @@ vi.mock("@/lib/repositories/posts", () => ({
   deleteCommentById: vi.fn(),
   listCommentsForPosts: vi.fn(),
   countCommentsForPosts: vi.fn(),
+  countLikesForPosts: vi.fn(),
+  listLikedPostIds: vi.fn(),
+  countPostLikes: vi.fn(),
+  isPostLikedByProfile: vi.fn(),
 }));
 
 vi.mock("@/lib/repositories/profiles", () => ({
@@ -73,6 +77,10 @@ function author(overrides: Partial<ProfileSummaryRow> = {}): ProfileSummaryRow {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  repo.countLikesForPosts.mockResolvedValue(new Map());
+  repo.listLikedPostIds.mockResolvedValue(new Set());
+  repo.countPostLikes.mockResolvedValue(0);
+  repo.isPostLikedByProfile.mockResolvedValue(false);
 });
 
 describe("loadPostsFeed (F11)", () => {
@@ -111,6 +119,8 @@ describe("loadPostsFeed (F11)", () => {
       imageUrl: "https://cdn.test/posts/p1/a.jpg",
       authorId: "p1",
       commentCount: 2,
+      likeCount: 0,
+      hasLiked: false,
     });
     expect(edge.author).toMatchObject({ id: "p1", username: "awa" });
     // Arbre : racine (depth 0) puis réponse (depth 1, parentId = racine).
@@ -169,5 +179,20 @@ describe("loadPostDetail (F11)", () => {
     expect(detail!.post.id).toBe("post-1");
     expect(detail!.author).toMatchObject({ username: "awa" });
     expect(detail!.comments.map((c) => c.id)).toEqual(["c1", "c2"]);
+    expect(detail!.likeCount).toBe(0);
+    expect(detail!.hasLiked).toBe(false);
+  });
+
+  it("propage les j'aime du viewer", async () => {
+    repo.findPostById.mockResolvedValue(post());
+    repo.listCommentsForPosts.mockResolvedValue([]);
+    profiles.findProfileSummariesByIds.mockResolvedValue([author()]);
+    repo.countPostLikes.mockResolvedValue(3);
+    repo.isPostLikedByProfile.mockResolvedValue(true);
+
+    const detail = await loadPostDetail(ctx, "post-1");
+
+    expect(detail!.likeCount).toBe(3);
+    expect(detail!.hasLiked).toBe(true);
   });
 });

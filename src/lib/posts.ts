@@ -3,13 +3,19 @@ import { NotFoundError, ValidationError } from "@/lib/errors";
 import { decodeCursor, encodeCursor } from "@/lib/pagination";
 import type { UseCaseContext, ViewerContext } from "@/lib/context";
 import {
+  countPostLikes,
   deleteCommentById,
   deletePostById,
+  deletePostLike,
   findCommentById,
   findPostById,
   insertComment,
   insertPost,
+  insertPostLike,
+  isPostLikedByProfile,
   listPosts as repoListPosts,
+  listPostsByAuthor as repoListPostsByAuthor,
+  updatePostById,
   type PostsCursor,
 } from "@/lib/repositories/posts";
 import type { Post, PostComment } from "@/lib/types";
@@ -49,6 +55,14 @@ export const createPostSchema = z
     imageKey: postImageKeySchema.nullable().optional(),
   })
   .strict();
+export const updatePostSchema = z
+  .object({
+    id: uuidSchema,
+    body: postBodySchema,
+    // Absent = conserver l'image, null = la retirer, clé = la remplacer.
+    imageKey: postImageKeySchema.nullable().optional(),
+  })
+  .strict();
 export const createCommentSchema = z
   .object({
     postId: uuidSchema,
@@ -58,7 +72,14 @@ export const createCommentSchema = z
   .strict();
 
 export type CreatePostInput = z.infer<typeof createPostSchema>;
+export type UpdatePostInput = z.infer<typeof updatePostSchema>;
 export type CreateCommentInput = z.infer<typeof createCommentSchema>;
+
+export type PostLikeResult = {
+  postId: string;
+  likeCount: number;
+  hasLiked: boolean;
+};
 
 // Cas d'usage des posts et commentaires (F11). L'auteur est TOUJOURS
 // `ctx.profileId` (jamais un identifiant reçu du client) ; la propriété est
@@ -83,6 +104,59 @@ export async function deletePost(ctx: UseCaseContext, id: string): Promise<void>
   }
 }
 
+// Édition d'un post : la propriété est vérifiée avant toute écriture.
+export async function updatePost(
+  ctx: UseCaseContext,
+  input: UpdatePostInput,
+): Promise<Post> {
+  const existing = await findPostById(input.id);
+  if (!existing || existing.authorId !== ctx.profileId) {
+    throw new NotFoundError("Post introuvable.");
+  }
+  if (input.imageKey && !input.imageKey.startsWith(postImagePrefix(ctx.profileId))) {
+    throw new ValidationError("Clé d'image invalide.");
+  }
+
+  const updated = await updatePostById(
+    input.id,
+    ctx.profileId,
+    input.body,
+    input.imageKey,
+  );
+  if (!updated) throw new NotFoundError("Post introuvable.");
+  return updated;
+}
+
+export async function getOwnPost(ctx: UseCaseContext, id: string): Promise<Post> {
+  const post = await findPostById(id);
+  if (!post || post.authorId !== ctx.profileId) {
+    throw new NotFoundError("Post introuvable.");
+  }
+  return post;
+}
+
+// J'aime / retire un j'aime. Retourne l'état courant pour le client.
+export async function togglePostLike(
+  ctx: UseCaseContext,
+  id: string,
+): Promise<PostLikeResult> {
+  const post = await findPostById(id);
+  if (!post) throw new NotFoundError("Post introuvable.");
+
+  const alreadyLiked = await isPostLikedByProfile(id, ctx.profileId);
+  if (alreadyLiked) {
+    await deletePostLike(id, ctx.profileId);
+  } else {
+    await insertPostLike(id, ctx.profileId);
+  }
+
+  return {
+    postId: id,
+    likeCount: await countPostLikes(id),
+    hasLiked: !alreadyLiked,
+  };
+}
+
 export async function getPost(ctx: UseCaseContext, id: string): Promise<Post> {
   const post = await findPostById(id);
   if (!post) throw new NotFoundError("Post introuvable.");
@@ -103,6 +177,47 @@ export async function listPosts(
   }));
   return {
     edges,
+    hasNextPage,
+    endCursor: edges.at(-1)?.cursor ?? null,
+  };
+}
+
+// Posts d'un auteur (profil public) : mêmes règles de pagination que le fil.
+export async function listPostsByAuthor(
+  _ctx: ViewerContext,
+  authorId: string,
+  options: { limit: number; after?: string },
+): Promise<{ edges: { cursor: string; node: Post }[]; hasNextPage: boolean; endCursor: string | null }> {
+  const cursor = options.after ? decodePostsCursor(options.after) : undefined;
+  const rows = await repoListPostsByAuthor(authorId, options.limit, cursor);
+  const hasNextPage = rows.length > options.limit;
+  const pageRows = hasNextPage ? rows.slice(0, options.limit) : rows;
+  const edges = pageRows.map((node) => ({
+    cursor: encodeCursor({ sortAt: node.createdAt, id: node.id }),
+    node,
+  }));
+  return {
+    edges,
+    hasNextPage,
+    endCursor: edges.at(-1)?.cursor ?? null,
+  };
+}
+
+// Posts de l'auteur connecté : tous les posts (pas de brouillon en V1.5),
+// paginés par curseur, pour l'espace de gestion `/me/posts`.
+export async function listOwnPosts(
+  ctx: UseCaseContext,
+  options: { limit: number; after?: string },
+): Promise<{ posts: Post[]; hasNextPage: boolean; endCursor: string | null }> {
+  const cursor = options.after ? decodePostsCursor(options.after) : undefined;
+  const rows = await repoListPostsByAuthor(ctx.profileId, options.limit, cursor);
+  const hasNextPage = rows.length > options.limit;
+  const pageRows = hasNextPage ? rows.slice(0, options.limit) : rows;
+  const edges = pageRows.map((post) => ({
+    cursor: encodeCursor({ sortAt: post.createdAt, id: post.id }),
+  }));
+  return {
+    posts: pageRows,
     hasNextPage,
     endCursor: edges.at(-1)?.cursor ?? null,
   };

@@ -1,13 +1,16 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { requireSession } from "@/lib/auth";
 import { getOwnProfile } from "@/lib/profile";
 import { loadPostDetail } from "@/lib/posts-feed";
 import { PageShell } from "@/components/page-shell";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/avatar";
 import { CommentThread } from "@/components/posts/comment-thread";
 import { CommentInput } from "@/components/posts/comment-input";
+import { PostLikeButton } from "@/components/posts/post-like-button";
 
 // Détail d'un post (F11) : texte complet + commentaires et réponses imbriquées
 // (indentation max 3 niveaux visuels). La session est lue à chaque requête.
@@ -28,7 +31,8 @@ export default async function PostDetailPage({
   );
   if (!detail) notFound();
 
-  const { post, imageUrl, author, comments } = detail;
+  const { post, imageUrl, author, comments, likeCount, hasLiked } = detail;
+  const isOwner = post.authorId === profile.id;
 
   return (
     <PageShell width="feed" className="space-y-6">
@@ -57,6 +61,13 @@ export default async function PostDetailPage({
                 timeZone: "UTC",
               }).format(post.createdAt)}
             </time>
+            {isOwner ? (
+              <Button asChild variant="ghost" size="icon" className="size-7">
+                <Link href={`/posts/${post.id}/edit`} aria-label="Modifier le post">
+                  <Pencil className="size-3.5" />
+                </Link>
+              </Button>
+            ) : null}
           </div>
 
           <p className="text-sm whitespace-pre-wrap">{post.body}</p>
@@ -69,6 +80,14 @@ export default async function PostDetailPage({
               className="bg-muted max-h-[32rem] w-full rounded-xl object-cover"
             />
           ) : null}
+
+          <div className="border-border/60 border-t pt-3">
+            <PostLikeButton
+              postId={post.id}
+              initialLikeCount={likeCount}
+              initialHasLiked={hasLiked}
+            />
+          </div>
         </CardContent>
       </Card>
 

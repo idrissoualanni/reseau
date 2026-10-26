@@ -1,9 +1,13 @@
 import type { ViewerContext } from "@/lib/context";
-import { listPosts } from "@/lib/posts";
+import { listPosts, listPostsByAuthor } from "@/lib/posts";
 import { findPostById } from "@/lib/repositories/posts";
 import {
   countCommentsForPosts,
+  countLikesForPosts,
+  countPostLikes,
+  isPostLikedByProfile,
   listCommentsForPosts,
+  listLikedPostIds,
   type CommentRow,
 } from "@/lib/repositories/posts";
 import {
@@ -25,6 +29,8 @@ export type FeedPost = {
   createdAt: string;
   authorId: string;
   commentCount: number;
+  likeCount: number;
+  hasLiked: boolean;
 };
 
 export type FeedComment = {
@@ -103,16 +109,32 @@ export async function loadPostsFeed(
   ctx: ViewerContext,
   options: PostFeedOptions,
 ): Promise<PostFeedPage> {
-  const page = await listPosts(ctx, options);
+  return assembleFeed(ctx, await listPosts(ctx, options));
+}
 
+// Fil des posts d'un auteur, utilisé par le profil public.
+export async function loadAuthorPostsFeed(
+  ctx: ViewerContext,
+  authorId: string,
+  options: PostFeedOptions,
+): Promise<PostFeedPage> {
+  return assembleFeed(ctx, await listPostsByAuthor(ctx, authorId, options));
+}
+
+async function assembleFeed(
+  ctx: ViewerContext,
+  page: Awaited<ReturnType<typeof listPosts>>,
+): Promise<PostFeedPage> {
   const postIds = page.edges.map((edge) => edge.node.id);
   if (postIds.length === 0) {
     return { edges: [], hasNextPage: false, endCursor: null };
   }
 
-  const [commentRows, counts, authorRows] = await Promise.all([
+  const [commentRows, counts, likeCounts, likedPostIds, authorRows] = await Promise.all([
     listCommentsForPosts(postIds),
     countCommentsForPosts(postIds),
+    countLikesForPosts(postIds),
+    listLikedPostIds(postIds, ctx.profileId),
     findProfileSummariesByIds(page.edges.map((edge) => edge.node.authorId)),
   ]);
 
@@ -139,6 +161,8 @@ export async function loadPostsFeed(
         createdAt: post.createdAt.toISOString(),
         authorId: post.authorId,
         commentCount: counts.get(post.id) ?? 0,
+        likeCount: likeCounts.get(post.id) ?? 0,
+        hasLiked: likedPostIds.has(post.id),
       },
       author: toAuthorSummary(authorById.get(post.authorId) ?? null),
       comments,
@@ -157,13 +181,22 @@ export async function loadPostsFeed(
 export async function loadPostDetail(
   ctx: ViewerContext,
   postId: string,
-): Promise<{ post: Post; imageUrl: string | null; author: AuthorSummary | null; comments: FeedComment[] } | null> {
+): Promise<{
+  post: Post;
+  imageUrl: string | null;
+  author: AuthorSummary | null;
+  comments: FeedComment[];
+  likeCount: number;
+  hasLiked: boolean;
+} | null> {
   const post = await findPostById(postId);
   if (!post) return null;
 
-  const [commentRows, authorRows] = await Promise.all([
+  const [commentRows, authorRows, likeCount, hasLiked] = await Promise.all([
     listCommentsForPosts([post.id]),
     findProfileSummariesByIds([post.authorId]),
+    countPostLikes(post.id),
+    ctx.profileId ? isPostLikedByProfile(post.id, ctx.profileId) : Promise.resolve(false),
   ]);
 
   const authorById = new Map(authorRows.map((row) => [row.id, row]));
@@ -174,5 +207,7 @@ export async function loadPostDetail(
     imageUrl: post.imageKey ? getPublicUrl(post.imageKey) : null,
     author: toAuthorSummary(authorById.get(post.authorId) ?? null),
     comments,
+    likeCount,
+    hasLiked,
   };
 }

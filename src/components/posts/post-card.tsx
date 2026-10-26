@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/avatar";
+import { PostLikeButton } from "@/components/posts/post-like-button";
 import type { FeedPost } from "@/lib/posts-feed";
 import type { AuthorSummary } from "@/lib/api/mappers/profile";
 
@@ -85,6 +86,11 @@ export function PostCard({ post, author }: PostCardProps) {
         ) : null}
 
         <div className="border-border/60 flex items-center gap-4 border-t pt-3">
+          <PostLikeButton
+            postId={post.id}
+            initialLikeCount={post.likeCount}
+            initialHasLiked={post.hasLiked}
+          />
           <Link
             href={`/posts/${post.id}`}
             className="text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex items-center gap-1.5 rounded-sm text-xs outline-none focus-visible:ring-2"

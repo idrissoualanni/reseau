@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray, lt, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db/client";
-import { postComments, posts } from "@/db/schema";
+import { postComments, postLikes, posts } from "@/db/schema";
 import type { Post, PostComment } from "@/lib/types";
 
 // Repository des posts et commentaires (F11). Les suppressions en cascade
@@ -40,6 +40,49 @@ export async function listPosts(limit: number, cursor?: PostsCursor): Promise<Po
     .orderBy(desc(posts.createdAt), desc(posts.id))
     .limit(limit + 1);
   return rows;
+}
+
+export async function updatePostById(
+  id: string,
+  authorId: string,
+  body: string,
+  imageKey?: string | null,
+): Promise<Post | null> {
+  const patch: { body: string; updatedAt: Date; imageKey?: string | null } = {
+    body,
+    updatedAt: new Date(),
+  };
+  if (imageKey !== undefined) patch.imageKey = imageKey;
+  const [row] = await db
+    .update(posts)
+    .set(patch)
+    .where(and(eq(posts.id, id), eq(posts.authorId, authorId)))
+    .returning();
+  return row ?? null;
+}
+
+// Posts d'un auteur, quel que soit leur état de publication (F11) : utilisé
+// par l'espace de gestion `/me/posts`.
+export async function listPostsByAuthor(
+  authorId: string,
+  limit: number,
+  cursor?: PostsCursor,
+): Promise<Post[]> {
+  const conditions: SQL[] = [eq(posts.authorId, authorId)];
+  if (cursor) {
+    conditions.push(
+      or(
+        lt(posts.createdAt, cursor.createdAt),
+        and(eq(posts.createdAt, cursor.createdAt), lt(posts.id, cursor.id))!,
+      )!,
+    );
+  }
+  return db
+    .select()
+    .from(posts)
+    .where(and(...conditions))
+    .orderBy(desc(posts.createdAt), desc(posts.id))
+    .limit(limit + 1);
 }
 
 export async function deletePostById(id: string, authorId: string): Promise<boolean> {
@@ -110,4 +153,61 @@ export async function countCommentsForPosts(postIds: string[]): Promise<Map<stri
     .where(inArray(postComments.postId, postIds))
     .groupBy(postComments.postId);
   return new Map(rows.map((row) => [row.postId, row.count]));
+}
+
+// ─── V1.5 — J'aime des posts (F11) ──────────────────────────────────────────
+
+export async function insertPostLike(postId: string, profileId: string): Promise<void> {
+  await db.insert(postLikes).values({ postId, profileId }).onConflictDoNothing();
+}
+
+export async function deletePostLike(postId: string, profileId: string): Promise<boolean> {
+  const rows = await db
+    .delete(postLikes)
+    .where(and(eq(postLikes.postId, postId), eq(postLikes.profileId, profileId)))
+    .returning({ postId: postLikes.postId });
+  return rows.length > 0;
+}
+
+export async function countLikesForPosts(postIds: string[]): Promise<Map<string, number>> {
+  if (postIds.length === 0) return new Map();
+  const rows = await db
+    .select({ postId: postLikes.postId, count: sql<number>`count(*)::int` })
+    .from(postLikes)
+    .where(inArray(postLikes.postId, postIds))
+    .groupBy(postLikes.postId);
+  return new Map(rows.map((row) => [row.postId, row.count]));
+}
+
+// Sous-ensemble des posts déjà aimés par un membre, en une requête.
+export async function listLikedPostIds(
+  postIds: string[],
+  profileId: string | null,
+): Promise<Set<string>> {
+  if (!profileId || postIds.length === 0) return new Set();
+  const rows = await db
+    .select({ postId: postLikes.postId })
+    .from(postLikes)
+    .where(and(inArray(postLikes.postId, postIds), eq(postLikes.profileId, profileId)));
+  return new Set(rows.map((row) => row.postId));
+}
+
+export async function countPostLikes(postId: string): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(postLikes)
+    .where(eq(postLikes.postId, postId));
+  return row?.count ?? 0;
+}
+
+export async function isPostLikedByProfile(
+  postId: string,
+  profileId: string,
+): Promise<boolean> {
+  const [row] = await db
+    .select({ postId: postLikes.postId })
+    .from(postLikes)
+    .where(and(eq(postLikes.postId, postId), eq(postLikes.profileId, profileId)))
+    .limit(1);
+  return Boolean(row);
 }
