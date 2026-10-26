@@ -100,8 +100,8 @@
   `npm install` (708 paquets), `npm run lint` (0 erreur), `npx next typegen` +
   `npm run typecheck` (0 erreur), `npm test` (**242 verts / 4 skipped**),
   `npm run build` (OK). Blocage levé : `node_modules` était vide (0 entrée).
-- [x] **Fin de V1 — déployé et sondé (2026-10-26)** : commit `64310a2`, deploy
-  `dep-dbfr726q1p3s738c59ag` **live** sur `srv-db4ek92jnfac73b4uij0`. Sondes :
+- [x] **Fin de V1 — déployé et sondé (2026-10-26)** : commit `e0f2d5f`, deploy
+  `dep-dbfragff3r2c73avpo3g` **live** sur `srv-db4ek92jnfac73b4uij0`. Sondes :
   `/api/health` 200 + `database:true`, `POST /api/graphql` 200 (`{ __typename }`),
   `/sign-in` et `/sign-up` 200. Pages protégées sans session → page de connexion.
   Tests/lint locaux non exécutés (disque plein, `node_modules` absent) : le build
