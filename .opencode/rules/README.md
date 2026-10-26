@@ -17,6 +17,10 @@ autoritaire reste `.claude/rules/` (également importée par `CLAUDE.md`).
 - `testing.md` — Vitest (unitaires/intégration), tests d'intégration hors ligne, worktree
   neuf → `next typegen` avant `typecheck`, base réelle en opt-in sur la branche **dev**,
   traçabilité des fiches (miroir de `.claude/rules/testing.md`).
+- `websocket.md` — temps réel V2 : Neon Realtime pour les lignes, Neon Functions pour
+  la saisie/présence, pas de `apps/realtime` (miroir de `.claude/rules/websocket.md`).
+- `messagerie-e2e.md` — chiffrement E2E : ECDH P-256 + HKDF + AES-256-GCM, clés privées
+  IndexedDB, réactions chiffrées (miroir de `.claude/rules/messagerie-e2e.md`).
 - Deux règles à lire **sans miroir** (dans `.claude/rules/`) :
   `database.md` — **migrations Neon via MCP** (`drizzle-kit migrate` ne persiste pas,
   hash SHA-256 à écrire dans `drizzle.__drizzle_migrations`) + `paths` alignés sur

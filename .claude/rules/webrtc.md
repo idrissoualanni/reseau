@@ -1,17 +1,18 @@
 ---
-description: Règles WebRTC — appels audio/vidéo, partage d'écran, STUN/TURN. V2 uniquement. Dépend de websocket.md.
+description: Règles WebRTC — appels audio/vidéo, partage d'écran, STUN/TURN. V3. Dépend de websocket.md.
 paths:
-  - apps/realtime/src/handlers/call.ts
-  - apps/web/src/modules/calls/**
-  - apps/web/src/app/api/realtime/ice/**
-  - apps/web/src/lib/ice.ts
+  - src/modules/calls/**
+  - src/app/api/calls/**
+  - src/lib/ice.ts
 ---
 
 # Règle WebRTC (appels)
 
-## 0. Statut : V2 — INTERDIT EN V1
-- Aucun code WebRTC en V1. Prérequis : `websocket.md` appliqué (la signalisation passe par WebSocket) et un ADR (`docs/adr/0004-webrtc.md`).
-- Phasage : **audio 1-1 → vidéo 1-1 → partage d'écran → groupes (SFU, hors périmètre)**. Ne pas sauter d'étape.
+## 0. Statut : V3 — INTERDIT EN V1, V1.5 ET V2
+- Aucun code WebRTC avant la V3. Prérequis : `websocket.md` appliqué (signalisation)
+  et un ADR dédié.
+- Phasage : **audio 1-1 → vidéo 1-1 → partage d'écran → groupes (SFU, hors périmètre)**.
+  Ne pas sauter d'étape.
 
 ## 1. Principe
 WebRTC envoie audio, vidéo ou données **directement d'un appareil à l'autre**, chiffrés automatiquement (DTLS-SRTP). Le serveur ne sert qu'à les mettre en contact (**signalisation**). Trois briques :

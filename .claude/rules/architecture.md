@@ -53,7 +53,8 @@ reseau/
 └── .claude/                          Règles, skills, commandes, agents
 ```
 
-- **Un seul `apps/web` en V1.** Pas de `apps/realtime` ni autre app (voir section 15).
+- **Une seule application Next.js** (racine `src/`) en V1 et V2. Pas de `apps/realtime`
+  ni autre app : le temps réel V2 utilise Neon Realtime + Neon Functions (ADR 0008).
 - `modules/` contient la logique métier **par domaine**. `app/` et `server/graphql/` ne contiennent **aucune** logique métier.
 - `lib/` contient l'infrastructure (connexion base, auth, stockage, env, utilitaires HTTP). Ce n'est **pas** un fourre-tout (voir section 12).
 
@@ -289,10 +290,14 @@ Il est construit par `buildContext(session)` dans la couche transport. Un cas d'
 
 ## 15. Périmètre : ne pas construire le futur
 
-- **Ne pas créer `apps/realtime`**, ni table, ni dépendance, ni dossier, ni type appartenant à une **version future** (messagerie, appels, chiffrement de bout en bout, vidéo, etc.). La référence est `docs/roadmap.md`.
-- La V1 = les **10 fonctionnalités** du périmètre (compte, connexion, profil, compétences, projets, publication, consultation, recherche, modification).
-- Besoin d'anticiper (ex. nommer proprement une table) ? Le faire **sans créer** l'élément. Noter l'idée dans `docs/roadmap.md`, pas dans le code.
-- Une fonctionnalité hors périmètre demandée par l'utilisateur : proposer d'abord une entrée dans la roadmap ou une ADR, ne pas coder en douce.
+- **Phase en cours : V2 — messagerie chiffrée** (voir `docs/phases.md`). Les appels
+  WebRTC, les pièces jointes, les groupes et les profils entrepreneur sont hors V2.
+- Ne pas créer `apps/realtime` : le temps réel V2 utilise Neon Realtime + Neon
+  Functions (ADR 0008).
+- Ne pas coder une fonctionnalité d'une phase future sans ADR et accord explicite.
+  Noter l'idée dans `docs/backlog.md` ou `docs/phases.md`.
+- Une fonctionnalité hors périmètre demandée par l'utilisateur : proposer d'abord une
+  entrée dans la roadmap ou une ADR, ne pas coder en douce.
 - **Pas de code mort** : pas de fonction, fichier, export ou dépendance « au cas où ».
 
 ---
@@ -363,5 +368,5 @@ Dans cet ordre, du bas vers le haut :
 - ❌ SDK d'auth ou de stockage importé en dehors de `lib/auth.ts` / `lib/storage.ts`.
 - ❌ `process.env` en dehors de `lib/env.ts`.
 - ❌ `any`, export par défaut hors fichiers Next.js, `catch {}` vide.
-- ❌ Créer `apps/realtime` ou tout élément d'une version future.
+- ❌ Créer `apps/realtime` (le temps réel V2 est Neon Realtime + Neon Functions).
 - ❌ Code mort, dépendance « au cas où », fichier « utils » sans domaine.

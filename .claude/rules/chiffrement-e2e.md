@@ -5,3 +5,5 @@
 - Toute modification de ce domaine passe par l'agent `securite` avant fusion.
 - Les métadonnées (qui parle à qui, quand) sont aussi sensibles : en stocker le minimum.
 - Si un point du chiffrement est incertain, s'arrêter et poser la question.
+- Messagerie V2 : voir `messagerie-e2e.md` (ECDH P-256 + HKDF + AES-256-GCM,
+  clés privées IndexedDB, réactions chiffrées).
