@@ -1,4 +1,14 @@
-import { Compass, Layers, MessageSquare, Shield, UserRound, Users, type LucideIcon } from "lucide-react";
+import {
+  Compass,
+  FolderKanban,
+  Layers,
+  MessageSquare,
+  PenLine,
+  Shield,
+  UserRound,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 
 export type NavItem = {
   href: string;
@@ -13,6 +23,8 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/posts", label: "Posts", icon: MessageSquare },
   { href: "/spaces", label: "Espaces", icon: Users },
   { href: "/search", label: "Recherche", icon: Compass },
+  { href: "/me/projects", label: "Mes projets", icon: FolderKanban },
+  { href: "/me/posts", label: "Mes posts", icon: PenLine },
   { href: "/me/profile", label: "Mon profil", icon: UserRound },
 ];
 

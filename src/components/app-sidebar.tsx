@@ -57,7 +57,10 @@ export function AppSidebar({ user, isAdmin = false }: { user: SidebarUser | null
           <SidebarGroupContent>
             <SidebarMenu>
               {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-                const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+                const target =
+                  href === "/me/profile" && user ? `/u/${user.username}` : href;
+                const active =
+                  target === "/" ? pathname === "/" : pathname.startsWith(target);
                 return (
                   <SidebarMenuItem key={href}>
                     <SidebarMenuButton
@@ -66,7 +69,7 @@ export function AppSidebar({ user, isAdmin = false }: { user: SidebarUser | null
                       tooltip={label}
                       aria-current={active ? "page" : undefined}
                     >
-                      <Link href={href}>
+                      <Link href={target}>
                         <Icon />
                         <span>{label}</span>
                       </Link>
