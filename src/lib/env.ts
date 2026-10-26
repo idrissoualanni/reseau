@@ -25,9 +25,19 @@ const storageEnvSchema = z.object({
   AWS_ENDPOINT_URL_S3: z.url(),
 });
 
+// Neon Realtime (V2) : URL de souscription + secret serveur uniquement.
+// Le secret ne doit jamais être exposé au navigateur ni journalisé.
+const realtimeEnvSchema = z.object({
+  NEON_REALTIME_URL: z
+    .string()
+    .refine((value) => /^wss?:\/\//.test(value), "URL WebSocket invalide."),
+  NEON_REALTIME_SECRET: z.string().min(1),
+});
+
 export type AuthEnv = z.infer<typeof authEnvSchema>;
 export type TurnstileEnv = z.infer<typeof turnstileEnvSchema>;
 export type StorageEnv = z.infer<typeof storageEnvSchema>;
+export type RealtimeEnv = z.infer<typeof realtimeEnvSchema>;
 
 function parseOrThrow<T>(schema: z.ZodType<T>, label: string): T {
   const parsed = schema.safeParse(process.env);
@@ -57,4 +67,11 @@ let storageEnv: StorageEnv | undefined;
 export function getStorageEnv(): StorageEnv {
   storageEnv ??= parseOrThrow(storageEnvSchema, "de stockage");
   return storageEnv;
+}
+
+let realtimeEnv: RealtimeEnv | undefined;
+
+export function getRealtimeEnv(): RealtimeEnv {
+  realtimeEnv ??= parseOrThrow(realtimeEnvSchema, "Neon Realtime");
+  return realtimeEnv;
 }

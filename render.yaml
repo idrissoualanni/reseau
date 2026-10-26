@@ -25,6 +25,11 @@ projects:
                 fromService: [{"name": "reseau", "property": "publicUrl"}]
               - key: NEON_BRANCH
                 value: dev
+              # Neon Realtime (V2) — URL lisible, secret serveur uniquement
+              - key: NEON_REALTIME_URL
+                sync: false
+              - key: NEON_REALTIME_SECRET
+                sync: false
               # Secrets — jamais en clair, gérés via Dashboard Render (sync: false)
               - key: DATABASE_URL
                 sync: false
