@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar } from "@/components/avatar";
 import { ImageUploader } from "@/components/image-uploader";
-import { formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
+import { formatRelativeTime } from "@/lib/relative-time";
 import { Loader2, X } from "lucide-react";
 
 type ProjectUpdate = {
@@ -173,7 +172,7 @@ function ProjectUpdateCard({ update, isAuthor, onDelete }: { update: ProjectUpda
           <div className="flex items-center gap-2">
             <span className="font-medium text-sm">{update.author.displayName}</span>
             <span className="text-muted-foreground text-xs">
-              {formatDistanceToNow(new Date(update.createdAt), { addSuffix: true, locale: fr })}
+              {formatRelativeTime(update.createdAt)}
             </span>
             {isAuthor && (
               <Button

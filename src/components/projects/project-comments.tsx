@@ -4,8 +4,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar } from "@/components/avatar";
-import { formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
+import { formatRelativeTime } from "@/lib/relative-time";
 import { ChevronRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -159,7 +158,7 @@ function CommentThread({
         <div className="flex items-center gap-2">
           <span className="font-medium text-sm">{comment.author.displayName}</span>
           <span className="text-muted-foreground text-xs">
-            {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true, locale: fr })}
+            {formatRelativeTime(comment.createdAt)}
           </span>
           {comment.author.id === "current-user" && (
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onDelete(comment.id)}>

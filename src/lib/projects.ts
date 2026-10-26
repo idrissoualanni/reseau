@@ -21,10 +21,10 @@ import {
   countProjectFollowersByProjectId,
   countProjectReactionsByProjectId,
   countProjectUpdatesByProjectId,
-  deleteProjectComment,
+  deleteProjectComment as repoDeleteProjectComment,
   deleteProjectFollower,
   deleteProjectReaction,
-  deleteProjectUpdate,
+  deleteProjectUpdate as repoDeleteProjectUpdate,
   findProjectCommentById,
   findProjectReactionsByProjectId,
   findUserProjectReactions,
@@ -347,7 +347,7 @@ export async function createProjectComment(
 }
 
 export async function deleteProjectComment(ctx: UseCaseContext, id: string): Promise<void> {
-  const deleted = await deleteProjectComment(id, ctx.profileId);
+  const deleted = await repoDeleteProjectComment(id, ctx.profileId);
   if (!deleted) {
     throw new NotFoundError("Commentaire introuvable.");
   }
@@ -399,7 +399,7 @@ export async function createProjectUpdate(
 }
 
 export async function deleteProjectUpdate(ctx: UseCaseContext, id: string): Promise<void> {
-  const deleted = await deleteProjectUpdate(id, ctx.profileId);
+  const deleted = await repoDeleteProjectUpdate(id, ctx.profileId);
   if (!deleted) {
     throw new NotFoundError("Mise à jour introuvable.");
   }
