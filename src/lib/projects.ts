@@ -2,7 +2,6 @@ import { ForbiddenError, NotFoundError, RuleViolationError } from "@/lib/errors"
 import { decodeCursor, encodeCursor } from "@/lib/pagination";
 import type { UseCaseContext, ViewerContext } from "@/lib/context";
 import type { Project, ProjectComment, ProjectFollower, ProjectReaction, ProjectReactionType, ProjectType, ProjectUpdate, Skill } from "@/lib/types";
-import { projectReactionTypeValues } from "@/lib/types";
 import { findOrCreateSkill } from "@/lib/repositories/skills";
 import {
   deleteOwnedProject,
@@ -294,16 +293,13 @@ export async function addProjectReaction(
     });
   }
 
-  // Retourner les compteurs mis à jour
+  // Retourner l'état de la réaction ajoutée
   const counts = await countProjectReactionsByProjectId(input.projectId);
-  const userReactions = await findUserProjectReactions(input.projectId, ctx.profileId);
-  const userReactedTypes = new Set(userReactions.map((r) => r.type));
-
-  return projectReactionTypeValues.map((type) => ({
-    type: type as ProjectReactionType,
-    count: counts.get(type) ?? 0,
-    hasReacted: userReactedTypes.has(type),
-  }));
+  return {
+    type: input.type,
+    count: counts.get(input.type) ?? 0,
+    hasReacted: true,
+  };
 }
 
 export async function removeProjectReaction(

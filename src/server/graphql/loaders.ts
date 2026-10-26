@@ -31,7 +31,7 @@ export type ProfileSummary = ProfileSummaryRow;
 
 // V1.5 — Types pour DataLoaders projets
 export type ProjectReactionCounts = {
-  type: string;
+  type: (typeof projectReactionTypeValues)[number];
   count: number;
   hasReacted: boolean;
 };

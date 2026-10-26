@@ -220,12 +220,12 @@ builder.queryFields((t) => ({
     },
     resolve: (_root, args, ctx) =>
       run(async () => {
-        const { first, skillSlug, authorUsername } = validateInput(
+        const { first, skillSlugs, authorUsername } = validateInput(
           listProjectsQuerySchema,
           {
             first: args.first ?? undefined,
             after: args.after ?? undefined,
-            skillSlug: args.skillSlug ?? undefined,
+            skillSlugs: args.skillSlug ? [args.skillSlug] : undefined,
             authorUsername: args.authorUsername ?? undefined,
           },
         );
@@ -234,7 +234,7 @@ builder.queryFields((t) => ({
           {
             limit: first,
             after: args.after ?? undefined,
-            skillSlug,
+            skillSlug: skillSlugs?.[0],
             authorUsername,
           },
         );
