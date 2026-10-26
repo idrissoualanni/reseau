@@ -100,8 +100,12 @@
   `npm install` (708 paquets), `npm run lint` (0 erreur), `npx next typegen` +
   `npm run typecheck` (0 erreur), `npm test` (**242 verts / 4 skipped**),
   `npm run build` (OK). Blocage levé : `node_modules` était vide (0 entrée).
-- [ ] **Fin de V1** : déploiement Render dev + Neon dev → tester ce qui est
-  réellement déployé (sondes de vérification), pas seulement le statut du build.
+- [x] **Fin de V1 — déployé et sondé (2026-10-26)** : commit `64310a2`, deploy
+  `dep-dbfr726q1p3s738c59ag` **live** sur `srv-db4ek92jnfac73b4uij0`. Sondes :
+  `/api/health` 200 + `database:true`, `POST /api/graphql` 200 (`{ __typename }`),
+  `/sign-in` et `/sign-up` 200. Pages protégées sans session → page de connexion.
+  Tests/lint locaux non exécutés (disque plein, `node_modules` absent) : le build
+  Render et les sondes sont les seules preuves.
 - [ ] **Disque `C:` saturé** (2026-10-26 : ~200 Mo libres, `node_modules` absent) —
   `~/.local/share/opencode/opencode.db` pèse 2,5 Go. **Intervention utilisateur** :
   libérer de l'espace, puis `npm ci` pour exécuter `npm test` et `npm run lint`
@@ -133,9 +137,9 @@
   `imageUrl` exposé (jamais `imageKey`). F12 terminé (voir `docs/features/F12-posts-images.md`).
 - [x] **Avatars** : **fait (2026-10-10)** — bucket `profile`, clé `profiles/{profileId}/{uuid}.{ext}`,
   ≤ 5 Mo, F13 (voir `docs/features/F13-avatar-profil.md`).
-- [x] **Buckets Neon vérifiés (2026-10-10)** : `post`, `profile`, **`projet`** (tous `public_read`),
-  `asset` (privé). Endpoint dev = `https://br-jolly-pine-b50wjyjx.storage.c-7.us-east-2.aws.neon.tech`,
-  région `us-east-2`, `force_path_style: true`. Aligné avec `AWS_*` en local et sur Render.
+- [x] **Buckets Neon vérifiés (2026-10-26)** : `asset`, `post`, `profile`, `projet`,
+  `videos` présents. Objets `post`, `profile` et `projet` servis en **HTTP 200**
+  (public_read) ; endpoint S3 path-style aligné avec `AWS_*` local et Render.
 - [x] **Couvertures de projets** : **fait (2026-10-11)** — upload présigné branché (bucket
   `projet`, kind `project-cover`, clé `projects/{profileId}/{uuid}.{ext}`, ≤ 5 Mo) ;
   création F05 + édition F06 ; aperçu + retrait ; tests de validation. Mergé sur `dev`.
@@ -164,8 +168,9 @@
 - [x] **`drizzle-kit studio`** : **fait (2026-10-10)** — `drizzle.config.ts` charge
   `.env.local` via `process.loadEnvFile` (drizzle-kit ne le fait pas tout seul).
   `npx drizzle-kit studio` démarre Drizzle Studio (https://local.drizzle.studio).
-- [x] **`schema.graphql`** : **fait (2026-10-10)** — export committé + scripts
-  `graphql:export` / `graphql:check` (golden test, CI compare).
+- [~] **`schema.graphql`** : export et scripts `graphql:export` / `graphql:check`
+  existent ; le golden file est **périmé** pour les types V1.5 et les j'aime de posts.
+  Régénération à faire après `npm ci` (voir section Render).
 - [x] **Fusion F05/F06 → dev** : **fait (2026-10-10)** — `f05-f06-projects` mergé,
   worktree supprimé. Stubs cassés `projects/page.tsx` / `posts/page.tsx` supprimés.
 - [x] **Fusion F07/F08 → dev** : **fait (2026-10-10)** — feed `/`, détail

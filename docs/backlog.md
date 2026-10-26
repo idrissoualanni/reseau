@@ -21,10 +21,12 @@
   Voir `docs/features/F17-administration-plateforme.md` §« Journal des envois OTP ».
 - [ ] **Gestion des comptes par l'admin** — voir/list, bannir, supprimer : exige une clé
   serveur Better Auth (F17, `docs/TODO.md`).
-- [ ] **Front posts hors GraphQL** — `/posts`, `/posts/[id]` et le fil de posts
-  appellent les cas d'usage / actions serveur ; aucun client n'utilise
-  `/api/graphql` (règle `api-graphql` §0 : les posts sont en GraphQL). Écart de
-  périmètre à trancher (ADR) — non corrigé.
+- [x] **Front posts et GraphQL — tranché (2026-10-26)** : le schéma GraphQL expose
+  `posts`, `post`, `createPost`, `updatePost`, `deletePost`, `addComment`,
+  `deleteComment`, `togglePostLike` et les champs `likeCount`/`hasLiked`. Les pages
+  Next rendues côté serveur appellent directement les cas d'usage (SSR, pas de
+  round-trip HTTP interne) ; l'API publique reste GraphQL. Décision à consigner
+  dans un ADR si le front bascule un jour en client séparé.
 - [ ] **F11 : `addReply` absent du schéma** — les réponses passent par
   `addComment(input: { parentId })` (vérifié par test d'intégration). Aligner la
   fiche F11, ou créer la mutation `addReply` dédiée.
@@ -87,7 +89,8 @@
   du domaine autorisé) — enum `space_access_kind`, hors périmètre F15, à examiner en V2.
 
 ## Idées en attente (non triées)
-- [ ] **Likes/réactions** sur les **posts** (V1.5+) — **voir F19 pour projets**.
+- [x] **Likes/réactions sur les posts** : livré (2026-10-26) — `post_likes`,
+  `togglePostLike`, `/me/posts`, compteurs dans le fil et le détail (F11).
 - [ ] **Mentions** dans les commentaires.
 - [ ] **Brouillon local** du post (composition `/posts/new`) — V1.5.
 - [ ] **Recadrage / zoom d'image** à la composition — V1.5 (hors périmètre F12).
@@ -99,14 +102,20 @@
 - [ ] **Résultats par proximité géographique** (F09 V1.5+).
 - [ ] **Recherche par recruteurs** (F09 V1.5+).
 - [ ] **Avatar** : upload présigné (bucket `profile` public_read, même mécanisme que F12).
-- [x] **Bucket tranché** : fait (2026-10-10) — images de posts sur `post` public_read
-  ; avatars/couvertures suivront sur `profile` (TODO).
-- [ ] **Turnstile** : widget anti-robot dès qu'un domaine existe (TODO).
+- [x] **Buckets tranchés et vérifiés (2026-10-26)** : `post` pour les images de posts,
+  `profile` pour les avatars, `projet` pour les couvertures et updates. Buckets
+  `asset`, `post`, `profile`, `projet`, `videos` présents dans Neon Object Storage ;
+  premiers objets post/profil/projet vérifiés.
+- [ ] **Turnstile — EN ATTENTE** : retiré des actions d'auth pour le dev (aucune clé
+  requise) ; à réactiver dès qu'un domaine de confiance existe.
 - [ ] **Domaines de confiance Neon Auth** : origines staging + prod (TODO).
 - [ ] **SMTP dédié** : SendGrid/Mailgun/AWS SES pour la production (TODO).
-- [ ] **Supprimer le service `srv-db46e4btqb8s73e8bsd0`** (TODO).
-- [ ] **Déploiement Render dev + Neon dev** depuis `dev` quand V1 terminée (TODO).
-- [ ] **Changement d'e-mail/mot de passe** : interface planifiée V1.5.
+- [x] **Service `srv-db46e4btqb8s73e8bsd0`** : supprimé (vérifié 404 le 2026-10-26).
+- [x] **Déploiement Render dev + Neon dev** : service `reseau`
+  (`srv-db4ek92jnfac73b4uij0`), branche `dev`, déployé et sondé (2026-10-26).
+- [ ] **Changement d'e-mail** : interface planifiée V1.5.
+- [x] **Changement de mot de passe** : parcours `mot de passe oublié` + code Neon Auth
+  livré, champ mot de passe avec œil afficher/masquer.
 - [ ] **Suppression de compte** : à planifier avant production.
 - [ ] **Confidentialité par champ** : qui voit quoi (V1.5+).
 - [ ] **CV/portfolio** : export, partage (V1.5+).
