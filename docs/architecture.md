@@ -24,13 +24,37 @@ flowchart TB
   UI -->|PUT image présignée| STO
 ```
 
-Évolution V2 : ajout de `apps/realtime` (WebSocket : messagerie, signalisation d'appels) et d'un TURN géré. Rien de cela n'est créé en V1.
+Évolution V2 : **Neon Realtime** pour les lignes live (messages, réactions, accusés,
+liste de conversations) et **Neon Functions** pour l'éphémère (saisie, présence).
+Aucun service `apps/realtime` n'est créé. La signalisation WebRTC et TURN restent
+hors V2 (ADR 0005, révisé par ADR 0008).
+
+### Temps réel V2
+
+```mermaid
+flowchart LR
+  B["Navigateur"] -->|"POST message chiffré"| N["Next.js (auth + validation)"]
+  N -->|"INSERT"| PG[("Postgres Neon")]
+  PG -->|"live query"| R["Neon Realtime"]
+  R -->|"lignes"| B
+  B -->|"typing / presence"| F["Neon Function WebSocket"]
+  N -->|"jeton court"| B
+```
+
+- Les écritures ne passent jamais par le WebSocket.
+- Une live query est **scellée côté serveur** et filtrée sur les conversations de
+  l'utilisateur ; le client ne peut pas modifier le SQL.
+- Les événements de saisie/présence sont éphémères, avec TTL ; ils ne sont pas stockés.
+- `NEON_REALTIME_SECRET` est serveur uniquement.
 
 ## API : qui parle comment
 | Domaine | Protocole | Pourquoi |
 |---|---|---|
 | Projets / posts (liste, détail, création, édition, publication, suppression) | **GraphQL** (`POST /api/graphql`) | Lectures composées (projet + auteur + compétences), évolutif vers le fil |
 | Auth | Handler Neon Auth (`/api/auth/[...path]`) | Fourni par le SDK |
+| Messagerie : écritures et historique | **REST** (`/api/conversations/*`, `/api/messages/*`) | Écritures autorisées, pagination par curseur |
+| Messagerie : flux live | **Neon Realtime** (live query scellée) | Lignes persistées + accusés + réactions |
+| Saisie / présence | **Neon Function WebSocket** | Éphémère, TTL court, rien en base |
 | Profil, compétences, recherche, upload | **REST** (route handlers) | Opérations simples, cacheables |
 | Pages serveur (RSC) | **Appel direct aux cas d'usage** | Jamais d'appel HTTP vers soi-même |
 

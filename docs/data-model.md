@@ -176,3 +176,112 @@ Mises à jour d'avancement créées par l'auteur du projet uniquement.
 Index : `project_updates_project_idx (project_id, created_at DESC, id DESC)`, `project_updates_author_idx (author_id)`.
 
 **Supprimé du cadrage initial** : table `endorsements` (validation par pairs/enseignants).
+
+## Tables V2 — messagerie chiffrée (planifiées)
+
+> Migration **additive** uniquement. Aucune colonne existante n'est renommée ni
+> supprimée. Les contenus (`ciphertext`, réactions, clés enveloppées) sont opaques
+> pour le serveur.
+
+### `conversations`
+
+| Colonne | Type | Règle |
+|---|---|---|
+| id | uuid PK | `gen_random_uuid()` |
+| kind | enum(`direct`,`group`) | défaut `direct`, `group` non exposé en V2 |
+| direct_key | text unique, null | deux `profile_id` triés, ex. `uuidA:uuidB` ; NULL pour groupe |
+| created_by | uuid FK → profiles | auteur de la conversation |
+| last_message_at | timestamptz, null | mis à jour à chaque message |
+| created_at, updated_at | timestamptz | défaut `now()` |
+
+Index : `conversations_last_message_idx (last_message_at DESC, id DESC)`.
+
+### `conversation_participants`
+
+| Colonne | Type | Règle |
+|---|---|---|
+| conversation_id | uuid FK → conversations | PK partielle, cascade |
+| profile_id | uuid FK → profiles | PK partielle, cascade |
+| role | enum(`member`,`owner`) | défaut `member` |
+| last_read_at | timestamptz, null | curseur de lecture |
+| joined_at | timestamptz | défaut `now()` |
+
+PK : `(conversation_id, profile_id)`. Index : `conversation_participants_profile_idx (profile_id, conversation_id)`.
+
+### `messages`
+
+| Colonne | Type | Règle |
+|---|---|---|
+| id | uuid PK | `gen_random_uuid()` |
+| conversation_id | uuid FK → conversations | cascade |
+| sender_id | uuid FK → profiles | cascade |
+| client_id | uuid, unique | idempotence d'envoi |
+| ciphertext | text, not null | base64, contenu chiffré |
+| iv | text, not null | nonce AES-GCM (12 octets, base64) |
+| key_version | integer, not null | version de la clé de conversation |
+| sender_key_id | text, not null | clé publique utilisée |
+| created_at | timestamptz | défaut `now()` |
+| edited_at, deleted_at | timestamptz, null | édition/suppression douce |
+
+Index : `messages_conversation_idx (conversation_id, created_at DESC, id DESC)`.
+
+### `message_reactions`
+
+| Colonne | Type | Règle |
+|---|---|---|
+| id | uuid PK | `gen_random_uuid()` |
+| message_id | uuid FK → messages | cascade |
+| profile_id | uuid FK → profiles | cascade |
+| ciphertext | text, not null | emoji chiffré côté client |
+| iv | text, not null | nonce AES-GCM |
+| key_version | integer, not null | |
+| created_at, updated_at | timestamptz | défaut `now()` |
+
+Unique : `(message_id, profile_id)` — une réaction par personne et par message.
+
+### `message_receipts`
+
+| Colonne | Type | Règle |
+|---|---|---|
+| message_id | uuid FK → messages | PK partielle, cascade |
+| profile_id | uuid FK → profiles | PK partielle, cascade |
+| delivered_at | timestamptz, null | |
+| read_at | timestamptz, null | |
+
+PK : `(message_id, profile_id)`. Index : `message_receipts_profile_idx (profile_id, read_at)`.
+
+### `profile_keys`
+
+| Colonne | Type | Règle |
+|---|---|---|
+| profile_id | uuid FK → profiles | PK, cascade |
+| key_id | text, not null | identifiant de clé |
+| public_key_jwk | jsonb, not null | clé **publique** ECDH P-256 |
+| algorithm | text, not null | `ECDH-P256` |
+| created_at, rotated_at | timestamptz | |
+
+Aucune clé privée, aucun secret.
+
+### `conversation_keys`
+
+| Colonne | Type | Règle |
+|---|---|---|
+| conversation_id | uuid FK → conversations | PK partielle, cascade |
+| profile_id | uuid FK → profiles | PK partielle, cascade |
+| key_id | text | PK partielle |
+| wrapped_key | text, not null | clé de conversation enveloppée (opaque) |
+| iv | text, not null | nonce de l'enveloppe |
+| algorithm | text, not null | `AES-256-GCM` |
+| created_at | timestamptz | défaut `now()` |
+
+PK : `(conversation_id, profile_id, key_id)`. Le serveur ne peut pas déballer ces clés.
+
+### Galerie d'images (posts et projets)
+
+- `post_images` : `id`, `post_id` FK cascade, `key`, `position` smallint `0..4`,
+  `alt` null, `created_at`. Unique `(post_id, position)`.
+- `project_images` : même forme avec `project_id`.
+- `position = 0` est la **couverture** ; maximum 5 images. Les anciennes colonnes
+  `image_key` / `cover_key` restent lisibles pendant la transition, puis sont
+  ignorées par les nouveaux parcours.
+

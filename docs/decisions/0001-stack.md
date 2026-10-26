@@ -10,4 +10,5 @@ Next.js (App Router, TypeScript) · Tailwind + shadcn/ui · Neon (Postgres, Auth
 
 ## Conséquences
 - Pas de Row Level Security par défaut : l'autorisation côté serveur est **obligatoire** (`rules/security.md`).
-- Le temps réel (V2) demandera un service dédié (`apps/realtime`), pas fourni par la base.
+- Le temps réel (V2) est fourni par **Neon Realtime + Neon Functions**, pas par un
+  service `apps/realtime` (révision ADR 0008, 2026-10-26).

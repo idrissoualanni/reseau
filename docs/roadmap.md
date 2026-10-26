@@ -6,8 +6,9 @@ Correspondance avec les phases du document de cadrage initial.
 |---|---|---|
 | **V1** | Compte, connexion (vérif. e-mail), profil, compétences, projets (texte + image), consultation, recherche par compétence | Phase 0 + noyau phase 1 |
 | **V1.5** | Espaces + accès université (méthodes configurables) · fil libre texte/image/**vidéo** · publications structurées (appris/construit/participé/obtenu) · niveau `verifiable` · suggestions IA · **CV et portfolio générés puis modifiables** | Reste phase 1 |
-| **V2** | Connexions · **messagerie chiffrée** · **appels WebRTC** (service `apps/realtime`) | Phase 2 (partie) |
-| **V3** | Espace recruteur · tableau de bord université · communauté ouverte · module entrepreneur | Phases 2–3 |
+| **V2** | **Messagerie chiffrée 1-1** (Neon Realtime + Neon Functions) · galerie 5 images · séparation admin | Phase 2 (partie) |
+| **V2.5** | Connexions · pièces jointes · groupes · blocage/signalement | Phase 2 |
+| **V3** | **Appels WebRTC** · espace recruteur · tableau de bord université · module entrepreneur | Phases 2–3 |
 
 ## Périmètre V1 (minimal)
 Les 10 fonctionnalités de `features/F01…F10`. Hors périmètre V1 : espaces, fil libre, vidéo, CV, portfolio, IA, connexions, messagerie, appels, recruteurs.
