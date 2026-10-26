@@ -21,19 +21,21 @@ Détails : docs/architecture.md, docs/base-de-donnees.md, docs/deploiement.md.
 (Adapter si la stack change.)
 
 ## Règles détaillées (à lire selon la tâche)
-- GraphQL : .claude/rules/graphql.md
-- Chiffrement E2E : .claude/rules/chiffrement-e2e.md
-- WebRTC : .claude/rules/webrtc.md
+- GraphQL : .claude/rules/api-graphql.md
+- Chiffrement E2E : .claude/rules/chiffrement-e2e.md et .claude/rules/messagerie-e2e.md
+- Temps réel : .claude/rules/websocket.md (Neon Realtime + Neon Functions)
+- WebRTC (V3) : .claude/rules/webrtc.md
 - Profils modulaires : .claude/rules/profils-modulaires.md
 - Données personnelles : .claude/rules/donnees-personnelles.md
-- Base de données (Neon) : .claude/rules/base-de-donnees.md
+- Base de données (Neon) : .claude/rules/base-de-donnees.md et .claude/rules/database.md
+- Miroirs OpenCode : .opencode/rules/README.md
 
 ## Workflow git
 - 1 tâche = 1 branche = 1 worktree.
 - Jamais de travail direct sur `main` depuis un worktree de tâche.
 - Petits commits ; le projet doit fonctionner à chaque commit.
 - Ne jamais fusionner dans `main` sans mon accord. Ne jamais déployer depuis un worktree de tâche.
-- Créer un worktree à la main : `git worktree add ../reseau-social-<tache> -b <tache>`
+- Créer un worktree à la main : `git worktree add .opencode/worktrees/reseau-social-<tache> -b <tache>`
 - Supprimer après fusion : `git worktree remove ../reseau-social-<tache>` — le **worktree seulement**, ne **pas** supprimer la branche.
 
 ## Définition de "terminé"
@@ -148,7 +150,7 @@ Le sidebar remplace la top bar sur les pages d'auth et les pages protégées.
 
 - Travailler dans le worktree de `v1-vision`.
 - Les agents doivent travailler dans leur propre worktree.
-- Créer un worktree : `git worktree add ../reseau-social-<tache> -b <tache>`
+- Créer un worktree : `git worktree add .opencode/worktrees/reseau-social-<tache> -b <tache>`
 - Supprimer après fusion : `git worktree remove ../reseau-social-<tache>` — le **worktree seulement**, ne **pas** supprimer la branche.
 # Réseau social modulable
 
@@ -173,19 +175,21 @@ Détails : docs/architecture.md, docs/base-de-donnees.md, docs/deploiement.md.
 (Adapter si la stack change.)
 
 ## Règles détaillées (à lire selon la tâche)
-- GraphQL : .claude/rules/graphql.md
-- Chiffrement E2E : .claude/rules/chiffrement-e2e.md
-- WebRTC : .claude/rules/webrtc.md
+- GraphQL : .claude/rules/api-graphql.md
+- Chiffrement E2E : .claude/rules/chiffrement-e2e.md et .claude/rules/messagerie-e2e.md
+- Temps réel : .claude/rules/websocket.md (Neon Realtime + Neon Functions)
+- WebRTC (V3) : .claude/rules/webrtc.md
 - Profils modulaires : .claude/rules/profils-modulaires.md
 - Données personnelles : .claude/rules/donnees-personnelles.md
-- Base de données (Neon) : .claude/rules/base-de-donnees.md
+- Base de données (Neon) : .claude/rules/base-de-donnees.md et .claude/rules/database.md
+- Miroirs OpenCode : .opencode/rules/README.md
 
 ## Workflow git
 - 1 tâche = 1 branche = 1 worktree.
 - Jamais de travail direct sur `main` depuis un worktree de tâche.
 - Petits commits ; le projet doit fonctionner à chaque commit.
 - Ne jamais fusionner dans `main` sans mon accord. Ne jamais déployer depuis un worktree de tâche.
-- Créer un worktree à la main : `git worktree add ../reseau-social-<tache> -b <tache>`
+- Créer un worktree à la main : `git worktree add .opencode/worktrees/reseau-social-<tache> -b <tache>`
 - Supprimer après fusion : `git worktree remove ../reseau-social-<tache>` — le **worktree seulement**, ne **pas** supprimer la branche.
 
 ## Définition de "terminé"

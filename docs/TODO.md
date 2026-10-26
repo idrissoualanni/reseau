@@ -15,6 +15,38 @@
   `git push origin --delete v1.5-projects-db v1.5-projects-api v1.5-projects-ui`
   (commits déjà dans `dev`).
 
+## V2 — temps réel et messagerie (en cours, 2026-10-26)
+
+- [x] **Neon Realtime activé sur `dev`** : origines autorisées
+  `http://localhost:3000` et `https://reseau-3tuk.onrender.com`. Preuve : abonnement
+  à une table de test, snapshot vide, insertion, réception de la ligne, table supprimée.
+- [x] **Variables `NEON_REALTIME_URL` / `NEON_REALTIME_SECRET`** présentes dans
+  `.env.local` (noms vérifiés, valeurs jamais affichées). `NEON_REALTIME_SECRET`
+  reste **serveur uniquement**.
+- [x] **Déclaration `neon.ts`** : buckets `asset`, `post`, `profile`, `projet`,
+  `videos` + `preview.realtime` avec les deux origines. Ne pas lancer
+  `neon config apply` avant que l'état live et le fichier soient alignés.
+- [ ] **Render dev — variables Realtime** — **intervention utilisateur** : ajouter
+  `NEON_REALTIME_URL` et `NEON_REALTIME_SECRET` au service `reseau`
+  (`srv-db4ek92jnfac73b4uij0`). Ne jamais coller le secret dans un ticket, un log ou
+  la conversation.
+- [ ] **Fonction de saisie/présence** : contrat WebSocket, jeton court, TTL, limites.
+  Aucun événement persisté.
+- [ ] **Schéma messagerie** : conversations, participants, messages, réactions,
+  accusés, clés publiques, clés de conversation enveloppées. Migration additive.
+- [ ] **Crypto E2E client** : ECDH P-256 + HKDF + AES-256-GCM, clé privée IndexedDB,
+  aucun recouvrement en V2.
+- [ ] **UI messagerie** : `/messages`, liste de conversations, fil, saisie, réactions,
+  indicateur de saisie, présence, pagination.
+- [ ] **Galerie 5 images** : posts et projets, première image = couverture, carrousel.
+- [ ] **Séparation admin** : route group et modules serveur dédiés, gardes API.
+- [ ] **Vérification navigateur authentifiée** des parcours V1.5/V2 — **intervention
+  utilisateur** (session réelle).
+- [ ] **Rotation du secret Realtime** si `NEON_REALTIME_SECRET` a été affiché :
+  `neon realtime rotate-secret`, puis mise à jour Render et `.env.local`.
+- [ ] **Blocage / signalement** : hors V2, à examiner en V2.5 (`docs/backlog.md`).
+- [ ] **Pièces jointes de messagerie** : hors V2, à examiner en V2.5.
+
 ## Contenu V1.5 — livré (2026-10-26)
 - [x] `post_likes` + `togglePostLike` + `likeCount`/`hasLiked`.
 - [x] Édition/suppression des posts, `/me/posts`, `/posts/[id]/edit`.
@@ -251,9 +283,10 @@
 - ⚠️ **Sécurité — cookie de session exposé** : le cookie `__Secure-neon-auth.*` a été collé en
   clair dans `AGENTS.md` (WIP non commité). À retirer du fichier ; considérer la session comme
   compromise (se déconnecter/reconnecter). Ne jamais committer `AGENTS.md` avec ce contenu.
-- **Render** : supprimer le service `srv-db46e4btqb8s73e8bsd0` (le dev utilise
-  `srv-db4ek92jnfac73b4uij0`).
-- **Turnstile** : décider si clés de test dev ou attente domaine.
+- **Render** : `srv-db46e4btqb8s73e8bsd0` déjà supprimé ; le dev utilise
+  `srv-db4ek92jnfac73b4uij0`.
+- **Turnstile** : **en attente** (retiré, ne doit pas bloquer l'app) ; à réactiver
+  quand un domaine et des clés réelles existent.
 - **Bucket stockage** : nommer le bucket Neon Object Storage (ADR 0004 « proposé »).
 - **TURN** : choisir le fournisseur pour WebRTC (V1.5+).
 - **Admin plateforme** : attribuer le rôle `admin` dans la console Neon Auth (déjà fait pour

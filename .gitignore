@@ -78,6 +78,9 @@ AGENTS.local.md
 AGENT.md
 .claude/settings.local.json
 .claude/worktrees/
+# liens locaux vers .agents/skills (chemins absolus, non portables)
+.claude/skills/neon
+.claude/skills/neon-realtime
 .opencode/node_modules/
 .opencode/worktrees/
 .opencode/settings.local.json
