@@ -9,6 +9,27 @@
 > sont livrés en V1 (2026-10-10) — voir `docs/features/F11-posts.md` et
 > `docs/features/F12-posts-images.md`. Le fil libre enrichi (vidéo) reste ici.
 
+## Temps réel / messagerie (V2.5 et après)
+
+- [ ] **Pièces jointes chiffrées** dans les messages (images, fichiers) : upload
+  présigné, chiffrement client, quota, analyse antivirus côté client impossible —
+  à cadrer.
+- [ ] **Messages de groupe** : le schéma prévoit `conversations.kind = group`, mais
+  l'UI, la distribution des clés et les rôles ne sont pas exposés en V2.
+- [ ] **Blocage et signalement** : nécessaires avant d'ouvrir la messagerie à tous ;
+  policy de modération à définir.
+- [ ] **Notifications** : push natif, e-mail de nouveau message, préférences.
+- [ ] **Multi-appareils E2E** : synchronisation des clés, appareils de confiance,
+  révocation.
+- [ ] **Recherche locale** dans les conversations : uniquement côté client, jamais
+  d'indexation serveur du clair.
+
+## Anciennes idées F18–F20 (sans identifiant stable)
+
+- Publications structurées (sections, blocs, mise en forme riche).
+- Vidéo dans le fil libre (upload, transcodage, lecteur, sous-titres).
+- Modération et signalement des publications.
+
 ## QA intégration V1.5 (2026-10-11) — écarts constatés
 - [ ] **Visibilité des OTP par l'admin** — **tranché (2026-10-13)** : avec Neon Auth
   (Managed Better Auth), le code n'est **jamais** reçu par l'app ; l'afficher est

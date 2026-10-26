@@ -28,9 +28,9 @@ Statuts : ✅ livré · 🔜 à développer · ⏳ reporté.
 | F15 | Rejoindre un espace (accès) | V1.5 | F14 | 🔜 (code écrit, à vérifier) |
 | F16 | Rôles et appartenances | V1.5 | F14 | ✅ |
 | F17 | Administration d'espace | V1.5 | F15, F16 | 🔜 (plateforme ✅, code écrit, à vérifier) |
-| F18 | Publications structurées | V1.5 | F05, F14 | 🔜 |
-| F19 | Vidéo dans le fil | V1.5 | F12 | 🔜 |
-| F20 | Modération et signalement | V1.5 | F11, F18 | 🔜 |
+| F18 | Catalogue de projets (type, filtres) | V1.5 | F05 | ✅ |
+| F19 | Social projets (réactions, commentaires, suivi) | V1.5 | F18 | ✅ |
+| F20 | Évolutions de projet | V1.5 | F18 | ✅ |
 | F21 | Confidentialité par champ | V1.5 | F03, F18 | 🔜 |
 | F22 | Suppression de compte | V1.5 | F01 | 🔜 |
 | F23 | Recherche élargie | V1.5 | F09 | 🔜 |
@@ -44,21 +44,27 @@ Statuts : ✅ livré · 🔜 à développer · ⏳ reporté.
 | F31 | CV généré et modifiable | V2 | F05, F08 | ⏳ |
 | F32 | Portfolio public | V2 | F31 | ⏳ |
 | F33 | Connexions | V2 | F03 | ⏳ |
-| F34 | Messagerie chiffrée de bout en bout | V2 | F33 | ⏳ |
-| F35 | Appels audio / vidéo (WebRTC) | V2 | F33, F34 | ⏳ |
+| F34 | Messagerie chiffrée de bout en bout | V2 | F03 | 🔜 |
+| F35 | Appels audio / vidéo (WebRTC) | V3 | F34 | ⏳ |
 | F36 | Niveau de preuve `verifiable` | V3 | F05, F18, F32 | ⏳ |
 | F37 | Espace recruteur | V3 | F08, F36 | ⏳ |
 | F38 | Tableau de bord université | V3 | F14, F17 | ⏳ |
 | F39 | Module entrepreneur | V3 | F14 | ⏳ |
+
+> **Correctif 2026-10-26** : les lignes F18–F20 ci-dessus correspondent aux fiches
+> réellement livrées (`F18-project-catalog`, `F19-project-social`,
+> `F20-project-updates`). Les anciennes idées « publications structurées », « vidéo
+> dans le fil » et « modération » n'ont pas encore d'identifiant stable et restent
+> dans `docs/backlog.md`.
 
 ## Ordre de développement (lots)
 
 | Lot | Fonctionnalités | Version |
 |---|---|---|
 | L6 — Espaces socle | F14, F15, F16, F17 | V1.5 |
-| L7 — Publications structurées | F18 | V1.5 |
-| L8 — Fil vidéo | F19 | V1.5 |
-| L9 — Confiance et contrôle | F20, F21, F22 | V1.5 |
+| L7 — Catalogue projets | F18 | V1.5 ✅ |
+| L8 — Social projets | F19, F20 | V1.5 ✅ |
+| L9 — Confiance et contrôle | F21, F22 | V1.5 |
 | L10 — Confort du fil et recherche | F23, F24, F25, F26, F27, F28 | V1.5 |
 | L11 — Accès université | F29 | V2 |
 | L12 — IA et documents | F30, F31, F32 | V2 |
@@ -226,8 +232,9 @@ Statuts : ✅ livré · 🔜 à développer · ⏳ reporté.
   jamais écrasée, export PDF.
 - **F32 — Portfolio public** : version visuelle du CV, mêmes règles d'édition, lien de partage.
 - **F33 — Connexions** : demandes de contact, acceptation, liste.
-- **F34 — Messagerie chiffrée E2E** : service `apps/realtime`, clé privée jamais côté serveur.
-- **F35 — Appels audio/vidéo WebRTC** : signaling + TURN géré.
+- **F34 — Messagerie chiffrée E2E** : Neon Realtime + Neon Functions, clé privée jamais
+  côté serveur (voir `F34-messagerie-1to1.md`).
+- **F35 — Appels audio/vidéo WebRTC** : V3, signaling + TURN géré.
 
 # V3 — fonctionnalités reportées
 
