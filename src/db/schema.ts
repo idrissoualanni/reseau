@@ -3,6 +3,7 @@ import {
   boolean,
   check,
   index,
+  integer,
   jsonb,
   pgEnum,
   pgTable,
@@ -503,5 +504,172 @@ export const projectUpdates = pgTable(
     index("project_updates_project_idx").on(t.projectId, t.createdAt.desc(), t.id.desc()),
     index("project_updates_author_idx").on(t.authorId),
     check("project_updates_body_check", sql`char_length(${t.body}) between 0 and 5000`),
+  ],
+);
+
+// ─── V2 — messagerie chiffrée de bout en bout (F34) ──────────────────────────
+
+// Nature de la conversation. `group` est prévu au schéma mais non exposé en V2.
+export const conversationKind = pgEnum("conversation_kind", ["direct", "group"]);
+export const conversationRole = pgEnum("conversation_role", ["member", "owner"]);
+
+// Une conversation 1-1 est unique par paire de profils (`direct_key` trié).
+export const conversations = pgTable(
+  "conversations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    kind: conversationKind("kind").notNull().default("direct"),
+    directKey: text("direct_key"),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    lastMessageAt: timestamp("last_message_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex("conversations_direct_key_uq").on(t.directKey),
+    index("conversations_last_message_idx").on(t.lastMessageAt.desc(), t.id.desc()),
+    check(
+      "conversations_direct_key_check",
+      sql`(${t.kind} = 'group' and ${t.directKey} is null) or (${t.kind} = 'direct' and ${t.directKey} is not null)`,
+    ),
+  ],
+);
+
+export const conversationParticipants = pgTable(
+  "conversation_participants",
+  {
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => conversations.id, { onDelete: "cascade" }),
+    profileId: uuid("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    role: conversationRole("role").notNull().default("member"),
+    lastReadAt: timestamp("last_read_at", { withTimezone: true }).defaultNow().notNull(),
+    joinedAt: timestamp("joined_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.conversationId, t.profileId] }),
+    index("conversation_participants_profile_idx").on(t.profileId, t.conversationId),
+  ],
+);
+
+// Contenu chiffré côté client : le serveur ne stocke jamais le clair.
+export const messages = pgTable(
+  "messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => conversations.id, { onDelete: "cascade" }),
+    senderId: uuid("sender_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    clientId: uuid("client_id").notNull(),
+    ciphertext: text("ciphertext").notNull(),
+    iv: text("iv").notNull(),
+    keyVersion: integer("key_version").notNull().default(1),
+    senderKeyId: text("sender_key_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    editedAt: timestamp("edited_at", { withTimezone: true }),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("messages_sender_client_uq").on(t.senderId, t.clientId),
+    index("messages_conversation_idx").on(t.conversationId, t.createdAt.desc(), t.id.desc()),
+    check("messages_ciphertext_check", sql`char_length(${t.ciphertext}) between 1 and 22000`),
+    check("messages_iv_check", sql`char_length(${t.iv}) between 16 and 24`),
+    check("messages_key_version_check", sql`${t.keyVersion} > 0`),
+  ],
+);
+
+export const messageReactions = pgTable(
+  "message_reactions",
+  {
+    messageId: uuid("message_id")
+      .notNull()
+      .references(() => messages.id, { onDelete: "cascade" }),
+    profileId: uuid("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    ciphertext: text("ciphertext").notNull(),
+    iv: text("iv").notNull(),
+    keyVersion: integer("key_version").notNull().default(1),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    primaryKey({ columns: [t.messageId, t.profileId] }),
+    index("message_reactions_profile_idx").on(t.profileId),
+    check("message_reactions_ciphertext_check", sql`char_length(${t.ciphertext}) between 1 and 2000`),
+    check("message_reactions_iv_check", sql`char_length(${t.iv}) between 16 and 24`),
+    check("message_reactions_key_version_check", sql`${t.keyVersion} > 0`),
+  ],
+);
+
+// Accusés de réception / lecture d'un message par participant.
+export const messageReceipts = pgTable(
+  "message_receipts",
+  {
+    messageId: uuid("message_id")
+      .notNull()
+      .references(() => messages.id, { onDelete: "cascade" }),
+    profileId: uuid("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+    readAt: timestamp("read_at", { withTimezone: true }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.messageId, t.profileId] }),
+    index("message_receipts_profile_idx").on(t.profileId, t.readAt),
+  ],
+);
+
+// Clé publique E2E du profil. Aucune clé privée ne quitte le client.
+export const profileKeys = pgTable(
+  "profile_keys",
+  {
+    profileId: uuid("profile_id")
+      .primaryKey()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    keyId: text("key_id").notNull(),
+    publicKeyJwk: jsonb("public_key_jwk").$type<Record<string, unknown>>().notNull(),
+    algorithm: text("algorithm").notNull().default("ECDH-P256"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    rotatedAt: timestamp("rotated_at", { withTimezone: true }),
+  },
+  (t) => [check("profile_keys_algorithm_check", sql`${t.algorithm} = 'ECDH-P256'`)],
+);
+
+// Clé de conversation enveloppée pour un participant (opaque côté serveur).
+export const conversationKeys = pgTable(
+  "conversation_keys",
+  {
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => conversations.id, { onDelete: "cascade" }),
+    profileId: uuid("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    keyId: text("key_id").notNull(),
+    wrappedKey: text("wrapped_key").notNull(),
+    iv: text("iv").notNull(),
+    algorithm: text("algorithm").notNull().default("AES-256-GCM"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.conversationId, t.profileId, t.keyId] }),
+    check("conversation_keys_wrapped_check", sql`char_length(${t.wrappedKey}) between 1 and 2000`),
+    check("conversation_keys_iv_check", sql`char_length(${t.iv}) between 16 and 24`),
+    check("conversation_keys_algorithm_check", sql`${t.algorithm} = 'AES-256-GCM'`),
   ],
 );

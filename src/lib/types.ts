@@ -252,3 +252,77 @@ export type ProjectUpdate = {
 export type ProjectUpdateWithAuthor = ProjectUpdate & {
   author: ProfileRef;
 };
+
+// ─── V2 — messagerie chiffrée (F34) ─────────────────────────────────────────
+
+export type ConversationKind = "direct" | "group";
+export type ConversationRole = "member" | "owner";
+
+export type Conversation = {
+  id: string;
+  kind: ConversationKind;
+  directKey: string | null;
+  createdBy: string;
+  lastMessageAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type ConversationParticipant = {
+  conversationId: string;
+  profileId: string;
+  role: ConversationRole;
+  lastReadAt: Date;
+  joinedAt: Date;
+};
+
+// Ligne de message : uniquement des enveloppes opaques côté serveur.
+export type EncryptedMessage = {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  clientId: string;
+  ciphertext: string;
+  iv: string;
+  keyVersion: number;
+  senderKeyId: string;
+  createdAt: Date;
+  editedAt: Date | null;
+  deletedAt: Date | null;
+};
+
+export type MessageReaction = {
+  messageId: string;
+  profileId: string;
+  ciphertext: string;
+  iv: string;
+  keyVersion: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type ConversationKey = {
+  conversationId: string;
+  profileId: string;
+  keyId: string;
+  wrappedKey: string;
+  iv: string;
+  algorithm: string;
+  createdAt: Date;
+};
+
+export type ProfileKey = {
+  profileId: string;
+  keyId: string;
+  publicKeyJwk: Record<string, unknown>;
+  algorithm: string;
+  createdAt: Date;
+  rotatedAt: Date | null;
+};
+
+export type ConversationSummary = {
+  conversation: Conversation;
+  participants: Array<{ participant: ConversationParticipant; profile: ProfileRef }>;
+  lastMessage: EncryptedMessage | null;
+  unreadCount: number;
+};
