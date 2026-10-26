@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getPlatformAdminProfile, toAdminContext } from "@/lib/admin";
 import { getSession } from "@/lib/auth";
+import { isEmailVerified } from "@/lib/auth-guard";
 import { PageShell } from "@/components/page-shell";
 import { AdminTabs } from "@/components/admin/admin-tabs";
 
@@ -12,6 +13,9 @@ export const instant = false;
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   if (!session?.user) redirect("/sign-in");
+  if (!isEmailVerified(session.user)) {
+    redirect(`/verify-email?email=${encodeURIComponent(session.user.email ?? "")}`);
+  }
 
   const admin = await getPlatformAdminProfile(toAdminContext(session));
   if (!admin) notFound();
