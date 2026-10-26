@@ -52,10 +52,10 @@
   la garde est **fail-open** ; si le champ est absent, elle est inerte. À confirmer en dev.
 - [ ] **Définir une rétention/purge pour `auth_otp_audit`** (ex. 30–90 j) — exigé par la
   revue `securite` et `donnees-personnelles.md` (exception tracée dans `security.md`).
-- [x] **MCP Render hors service** : `get_service` / `list_deploys` renvoient `unauthorized`
-  (2026-10-21). **Intervention utilisateur** : régénérer la clé API Render
-  (`{file:.secrets/render-api-key}`) et reconnecter le MCP. En attendant, l'état du
-  déploiement dev ne peut être vérifié que via le dashboard Render.
+- [x] **MCP Render hors service** : clé API **régénérée** (2026-10-26). L'API REST Render
+  fonctionne avec `{file:.secrets/render-api-key}` (services, deploys et logs vérifiés).
+- [ ] **Reconnecter le MCP Render** dans OpenCode avec la nouvelle clé — **intervention
+  utilisateur** (le MCP renvoie encore `unauthorized` dans la session en cours).
 
 ## Render / déploiement
 - [x] **`render.yaml`** : **aligné (2026-10-11)** via MCP Render — service `reseau`
@@ -85,6 +85,10 @@
   `npm run build` (OK). Blocage levé : `node_modules` était vide (0 entrée).
 - [ ] **Fin de V1** : déploiement Render dev + Neon dev → tester ce qui est
   réellement déployé (sondes de vérification), pas seulement le statut du build.
+- [ ] **Disque `C:` saturé** (2026-10-26 : ~200 Mo libres, `node_modules` absent) —
+  `~/.local/share/opencode/opencode.db` pèse 2,5 Go. **Intervention utilisateur** :
+  libérer de l'espace, puis `npm ci` pour exécuter `npm test` et `npm run lint`
+  localement. Le script `.opencode/scripts/cleanup-disk.sh` ne nettoie que caches/temp.
 
 ## Profil (F03/F04/F10) — reporté du Lot 2
 - [x] **Avatar** : **fait (2026-10-10)** — upload présigné (bucket `profile`, clé
@@ -176,9 +180,19 @@
 - [x] **Frontend UI** : `ProjectTabs` (4 onglets), `ProjectReactions` (4 types), `ProjectComments`
   (imbriqués 3 niveaux), `ProjectFollowers`, `ProjectActivity` (composer + liste),
   `ProjectsCatalog` (`/projects` filtres), `ImageUploader` (project-update)
-- [x] **Tests** : unitaires (use cases), intégration GraphQL, E2E Playwright
+- [x] **Tests unitaires** : tests colocalisés `src/**/*.test.ts` exécutés par Vitest.
+- [ ] **Tests V1.5 dans `tests/` à réparer** — imports obsolètes et Playwright non installé ;
+  `tests/**` est exclu de `tsconfig` et de Vitest depuis le 2026-10-26 (le build Next ne doit
+  pas dépendre des specs E2E). **Intervention dev** : réinstaller `@playwright/test` ou
+  supprimer les specs obsolètes, puis réactiver leur exécution.
 - [x] **Documentation** : fiches UX `projects-catalog.md`, `project-detail-tabs.md`, `project-updates.md`
-- [ ] **Déploiement Render dev** : secrets + trigger deploy + sondes `/api/health` + WebSocket
+- [x] **Déploiement Render dev** : **build réparé (2026-10-26)** — commits `a556dae` →
+  `9205eb8`, deploy `dep-dbfpvhvb9u1s739im4l0` **live**, `/api/health` = 200,
+  `/api/graphql` = 200 (`{ __typename }`), `/sign-in` = 200. Correctifs : export
+  `listProjectFollowersByProjectId`, collisions `deleteProject*`, composants UI manquants
+  (`scroll-area`, `tabs`, `select`), Zod v4, enums projets, encodage des curseurs,
+  fusion des inputs GraphQL dupliqués. Tests/lint non exécutés localement (disque plein,
+  `node_modules` absent) : **non vérifiés**, seuls build et sondes déployées le sont.
 
 ## V1.5 — Administration plateforme (worktree `v1.5-admin`)
 - [x] **F14 socle espaces, F16 rôles, F17 console plateforme** : **livré (2026-10-11)** —
