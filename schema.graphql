@@ -1,3 +1,8 @@
+input AddProjectReactionInput {
+  projectId: ID!
+  type: ProjectReactionType!
+}
+
 input CreateCommentInput {
   body: String!
   parentId: String
@@ -9,24 +14,53 @@ input CreatePostInput {
   imageKey: String
 }
 
+input CreateProjectCommentInput {
+  body: String!
+  parentId: ID
+  projectId: ID!
+}
+
 input CreateProjectInput {
   body: String!
   coverKey: String
   skillSlugs: [String!]
   title: String!
+  type: ProjectType
+}
+
+input CreateProjectUpdateInput {
+  body: String
+  imageKey: String
+  projectId: ID!
 }
 
 scalar DateTime
 
+input DeleteProjectUpdateInput {
+  id: ID!
+}
+
+input FollowProjectInput {
+  projectId: ID!
+}
+
 type Mutation {
   addComment(input: CreateCommentInput!): PostComment
+  addProjectReaction(input: AddProjectReactionInput!): ProjectReaction
   createPost(input: CreatePostInput!): Post
   createProject(input: CreateProjectInput!): Project
+  createProjectComment(input: CreateProjectCommentInput!): ProjectComment
+  createProjectUpdate(input: CreateProjectUpdateInput!): ProjectUpdate
   deleteComment(id: ID!): Boolean
   deletePost(id: ID!): Boolean
   deleteProject(id: ID!): Boolean
+  deleteProjectComment(id: ID!): Boolean
+  deleteProjectUpdate(input: DeleteProjectUpdateInput!): Boolean
+  followProject(input: FollowProjectInput!): Boolean
   publishProject(coverKey: String, id: ID!): Project
+  removeProjectReaction(projectId: ID!, type: ProjectReactionType!): Boolean
   togglePostLike(id: ID!): PostLikePayload
+  unfollowProject(projectId: ID!): Boolean
   unpublishProject(id: ID!): Project
   updatePost(id: ID!, input: UpdatePostInput!): Post
   updateProject(id: ID!, input: UpdateProjectInput!): Project
@@ -44,10 +78,10 @@ type Post {
   body: String
   comments: [PostComment!]
   createdAt: DateTime
-  id: ID
 
   """Vrai si le membre connecté a aimé ce post."""
   hasLiked: Boolean
+  id: ID
 
   """URL publique de l'image du post, quand elle existe."""
   imageUrl: String
@@ -76,11 +110,10 @@ type PostEdge {
   node: Post
 }
 
-"""État courant d'un j'aime de post."""
 type PostLikePayload {
-  hasLiked: Boolean!
-  likeCount: Int!
-  postId: ID!
+  hasLiked: Boolean
+  likeCount: Int
+  postId: ID
 }
 
 """Résumé public d'un membre."""
@@ -95,14 +128,42 @@ type ProfileSummary {
 type Project {
   author: ProfileSummary
   body: String
+  comments(after: String, first: Int): ProjectCommentConnection
   coverUrl: String
   createdAt: DateTime
+  followerCount: Int
+  followers(after: String, first: Int): ProjectFollowerConnection
   id: ID
+  isFollowed: Boolean
   publishedAt: DateTime
+  reactions: [ProjectReaction!]
   skills: [Skill!]
   status: ProjectStatus
   title: String
+  type: ProjectType
+  updateCount: Int
   updatedAt: DateTime
+  updates(after: String, first: Int): ProjectUpdateConnection
+}
+
+type ProjectComment {
+  author: ProfileSummary
+  body: String
+  createdAt: DateTime
+  depth: Int
+  id: ID
+  replies: [ProjectComment!]
+  updatedAt: DateTime
+}
+
+type ProjectCommentConnection {
+  edges: [ProjectCommentEdge!]
+  pageInfo: PageInfo
+}
+
+type ProjectCommentEdge {
+  cursor: String
+  node: ProjectComment
 }
 
 type ProjectConnection {
@@ -115,9 +176,64 @@ type ProjectEdge {
   node: Project
 }
 
+type ProjectFollower {
+  createdAt: DateTime
+  profile: ProfileSummary
+}
+
+type ProjectFollowerConnection {
+  edges: [ProjectFollowerEdge!]
+  pageInfo: PageInfo
+}
+
+type ProjectFollowerEdge {
+  cursor: String
+  node: ProjectFollower
+}
+
+type ProjectReaction {
+  count: Int
+  hasReacted: Boolean
+  type: ProjectReactionType
+}
+
+enum ProjectReactionType {
+  celebrate
+  curious
+  insight
+  like
+}
+
 enum ProjectStatus {
   draft
   published
+}
+
+enum ProjectType {
+  coursework
+  open_source
+  personal
+  research
+  team
+}
+
+type ProjectUpdate {
+  author: ProfileSummary
+  body: String
+  createdAt: DateTime
+  id: ID
+  imageUrl: String
+  updatedAt: DateTime
+}
+
+type ProjectUpdateConnection {
+  edges: [ProjectUpdateEdge!]
+  pageInfo: PageInfo
+}
+
+type ProjectUpdateEdge {
+  cursor: String
+  node: ProjectUpdate
 }
 
 type Query {
@@ -126,6 +242,7 @@ type Query {
   posts(after: String, first: Int): PostConnection
   project(id: ID!): Project
   projects(after: String, authorUsername: String, first: Int, skillSlug: String): ProjectConnection
+  projectsV15(after: String, authorUsername: String, first: Int, projectTypes: [ProjectType!], search: String, skillSlugs: [String!]): ProjectConnection
 }
 
 """Compétence du référentiel."""
@@ -145,4 +262,5 @@ input UpdateProjectInput {
   coverKey: String
   skillSlugs: [String!]
   title: String
+  type: ProjectType
 }
