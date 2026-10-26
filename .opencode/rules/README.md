@@ -12,6 +12,8 @@ autoritaire reste `.claude/rules/` (également importée par `CLAUDE.md`).
   (miroir de `.claude/rules/worktrees.md`).
 - `wip-utilisateur.md` — merger sur `dev` avec du WIP non commité : stash -u, merge,
   pop, ne jamais committer le WIP utilisateur (miroir de `.claude/rules/wip-utilisateur.md`).
+- `secrets.md` — clés hors du code : `.env.local`/`.secrets/` gitignorés, `{env:VAR}`
+  dans la config OpenCode, jamais d'affichage de valeur, rotation si divulgation.
 - `testing.md` — Vitest (unitaires/intégration), tests d'intégration hors ligne, worktree
   neuf → `next typegen` avant `typecheck`, base réelle en opt-in sur la branche **dev**,
   traçabilité des fiches (miroir de `.claude/rules/testing.md`).

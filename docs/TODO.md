@@ -4,6 +4,17 @@
 > Quand une ligne est faite, la retirer d'ici ; l'historique reste dans `CHANGELOG.md` et
 > `docs/prompt-loop/journal.md`.
 
+## Sécurité — clés et secrets
+- [ ] **Rotation de la clé API Neon** — la clé MCP a été affichée en clair dans la
+  conversation du 2026-10-26 (divulgation). **Intervention utilisateur** : régénérer la
+  clé dans la console Neon, puis mettre à jour la variable d'environnement utilisateur
+  `NEON_API_KEY` et reconnecter le MCP. La config OpenCode ne contient plus la valeur
+  (`Bearer {env:NEON_API_KEY}`), règle : `.opencode/rules/secrets.md`.
+- [ ] **Suppression des branches distantes mergées** (`v1.5-projects-db`, `-api`, `-ui`) :
+  commande refusée par les permissions de l'agent. **Intervention utilisateur** :
+  `git push origin --delete v1.5-projects-db v1.5-projects-api v1.5-projects-ui`
+  (commits déjà dans `dev`).
+
 ## Auth & comptes (F01–F02)
 - [ ] **Turnstile — EN ATTENTE.** Retiré temporairement (pas de domaine, pas de clés réelles).
   Créer un widget Cloudflare Turnstile dès qu'un domaine existe (Vercel staging + prod), puis
