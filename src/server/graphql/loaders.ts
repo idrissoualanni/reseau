@@ -1,7 +1,7 @@
 import DataLoader from "dataloader";
 import { inArray } from "drizzle-orm";
 import { db } from "@/db/client";
-import { postComments, projectComments, projectFollowers, projectReactions, projectUpdates } from "@/db/schema";
+import { postComments } from "@/db/schema";
 import type { Skill } from "@/lib/types";
 import {
   findProfileSummariesByIds,
@@ -13,7 +13,6 @@ import {
   countProjectFollowersByProjectId,
   countProjectReactionsByProjectId,
   countProjectUpdatesByProjectId,
-  findProjectReactionsByProjectId,
   findUserProjectReactions,
   isProjectFollowedByProfile,
   listProjectCommentsByProjectId,
@@ -74,7 +73,7 @@ export type Loaders = {
   repliesByCommentId: DataLoader<string, CommentRow[]>;
 
   // V1.5 — Projets
-  projectReactionsByProjectId: DataLoader<string, ProjectReactionCounts[]>;
+  projectReactionsByProjectId: DataLoader<{ projectId: string; profileId: string | null }, ProjectReactionCounts[]>;
   projectCommentsByProjectId: DataLoader<{ projectId: string; first: number; after?: string }, { edges: { cursor: string; node: ProjectCommentWithAuthor }[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } }>;
   projectCommentRepliesByParentId: DataLoader<string, ProjectCommentWithAuthor[]>;
   projectFollowerCountByProjectId: DataLoader<string, number>;
@@ -83,6 +82,26 @@ export type Loaders = {
   projectUpdateCountByProjectId: DataLoader<string, number>;
   projectUpdatesByProjectId: DataLoader<{ projectId: string; first: number; after?: string }, { edges: { cursor: string; node: ProjectUpdateWithAuthor }[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } }>;
 };
+
+// Réponses imbriquées d'un commentaire projet : profondeur 3 max (F19).
+async function loadProjectCommentReplies(
+  parentId: string,
+  depth: number,
+): Promise<ProjectCommentWithAuthor[]> {
+  if (depth > 2) return [];
+  const replies = await listProjectCommentRepliesByParentId(parentId);
+  return Promise.all(
+    replies.map(async (reply) => {
+      const [author] = await findProfileSummariesByIds([reply.authorId]);
+      return {
+        ...reply,
+        author: author!,
+        replies: await loadProjectCommentReplies(reply.id, depth + 1),
+        depth,
+      } as ProjectCommentWithAuthor;
+    }),
+  );
+}
 
 export function createLoaders(): Loaders {
   return {
@@ -142,21 +161,25 @@ export function createLoaders(): Loaders {
       return commentIds.map((id) => grouped.get(id) ?? []);
     }),
 
-    // V1.5 — Réactions projet (F19)
-    projectReactionsByProjectId: new DataLoader<string, ProjectReactionCounts[]>(async (projectIds) => {
+    // V1.5 — Réactions projet (F19) : la clé porte le viewer pour que
+    // `hasReacted` soit réel (jamais codé en dur à false).
+    projectReactionsByProjectId: new DataLoader<
+      { projectId: string; profileId: string | null },
+      ProjectReactionCounts[]
+    >(async (keys) => {
       const results = await Promise.all(
-        projectIds.map(async (projectId) => {
+        keys.map(async (key) => {
           const [reactions, userReactions] = await Promise.all([
-            countProjectReactionsByProjectId(projectId),
-            // Pour hasReacted, on a besoin du profileId du viewer
-            // On le gérera côté résolveur avec un DataLoader séparé
-            Promise.resolve(new Map<string, string[]>()),
+            countProjectReactionsByProjectId(key.projectId),
+            key.profileId
+              ? findUserProjectReactions(key.projectId, key.profileId)
+              : Promise.resolve([]),
           ]);
-          // Note: hasReacted sera calculé dans le résolveur avec projectFollowedByProfileId
+          const reacted = new Set(userReactions.map((reaction) => reaction.type));
           return projectReactionTypeValues.map((type) => ({
             type,
             count: reactions.get(type) ?? 0,
-            hasReacted: false, // Sera surchargé par le résolveur
+            hasReacted: reacted.has(type),
           }));
         }),
       );
@@ -174,30 +197,19 @@ export function createLoaders(): Loaders {
           );
           const hasCommentsNextPage = comments.length > key.first;
           const commentsPage = hasCommentsNextPage ? comments.slice(0, key.first) : comments;
-          
-          // Pour chaque commentaire, charger l'auteur et les réponses
+          const authors = await findProfileSummariesByIds(
+            [...new Set(commentsPage.map((comment) => comment.authorId))],
+          );
+          const authorById = new Map(authors.map((author) => [author.id, author]));
+
+          // Auteurs en un seul lot, puis réponses imbriquées (3 niveaux).
           const commentsWithAuthors = await Promise.all(
-            commentsPage.map(async (comment) => {
-              const [author] = await findProfileSummariesByIds([comment.authorId]);
-              const replies = await listProjectCommentRepliesByParentId(comment.id);
-              const repliesWithAuthors = await Promise.all(
-                replies.map(async (reply) => {
-                  const [replyAuthor] = await findProfileSummariesByIds([reply.authorId]);
-                  return {
-                    ...reply,
-                    author: replyAuthor!,
-                    replies: [],
-                    depth: 1,
-                  } as ProjectCommentWithAuthor;
-                })
-              );
-              return {
-                ...comment,
-                author: author!,
-                replies: repliesWithAuthors,
-                depth: 0,
-              } as ProjectCommentWithAuthor;
-            })
+            commentsPage.map(async (comment) => ({
+              ...comment,
+              author: authorById.get(comment.authorId)!,
+              replies: await loadProjectCommentReplies(comment.id, 1),
+              depth: 0,
+            })),
           );
 
           const edges = commentsWithAuthors.map((node) => ({
@@ -216,26 +228,11 @@ export function createLoaders(): Loaders {
       return results;
     }),
 
-    // V1.5 — Réponses aux commentaires projet
-    projectCommentRepliesByParentId: new DataLoader<string, ProjectCommentWithAuthor[]>(async (parentIds) => {
-      const results = await Promise.all(
-        parentIds.map(async (parentId) => {
-          const replies = await listProjectCommentRepliesByParentId(parentId);
-          return Promise.all(
-            replies.map(async (reply) => {
-              const [author] = await findProfileSummariesByIds([reply.authorId]);
-              return {
-                ...reply,
-                author: author!,
-                replies: [],
-                depth: 1,
-              } as ProjectCommentWithAuthor;
-            })
-          );
-        })
-      );
-      return results;
-    }),
+    // V1.5 — Réponses aux commentaires projet (3 niveaux, F19)
+    projectCommentRepliesByParentId: new DataLoader<string, ProjectCommentWithAuthor[]>(
+      async (parentIds) =>
+        Promise.all(parentIds.map((parentId) => loadProjectCommentReplies(parentId, 1))),
+    ),
 
     // V1.5 — Suiveurs projet (F19)
     projectFollowerCountByProjectId: new DataLoader<string, number>(async (projectIds) => {

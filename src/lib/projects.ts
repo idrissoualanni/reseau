@@ -1,7 +1,8 @@
 import { ForbiddenError, NotFoundError, RuleViolationError } from "@/lib/errors";
 import { decodeCursor, encodeCursor } from "@/lib/pagination";
 import type { UseCaseContext, ViewerContext } from "@/lib/context";
-import type { Project, ProjectComment, ProjectFollower, ProjectReaction, ProjectReactionType, ProjectType, ProjectUpdate, Skill } from "@/lib/types";
+import type { Project, ProjectComment, ProjectFollower, ProjectReactionType, ProjectType, ProjectUpdate, Skill } from "@/lib/types";
+import { projectReactionTypeValues } from "@/lib/types";
 import { findOrCreateSkill } from "@/lib/repositories/skills";
 import {
   deleteOwnedProject,
@@ -26,7 +27,6 @@ import {
   deleteProjectReaction,
   deleteProjectUpdate as repoDeleteProjectUpdate,
   findProjectCommentById,
-  findProjectReactionsByProjectId,
   findUserProjectReactions,
   insertProjectComment,
   insertProjectFollower,
@@ -270,38 +270,50 @@ export async function listProjectsV15(
 
 // ─── V1.5 — Réactions projet (F19) ───────────────────────────────────────────
 
-export async function addProjectReaction(
+export async function listProjectReactionsForViewer(
+  ctx: Pick<UseCaseContext, "profileId">,
+  projectId: string,
+): Promise<ProjectReactionCounts[]> {
+  const [counts, userReactions] = await Promise.all([
+    countProjectReactionsByProjectId(projectId),
+    findUserProjectReactions(projectId, ctx.profileId),
+  ]);
+  const reacted = new Set(userReactions.map((reaction) => reaction.type));
+  return projectReactionTypeValues.map((type) => ({
+    type,
+    count: counts.get(type) ?? 0,
+    hasReacted: reacted.has(type),
+  }));
+}
+
+export async function toggleProjectReaction(
   ctx: UseCaseContext,
-  input: AddProjectReactionInput,
-): Promise<ProjectReactionCounts> {
-  // Vérifier que le projet existe et est publié
-  const project = await findVisibleProjectById(input.projectId, ctx.profileId);
+  projectId: string,
+  type: ProjectReactionType,
+): Promise<ProjectReactionCounts[]> {
+  const project = await findVisibleProjectById(projectId, ctx.profileId);
   if (!project || project.status !== "published") {
     throw new ForbiddenError("Ce projet n'est pas publié.");
   }
 
-  const existing = await findUserProjectReactions(input.projectId, ctx.profileId);
-  const hasReacted = existing.some((r) => r.type === input.type);
-
-  if (hasReacted) {
-    // Toggle off
-    await deleteProjectReaction(input.projectId, ctx.profileId, input.type);
+  const existing = await findUserProjectReactions(projectId, ctx.profileId);
+  if (existing.some((reaction) => reaction.type === type)) {
+    await deleteProjectReaction(projectId, ctx.profileId, type);
   } else {
-    // Toggle on
-    await insertProjectReaction({
-      projectId: input.projectId,
-      profileId: ctx.profileId,
-      type: input.type,
-    });
+    await insertProjectReaction({ projectId, profileId: ctx.profileId, type });
   }
 
-  // Retourner l'état de la réaction ajoutée
-  const counts = await countProjectReactionsByProjectId(input.projectId);
-  return {
-    type: input.type,
-    count: counts.get(input.type) ?? 0,
-    hasReacted: true,
-  };
+  return listProjectReactionsForViewer(ctx, projectId);
+}
+
+export async function addProjectReaction(
+  ctx: UseCaseContext,
+  input: AddProjectReactionInput,
+): Promise<ProjectReactionCounts> {
+  // Conservé pour l'API GraphQL : l'opération bascule (toggle) puis renvoie
+  // l'état de la réaction demandée.
+  const reactions = await toggleProjectReaction(ctx, input.projectId, input.type);
+  return reactions.find((reaction) => reaction.type === input.type)!;
 }
 
 export async function removeProjectReaction(
@@ -354,6 +366,13 @@ export async function deleteProjectComment(ctx: UseCaseContext, id: string): Pro
 
 // ─── V1.5 — Suivi projet (F19) ───────────────────────────────────────────────
 
+export async function isFollowingProject(
+  ctx: Pick<UseCaseContext, "profileId">,
+  projectId: string,
+): Promise<boolean> {
+  return isProjectFollowedByProfile(projectId, ctx.profileId);
+}
+
 export async function followProject(ctx: UseCaseContext, projectId: string): Promise<boolean> {
   const project = await findVisibleProjectById(projectId, ctx.profileId);
   if (!project || project.status !== "published") {
@@ -392,7 +411,8 @@ export async function createProjectUpdate(
   return insertProjectUpdate({
     projectId: input.projectId,
     authorId: ctx.profileId,
-    body: input.body,
+    // Une mise à jour peut être une simple image (F20) : le texte est alors vide.
+    body: input.body ?? "",
     imageKey: input.imageKey ?? null,
   });
 }

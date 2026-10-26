@@ -45,18 +45,7 @@ import { PageInfoRef } from "./connection";
 import { ProfileSummaryRef } from "./profile";
 import { SkillRef } from "./skill";
 import { projectTypeValues, projectReactionTypeValues } from "@/lib/types";
-import { decodeCursor, encodeCursor } from "@/lib/pagination";
-import {
-  countProjectFollowersByProjectId,
-  countProjectReactionsByProjectId,
-  countProjectUpdatesByProjectId,
-  findProjectReactionsByProjectId,
-  findUserProjectReactions,
-  isProjectFollowedByProfile,
-  listProjectCommentsByProjectId,
-  listProjectCommentRepliesByParentId,
-  listProjectUpdatesByProjectId,
-} from "@/lib/repositories/projects";
+
 
 // Type Project et opérations (F05/F06/F18/F19/F20). Les résolveurs sont fins : contexte,
 // validation Zod, puis UN cas d'usage (api-graphql §5).
@@ -111,7 +100,11 @@ export const ProjectRef = builder.objectRef<Project>("Project").implement({
     // V1.5 — Réactions (F19) — via DataLoader
     reactions: t.field({
       type: [ProjectReactionRef],
-      resolve: (project, _args, ctx) => ctx.loaders.projectReactionsByProjectId.load(project.id),
+      resolve: (project, _args, ctx) =>
+        ctx.loaders.projectReactionsByProjectId.load({
+          projectId: project.id,
+          profileId: ctx.profileId,
+        }),
     }),
     // V1.5 — Commentaires (F19) — via DataLoader
     comments: t.field({
@@ -471,7 +464,8 @@ const FollowProjectInput = builder.inputType("FollowProjectInput", {
 const CreateProjectUpdateInput = builder.inputType("CreateProjectUpdateInput", {
   fields: (t) => ({
     projectId: t.id({ required: true }),
-    body: t.string({ required: true }),
+    // Une mise à jour peut être une simple image (F20).
+    body: t.string(),
     imageKey: t.string(),
   }),
 });
@@ -594,7 +588,7 @@ builder.mutationFields((t) => ({
       run(async () => {
         const input = validateInput(createProjectUpdateSchema, {
           projectId: args.input.projectId,
-          body: args.input.body,
+          body: args.input.body ?? undefined,
           imageKey: args.input.imageKey ?? undefined,
         });
         const update = await createProjectUpdate(requireProfile(ctx), input);
