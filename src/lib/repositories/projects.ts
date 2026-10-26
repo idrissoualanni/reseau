@@ -493,6 +493,19 @@ export async function listProjectCommentRepliesByParentId(parentId: string): Pro
   return rows.map(toProjectComment);
 }
 
+// Arbre complet d'un projet : utilisé par le rendu serveur et l'action de
+// commentaire, qui doivent voir les réponses imbriquées en une seule lecture.
+export async function listProjectCommentsForProject(
+  projectId: string,
+): Promise<ProjectComment[]> {
+  const rows = await db
+    .select()
+    .from(projectComments)
+    .where(eq(projectComments.projectId, projectId))
+    .orderBy(projectComments.createdAt, projectComments.id);
+  return rows.map(toProjectComment);
+}
+
 // ─── V1.5 — Suiveurs projet (F19) ────────────────────────────────────────────
 
 export type NewProjectFollower = {

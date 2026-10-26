@@ -10,6 +10,8 @@ import { projectTypeValues, projectReactionTypeValues } from "@/lib/types";
 export const MAX_SKILLS_PER_PROJECT = 10;
 export const MAX_PROJECT_TITLE = 120;
 export const MAX_PROJECT_BODY = 5000;
+export const MAX_PROJECT_COMMENT_BODY = 1000;
+export const MAX_PROJECT_DEPTH = 3;
 
 const uuidSchema = z
   .string()
@@ -127,7 +129,10 @@ const projectCommentBodySchema = z
   .string()
   .trim()
   .min(1, "Le commentaire ne peut pas être vide.")
-  .max(1000, "Texte trop long (1000 caractères maximum).")
+  .max(
+    MAX_PROJECT_COMMENT_BODY,
+    `Texte trop long (${MAX_PROJECT_COMMENT_BODY} caractères maximum).`,
+  )
   .refine((value) => !/[<>]/.test(value), "Le texte contient des caractères interdits.");
 
 export const createProjectCommentSchema = z
@@ -149,10 +154,14 @@ export const followProjectSchema = z
 export const createProjectUpdateSchema = z
   .object({
     projectId: uuidSchema,
-    body: bodySchema,
+    body: bodySchema.optional(),
     imageKey: updateImageKeySchema.nullable().optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (value) => Boolean(value.body) || Boolean(value.imageKey),
+    "Ajoute un texte ou une image.",
+  );
 
 export const deleteProjectUpdateSchema = z
   .object({

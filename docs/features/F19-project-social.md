@@ -58,7 +58,6 @@ type ProjectComment {
   updatedAt: DateTime!
   author: ProfileSummary!
   replies: [ProjectComment!]!
-  reactionCounts: [ProjectReaction!]!
   depth: Int!
 }
 
@@ -72,7 +71,7 @@ extend type Project {
   comments(first: Int = 20, after: String): ProjectCommentConnection!
   followerCount: Int!
   isFollowed: Boolean!
-  followers(first: Int = 20, after: String): ProfileConnection!
+  followers(first: Int = 20, after: String): ProjectFollowerConnection!
 }
 
 input AddProjectReactionInput {
@@ -158,14 +157,23 @@ CREATE INDEX project_followers_profile_idx ON project_followers (profile_id);
 - WebSocket auth : token JWT Neon Auth requis
 - Aucune donnée privée dans réponses (pas d'email, user_id)
 
+## État d'implémentation (2026-10-26)
+
+- Réactions persistantes via `src/lib/actions/project-social.ts` et `toggleProjectReaction`.
+- Commentaires persistants, réponses sur 3 niveaux, suppression par l'auteur.
+- Suivi / désabonnement persistants, liste paginée des suiveurs.
+- `hasReacted` réel dans le DataLoader GraphQL (viewer-aware).
+- Partage natif / copie du lien.
+- **En attente** : notifications WebSocket et rate limiting (voir `docs/TODO.md`).
+
 ## Critères d'acceptation
 
-- [ ] Given un projet publié, When un membre clique "J'aime", Then le compteur incrémente et le bouton passe en état actif.
-- [ ] Given une réaction existante, When le membre reclique, Then la réaction est retirée (toggle).
-- [ ] Given un commentaire, When un autre membre répond, Then la réponse s'affiche indentée (niveau 1).
-- [ ] Given 3 niveaux de réponses, When une 4ème répond, Then "Voir plus" apparaît sans indentation supplémentaire.
+- [x] Given un projet publié, When un membre clique "J'aime", Then le compteur incrémente et le bouton passe en état actif.
+- [x] Given une réaction existante, When le membre reclique, Then la réaction est retirée (toggle).
+- [x] Given un commentaire, When un autre membre répond, Then la réponse s'affiche indentée (niveau 1).
+- [x] Given 3 niveaux de réponses, When une 4ème répond, Then "Voir plus" apparaît sans indentation supplémentaire.
 - [ ] Given un suivi, When un nouveau commentaire est posté, Then le suiveur reçoit notification WebSocket temps réel.
-- [ ] Given un projet supprimé, Then toutes réactions, commentaires, suivis sont supprimés en cascade.
+- [x] Given un projet supprimé, Then toutes réactions, commentaires, suivis sont supprimés en cascade.
 
 ## Tests attendus
 

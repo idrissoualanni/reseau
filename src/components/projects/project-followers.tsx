@@ -1,132 +1,163 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { UserPlus, UserCheck, Loader2 } from "lucide-react";
-
-type ProjectFollower = {
-  projectId: string;
-  profileId: string;
-  createdAt: string;
-  profile: {
-    id: string;
-    username: string;
-    displayName: string;
-    avatarKey: string | null;
-  };
-};
+import { Loader2, UserCheck, UserPlus } from "lucide-react";
+import {
+  loadProjectFollowersPageAction,
+  toggleProjectFollowAction,
+} from "@/lib/actions/project-social";
+import type { ProjectFollowerView } from "@/lib/project-social";
 
 type ProjectFollowersProps = {
   projectId: string;
-  initialFollowers?: ProjectFollower[];
-  initialCount?: number;
-  initialIsFollowed?: boolean;
+  isAuthor: boolean;
+  initialFollowerCount: number;
+  initialIsFollowed: boolean;
+  initialFollowers: ProjectFollowerView[];
+  initialHasNextPage: boolean;
+  initialEndCursor: string | null;
 };
 
-export function ProjectFollowers({ projectId, initialFollowers = [], initialCount = 0, initialIsFollowed = false }: ProjectFollowersProps) {
+export function ProjectFollowers({
+  projectId,
+  isAuthor,
+  initialFollowerCount,
+  initialIsFollowed,
+  initialFollowers,
+  initialHasNextPage,
+  initialEndCursor,
+}: ProjectFollowersProps) {
   const [followers, setFollowers] = useState(initialFollowers);
-  const [count, setCount] = useState(initialCount);
+  const [count, setCount] = useState(initialFollowerCount);
   const [isFollowed, setIsFollowed] = useState(initialIsFollowed);
-  const [pending, startTransition] = useTransition();
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(initialFollowers.length < initialCount);
+  const [hasNextPage, setHasNextPage] = useState(initialHasNextPage);
+  const [endCursor, setEndCursor] = useState(initialEndCursor);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function handleFollow() {
+  async function handleToggleFollow() {
     if (pending) return;
-    startTransition(() => {
-      setIsFollowed(true);
-      setCount((c) => c + 1);
-    });
-
-    try {
-      // TODO: Call GraphQL mutation followProject
-      console.log("Follow project:", projectId);
-    } catch (error) {
-      startTransition(() => {
-        setIsFollowed(false);
-        setCount((c) => c - 1);
-      });
-      console.error("Failed to follow:", error);
+    setError(null);
+    setPending(true);
+    const result = await toggleProjectFollowAction({ projectId });
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
     }
-  }
-
-  async function handleUnfollow() {
-    if (pending) return;
-    startTransition(() => {
-      setIsFollowed(false);
-      setCount((c) => c - 1);
-    });
-
-    try {
-      // TODO: Call GraphQL mutation unfollowProject
-      console.log("Unfollow project:", projectId);
-    } catch (error) {
-      startTransition(() => {
-        setIsFollowed(true);
-        setCount((c) => c + 1);
-      });
-      console.error("Failed to unfollow:", error);
-    }
+    setFollowers(result.data.followers);
+    setCount(result.data.followerCount);
+    setIsFollowed(result.data.isFollowed);
+    setHasNextPage(result.data.hasNextPage);
+    setEndCursor(result.data.endCursor);
   }
 
   async function loadMore() {
-    if (pending || !hasMore) return;
-    // TODO: Implement pagination
-    console.log("Load more followers");
+    if (pending || !hasNextPage || !endCursor) return;
+    setError(null);
+    setPending(true);
+    const result = await loadProjectFollowersPageAction({
+      projectId,
+      after: endCursor,
+    });
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    setFollowers((current) => [
+      ...current,
+      ...result.data.followers.filter(
+        (follower) => !current.some((item) => item.profileId === follower.profileId),
+      ),
+    ]);
+    setCount(result.data.followerCount);
+    setHasNextPage(result.data.hasNextPage);
+    setEndCursor(result.data.endCursor);
   }
 
   return (
     <div className="space-y-4">
-      {/* Follow button + count */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Button
-            variant={isFollowed ? "secondary" : "default"}
-            size="sm"
-            onClick={isFollowed ? handleUnfollow : handleFollow}
-            disabled={pending}
-            className="gap-2"
-          >
-            {pending ? <Loader2 className="size-4 animate-spin" /> : isFollowed ? <UserCheck className="size-4" /> : <UserPlus className="size-4" />}
-            {isFollowed ? "Suivi" : "Suivre"}
-          </Button>
-          <span className="text-sm text-muted-foreground">
+          {!isAuthor ? (
+            <Button
+              variant={isFollowed ? "secondary" : "default"}
+              size="sm"
+              onClick={() => void handleToggleFollow()}
+              disabled={pending}
+              className="gap-2"
+            >
+              {pending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : isFollowed ? (
+                <UserCheck className="size-4" />
+              ) : (
+                <UserPlus className="size-4" />
+              )}
+              {isFollowed ? "Suivi" : "Suivre"}
+            </Button>
+          ) : (
+            <span className="text-muted-foreground text-sm">Ton projet</span>
+          )}
+          <span className="text-muted-foreground text-sm">
             {count} {count === 1 ? "suiveur" : "suiveurs"}
           </span>
         </div>
       </div>
 
-      {/* Followers list */}
-      {followers.length === 0 && !isFollowed ? (
-        <p className="text-muted-foreground text-sm text-center py-8">
-          Aucun suiveur pour l'instant.
+      {error ? (
+        <p className="text-destructive text-sm" role="alert">
+          {error}
+        </p>
+      ) : null}
+
+      {followers.length === 0 ? (
+        <p className="text-muted-foreground py-8 text-center text-sm">
+          Aucun suiveur pour l&apos;instant.
         </p>
       ) : (
         <div className="space-y-2">
           <ScrollArea className="h-[300px]">
-            <div className="space-y-2">
+            <div className="space-y-2 pr-3">
               {followers.map((follower) => (
-                <div key={follower.profileId} className="flex items-center gap-3">
+                <Link
+                  key={follower.profileId}
+                  href={`/u/${follower.profile.username}`}
+                  className="hover:bg-muted/60 flex items-center gap-3 rounded-lg p-2 transition-colors"
+                >
                   <Avatar
                     name={follower.profile.displayName}
-                    src={follower.profile.avatarKey}
+                    src={follower.profile.avatarUrl}
                     size="sm"
                   />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{follower.profile.displayName}</p>
-                    <p className="text-muted-foreground text-xs truncate">@{follower.profile.username}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {follower.profile.displayName}
+                    </p>
+                    <p className="text-muted-foreground truncate text-xs">
+                      @{follower.profile.username}
+                    </p>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </ScrollArea>
-          {hasMore && (
-            <Button variant="ghost" size="sm" className="w-full" onClick={loadMore} disabled={pending}>
+          {hasNextPage ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full"
+              onClick={() => void loadMore()}
+              disabled={pending}
+            >
               {pending ? <Loader2 className="size-4 animate-spin" /> : "Voir plus"}
             </Button>
-          )}
+          ) : null}
         </div>
       )}
     </div>

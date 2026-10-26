@@ -1,118 +1,90 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar } from "@/components/avatar";
 import { formatRelativeTime } from "@/lib/relative-time";
-import { ChevronRight } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-
-type ProjectComment = {
-  id: string;
-  projectId: string;
-  parentId: string | null;
-  authorId: string;
-  body: string;
-  createdAt: string;
-  updatedAt: string;
-  author: {
-    id: string;
-    username: string;
-    displayName: string;
-    avatarKey: string | null;
-  };
-  replies: ProjectComment[];
-  depth: number;
-};
+import { ChevronDown, Loader2, Reply, Trash2 } from "lucide-react";
+import {
+  createProjectCommentAction,
+  deleteProjectCommentAction,
+} from "@/lib/actions/project-social";
+import type { ProjectCommentView } from "@/lib/project-social";
+import { MAX_PROJECT_COMMENT_BODY, MAX_PROJECT_DEPTH } from "@/lib/validation/project";
 
 type ProjectCommentsProps = {
   projectId: string;
-  initialComments?: ProjectComment[];
+  viewerId: string;
+  initialComments: ProjectCommentView[];
 };
 
-const MAX_VISIBLE_DEPTH = 3;
-
-export function ProjectComments({ projectId, initialComments = [] }: ProjectCommentsProps) {
+export function ProjectComments({
+  projectId,
+  viewerId,
+  initialComments,
+}: ProjectCommentsProps) {
   const [comments, setComments] = useState(initialComments);
-  const [pending, startTransition] = useTransition();
-  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleAddComment(body: string, parentId?: string) {
-    const optimisticComment: ProjectComment = {
-      id: `temp-${Date.now()}`,
+    if (pending) return false;
+    setError(null);
+    setPending(true);
+    const result = await createProjectCommentAction({
       projectId,
       parentId: parentId ?? null,
-      authorId: "current-user", // TODO: get from session
       body,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      author: {
-        id: "current-user",
-        username: "user",
-        displayName: "Vous",
-        avatarKey: null,
-      },
-      replies: [],
-      depth: parentId ? 1 : 0,
-    };
-
-    // Optimistic update
-    startTransition(() => {
-      if (parentId) {
-        setComments((prev) => addReplyRecursive(prev, parentId, optimisticComment));
-      } else {
-        setComments((prev) => [optimisticComment, ...prev]);
-      }
     });
-
-    try {
-      // TODO: Call GraphQL mutation
-      // const result = await createProjectComment({ projectId, parentId, body });
-      // Replace optimistic with real
-      console.log("Add comment:", { projectId, parentId, body });
-    } catch (error) {
-      // Rollback
-      startTransition(() => {
-        setComments((prev) => removeOptimisticComment(prev, optimisticComment.id));
-      });
-      console.error("Failed to add comment:", error);
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return false;
     }
+    setComments(result.data);
+    return true;
   }
 
   async function handleDeleteComment(id: string) {
-    const originalComments = comments;
-    startTransition(() => {
-      setComments((prev) => removeCommentRecursive(prev, id));
-    });
-
-    try {
-      // TODO: Call GraphQL mutation
-      // await deleteProjectComment(id);
-      console.log("Delete comment:", id);
-    } catch (error) {
-      // Rollback
-      startTransition(() => {
-        setComments(originalComments);
-      });
-      console.error("Failed to delete comment:", error);
+    if (pending) return;
+    setError(null);
+    setPending(true);
+    const result = await deleteProjectCommentAction({ id, projectId });
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
     }
+    setComments(result.data);
   }
 
   return (
-    <div className="space-y-4">
-      {/* Add comment form */}
-      <ProjectCommentForm projectId={projectId} onSubmit={handleAddComment} />
+    <div className="space-y-5">
+      <ProjectCommentForm onSubmit={handleAddComment} pending={pending} />
 
-      {/* Comments list */}
+      {error ? (
+        <p className="text-destructive text-sm" role="alert">
+          {error}
+        </p>
+      ) : null}
+
       {comments.length === 0 ? (
-        <p className="text-muted-foreground text-sm text-center py-8">
-          Aucun commentaire pour l'instant. Soyez le premier à réagir !
+        <p className="text-muted-foreground py-8 text-center text-sm">
+          Aucun commentaire pour l&apos;instant. Soyez le premier à réagir !
         </p>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {comments.map((comment) => (
-            <CommentThread key={comment.id} comment={comment} onDelete={handleDeleteComment} onReply={handleAddComment} />
+            <CommentThread
+              key={comment.id}
+              comment={comment}
+              viewerId={viewerId}
+              pending={pending}
+              onDelete={handleDeleteComment}
+              onReply={handleAddComment}
+            />
           ))}
         </div>
       )}
@@ -122,160 +94,200 @@ export function ProjectComments({ projectId, initialComments = [] }: ProjectComm
 
 function CommentThread({
   comment,
+  viewerId,
+  pending,
   onDelete,
   onReply,
   depth = 0,
 }: {
-  comment: ProjectComment;
-  onDelete: (id: string) => void;
-  onReply: (body: string, parentId: string) => void;
+  comment: ProjectCommentView;
+  viewerId: string;
+  pending: boolean;
+  onDelete: (id: string) => Promise<void>;
+  onReply: (body: string, parentId: string) => Promise<boolean>;
   depth?: number;
 }) {
   const [showReplies, setShowReplies] = useState(false);
   const [replying, setReplying] = useState(false);
   const [replyBody, setReplyBody] = useState("");
-  const isDeep = depth >= MAX_VISIBLE_DEPTH;
+  const [replyPending, setReplyPending] = useState(false);
+  const isOwner = comment.author.id === viewerId;
   const hasReplies = comment.replies.length > 0;
+  const canReply = depth < MAX_PROJECT_DEPTH - 1;
 
-  const handleSubmitReply = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (replyBody.trim()) {
-      onReply(replyBody.trim(), comment.id);
+  async function handleSubmitReply(event: React.FormEvent) {
+    event.preventDefault();
+    if (!replyBody.trim() || pending || replyPending) return;
+    setReplyPending(true);
+    const ok = await onReply(replyBody.trim(), comment.id);
+    setReplyPending(false);
+    if (ok) {
       setReplyBody("");
       setReplying(false);
+      setShowReplies(true);
     }
-  };
+  }
 
   return (
-    <div className={`flex gap-3 ${depth > 0 ? "ml-8 border-l-2 border-muted/20 pl-4" : ""}`}>
-      <Avatar
-        name={comment.author.displayName}
-        src={comment.author.avatarKey}
-        size="sm"
-        className="flex-shrink-0 mt-1"
-      />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-sm">{comment.author.displayName}</span>
-          <span className="text-muted-foreground text-xs">
-            {formatRelativeTime(comment.createdAt)}
-          </span>
-          {comment.author.id === "current-user" && (
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onDelete(comment.id)}>
-              <ChevronRight className="size-3 rotate-90" />
-            </Button>
-          )}
-        </div>
-        <p className="text-sm mt-1">{comment.body}</p>
-
-        {/* Reply form */}
-        {replying && (
-          <form onSubmit={handleSubmitReply} className="mt-2 flex gap-2">
-            <Textarea
-              value={replyBody}
-              onChange={(e) => setReplyBody(e.target.value)}
-              placeholder="Répondre..."
-              className="min-h-[60px] resize-none flex-1"
-              rows={2}
-            />
-            <div className="flex gap-1 self-end">
-              <Button type="submit" size="sm">Répondre</Button>
-              <Button type="button" variant="ghost" size="sm" onClick={() => setReplying(false)}>
-                Annuler
-              </Button>
-            </div>
-          </form>
-        )}
-
-        {/* Replies */}
-        {hasReplies && (
-          <div className="mt-3">
-            {comment.replies.length <= 3 || showReplies ? (
-              <>
-                {comment.replies.map((reply) => (
-                  <CommentThread key={reply.id} comment={reply} onDelete={onDelete} onReply={onReply} depth={depth + 1} />
-                ))}
-              </>
-            ) : (
+    <div
+      className={
+        depth > 0
+          ? "border-border ml-4 border-l pl-4 sm:ml-8"
+          : undefined
+      }
+    >
+      <div className="flex gap-3">
+        <Avatar
+          name={comment.author.displayName}
+          src={comment.author.avatarUrl}
+          size="sm"
+          className="mt-1 flex-shrink-0"
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={`/u/${comment.author.username}`}
+              className="text-sm font-medium hover:underline"
+            >
+              {comment.author.displayName}
+            </Link>
+            <span className="text-muted-foreground text-xs">
+              {formatRelativeTime(comment.createdAt)}
+            </span>
+            {isOwner ? (
               <Button
+                type="button"
                 variant="ghost"
-                size="sm"
-                className="text-muted-foreground"
-                onClick={() => setShowReplies(true)}
+                size="icon"
+                className="ml-auto size-7"
+                onClick={() => void onDelete(comment.id)}
+                disabled={pending}
+                aria-label="Supprimer le commentaire"
               >
-                Voir les {comment.replies.length} réponses
+                <Trash2 className="text-destructive size-3.5" />
               </Button>
-            )}
+            ) : null}
           </div>
-        )}
+          <p className="mt-1 text-sm whitespace-pre-wrap">{comment.body}</p>
 
-        {/* Reply button */}
-        {!replying && depth < MAX_VISIBLE_DEPTH && (
-          <Button variant="ghost" size="sm" className="mt-1 text-muted-foreground" onClick={() => setReplying(true)}>
-            Répondre
-          </Button>
-        )}
+          {canReply && !replying ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground mt-1 h-7 px-2"
+              onClick={() => setReplying(true)}
+            >
+              <Reply className="size-3.5" />
+              Répondre
+            </Button>
+          ) : null}
+
+          {replying ? (
+            <form onSubmit={handleSubmitReply} className="mt-2 space-y-2">
+              <Textarea
+                value={replyBody}
+                onChange={(event) => setReplyBody(event.target.value)}
+                placeholder="Répondre..."
+                className="min-h-[60px] resize-none"
+                rows={2}
+                maxLength={MAX_PROJECT_COMMENT_BODY}
+                autoFocus
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setReplying(false);
+                    setReplyBody("");
+                  }}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={!replyBody.trim() || pending || replyPending}
+                >
+                  {replyPending ? <Loader2 className="size-4 animate-spin" /> : "Répondre"}
+                </Button>
+              </div>
+            </form>
+          ) : null}
+
+          {hasReplies ? (
+            <div className="mt-3 space-y-4">
+              {comment.replies.length <= 3 || showReplies ? (
+                comment.replies.map((reply) => (
+                  <CommentThread
+                    key={reply.id}
+                    comment={reply}
+                    viewerId={viewerId}
+                    pending={pending}
+                    onDelete={onDelete}
+                    onReply={onReply}
+                    depth={depth + 1}
+                  />
+                ))
+              ) : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground"
+                  onClick={() => setShowReplies(true)}
+                >
+                  <ChevronDown className="size-4" />
+                  Voir les {comment.replies.length} réponses
+                </Button>
+              )}
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
 }
 
 function ProjectCommentForm({
-  projectId,
   onSubmit,
+  pending,
 }: {
-  projectId: string;
-  onSubmit: (body: string, parentId?: string) => void;
+  onSubmit: (body: string) => Promise<boolean>;
+  pending: boolean;
 }) {
   const [body, setBody] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (body.trim()) {
-      onSubmit(body.trim());
-      setBody("");
-    }
-  };
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!body.trim() || pending || submitting) return;
+    setSubmitting(true);
+    const ok = await onSubmit(body.trim());
+    setSubmitting(false);
+    if (ok) setBody("");
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-2">
       <Textarea
         value={body}
-        onChange={(e) => setBody(e.target.value)}
+        onChange={(event) => setBody(event.target.value)}
         placeholder="Écrire un commentaire..."
         className="min-h-[80px] resize-none"
         rows={3}
+        maxLength={MAX_PROJECT_COMMENT_BODY}
       />
-      <div className="flex justify-end">
-        <Button type="submit" disabled={!body.trim() || body.trim().length > 1000}>
-          Commenter
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-muted-foreground text-xs">
+          {body.length}/{MAX_PROJECT_COMMENT_BODY}
+        </span>
+        <Button type="submit" disabled={!body.trim() || pending || submitting}>
+          {submitting ? <Loader2 className="size-4 animate-spin" /> : "Commenter"}
         </Button>
       </div>
     </form>
   );
-}
-
-function addReplyRecursive(comments: ProjectComment[], parentId: string, newReply: ProjectComment): ProjectComment[] {
-  return comments.map((comment) => {
-    if (comment.id === parentId) {
-      return { ...comment, replies: [...comment.replies, newReply] };
-    }
-    if (comment.replies.length > 0) {
-      return { ...comment, replies: addReplyRecursive(comment.replies, parentId, newReply) };
-    }
-    return comment;
-  });
-}
-
-function removeCommentRecursive(comments: ProjectComment[], id: string): ProjectComment[] {
-  return comments
-    .filter((comment) => comment.id !== id)
-    .map((comment) => ({
-      ...comment,
-      replies: removeCommentRecursive(comment.replies, id),
-    }));
-}
-
-function removeOptimisticComment(comments: ProjectComment[], optimisticId: string): ProjectComment[] {
-  return removeCommentRecursive(comments, optimisticId);
 }
