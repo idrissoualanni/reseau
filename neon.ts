@@ -9,12 +9,4 @@ export default defineConfig({
     projet: { access: "public_read" },
     videos: { access: "public_read" },
   },
-  preview: {
-    realtime: {
-      allowedOrigins: [
-        "http://localhost:3000",
-        "https://reseau-3tuk.onrender.com",
-      ],
-    },
-  },
 });
