@@ -53,6 +53,7 @@ export type Project = {
   title: string;
   body: string;
   coverKey: string | null;
+  imageKeys: string[];
   status: ProjectStatus;
   publishedAt: Date | null;
   type: ProjectType;
@@ -65,6 +66,7 @@ export type Post = {
   authorId: string;
   body: string;
   imageKey: string | null;
+  imageKeys: string[];
   createdAt: Date;
   updatedAt: Date;
 };

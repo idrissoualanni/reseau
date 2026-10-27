@@ -116,6 +116,8 @@ export const projects = pgTable(
     title: text("title").notNull(),
     body: text("body").notNull(),
     coverKey: text("cover_key"),
+    // Galerie 5 images (V1.5) : images 2 à 5, la couverture reste `cover_key`.
+    imageKeys: text("image_keys").array().notNull().default(sql`'{}'::text[]`),
     status: projectStatus("status").notNull().default("draft"),
     publishedAt: timestamp("published_at", { withTimezone: true }),
     // Type de projet (F18) : personal, team, open_source, research, coursework.
@@ -154,6 +156,7 @@ export const projects = pgTable(
     ),
     check("projects_title_check", sql`char_length(${t.title}) between 3 and 120`),
     check("projects_body_check", sql`char_length(${t.body}) between 1 and 5000`),
+    check("projects_image_keys_check", sql`cardinality(${t.imageKeys}) between 0 and 4`),
   ],
 );
 
@@ -186,6 +189,8 @@ export const posts = pgTable(
     // Clé de l'image du post (F12) : `posts/{profileId}/{uuid}.{ext}`, NULL si
     // le post n'a pas d'image. Le schéma GraphQL expose `imageUrl`, jamais la clé.
     imageKey: text("image_key"),
+    // Galerie 5 images (V1.5) : images 2 à 5, la première image reste `image_key`.
+    imageKeys: text("image_keys").array().notNull().default(sql`'{}'::text[]`),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
@@ -194,6 +199,7 @@ export const posts = pgTable(
   (t) => [
     index("posts_author_idx").on(t.authorId, t.createdAt.desc(), t.id.desc()),
     check("posts_body_check", sql`char_length(${t.body}) between 1 and 5000`),
+    check("posts_image_keys_check", sql`cardinality(${t.imageKeys}) between 0 and 4`),
   ],
 );
 

@@ -86,6 +86,9 @@ type Post {
   """URL publique de l'image du post, quand elle existe."""
   imageUrl: String
 
+  """Galerie du post : couverture puis images supplémentaires (5 max)."""
+  imageUrls: [String!]
+
   """Nombre de j'aime sur le post."""
   likeCount: Int
   updatedAt: DateTime
@@ -134,6 +137,9 @@ type Project {
   followerCount: Int
   followers(after: String, first: Int): ProjectFollowerConnection
   id: ID
+
+  """Galerie du projet : couverture puis images supplémentaires (5 max)."""
+  imageUrls: [String!]
   isFollowed: Boolean
   publishedAt: DateTime
   reactions: [ProjectReaction!]
