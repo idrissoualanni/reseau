@@ -391,7 +391,10 @@ export type NewMessage = {
 export async function insertMessage(input: NewMessage): Promise<EncryptedMessage> {
   try {
     return await db.transaction(async (tx) => {
-      const [row] = await tx.insert(messages).values(input).returning();
+      const [row] = await tx
+        .insert(messages)
+        .values({ ...input, id: input.clientId })
+        .returning();
       if (!row) throw new Error("Message non créé.");
       await tx
         .update(conversations)

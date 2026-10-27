@@ -55,6 +55,7 @@ export function toConversationSummaryDto(summary: ConversationSummary) {
   return {
     id: conversation.id,
     kind: conversation.kind,
+    createdBy: conversation.createdBy,
     createdAt: conversation.createdAt.toISOString(),
     lastMessageAt: conversation.lastMessageAt?.toISOString() ?? null,
     unreadCount: summary.unreadCount,
@@ -69,6 +70,7 @@ export function toConversationDto(conversation: Conversation) {
   return {
     id: conversation.id,
     kind: conversation.kind,
+    createdBy: conversation.createdBy,
     createdAt: conversation.createdAt.toISOString(),
     lastMessageAt: conversation.lastMessageAt?.toISOString() ?? null,
   };
