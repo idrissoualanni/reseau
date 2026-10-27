@@ -55,6 +55,14 @@ export function getPublicUrl(key: string): string | null {
   return `${env.AWS_ENDPOINT_URL_S3}/${bucketForKey(key)}/${key}`;
 }
 
+// Galerie 5 images (V1.5) : couverture + images supplémentaires, en URLs publiques.
+export function galleryUrls(coverKey: string | null, extraKeys: string[] = []): string[] {
+  return [coverKey, ...extraKeys]
+    .filter((key): key is string => Boolean(key))
+    .map((key) => getPublicUrl(key))
+    .filter((url): url is string => Boolean(url));
+}
+
 // Clé de stockage d'une couverture de projet : `projects/{profileId}/...`.
 export function projectCoverPrefix(profileId: string): string {
   return `projects/${profileId}/`;

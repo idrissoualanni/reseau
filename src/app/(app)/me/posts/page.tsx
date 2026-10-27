@@ -5,7 +5,7 @@ import { PenLine, Plus } from "lucide-react";
 import { requireSession } from "@/lib/auth";
 import { getOwnProfile } from "@/lib/profile";
 import { listOwnPosts } from "@/lib/posts";
-import { getPublicUrl } from "@/lib/storage";
+import { galleryUrls, getPublicUrl } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/page-shell";
 import { MyPostsList } from "@/components/posts/my-posts-list";
@@ -28,6 +28,7 @@ export default async function MyPostsPage() {
     id: post.id,
     body: post.body,
     imageUrl: post.imageKey ? getPublicUrl(post.imageKey) : null,
+    imageUrls: galleryUrls(post.imageKey, post.imageKeys),
     createdAt: post.createdAt.toISOString(),
     updatedAt: post.updatedAt.toISOString(),
   }));

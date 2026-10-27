@@ -10,11 +10,13 @@ import { PageShell } from "@/components/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ImageGallery } from "@/components/ui/image-gallery";
 import { Avatar } from "@/components/avatar";
 import { SkillBadge } from "@/components/skill-badge";
 import { NotFoundError } from "@/lib/errors";
 import { ProjectTabs } from "@/components/projects/project-tabs";
 import { Pencil } from "lucide-react";
+import { galleryUrls } from "@/lib/storage";
 
 // Détail d'un projet publié (F07) + onglets V1.5 (F19/F20) : Aperçu | Activité | Discussion | Suiveurs
 export const instant = false;
@@ -50,6 +52,7 @@ export default async function ProjectDetailPage({
 
   const isAuthor = project.authorId === profile.id;
   const isPublished = project.status === "published";
+  const imageUrls = galleryUrls(project.coverKey, project.imageKeys);
   const social = isPublished
     ? await loadProjectSocial(
         { userId: session.user.id, profileId: profile.id },
@@ -94,6 +97,10 @@ export default async function ProjectDetailPage({
             ) : null}
           </div>
         </header>
+
+        {imageUrls.length > 0 ? (
+          <ImageGallery images={imageUrls} alt={project.title} />
+        ) : null}
 
         <section className="flex items-center gap-3">
           {author ? (

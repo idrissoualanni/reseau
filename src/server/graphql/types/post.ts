@@ -15,7 +15,7 @@ import {
   type PostLikeResult,
 } from "@/lib/posts";
 import { listPostsQuerySchema, postIdSchema } from "@/lib/validation/post";
-import { getPublicUrl } from "@/lib/storage";
+import { galleryUrls, getPublicUrl } from "@/lib/storage";
 import { requireProfile, run, validateInput } from "@/server/graphql/errors";
 import { PageInfoRef } from "./connection";
 import { ProfileSummaryRef } from "./profile";
@@ -32,6 +32,10 @@ export const PostRef = builder.objectRef<Post>("Post").implement({
       nullable: true,
       description: "URL publique de l'image du post, quand elle existe.",
       resolve: (post) => (post.imageKey ? getPublicUrl(post.imageKey) : null),
+    }),
+    imageUrls: t.stringList({
+      description: "Galerie du post : couverture puis images supplémentaires (5 max).",
+      resolve: (post) => galleryUrls(post.imageKey, post.imageKeys),
     }),
     createdAt: t.field({ type: "DateTime", resolve: (post) => post.createdAt }),
     updatedAt: t.field({ type: "DateTime", resolve: (post) => post.updatedAt }),

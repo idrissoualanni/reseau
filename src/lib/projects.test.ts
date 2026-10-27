@@ -46,6 +46,7 @@ function project(overrides: Partial<Project> = {}): Project {
     title: "Covoiturage",
     body: "Une app de covoiturage.",
     coverKey: null,
+    imageKeys: [],
     status: "draft",
     publishedAt: null,
     type: "personal",

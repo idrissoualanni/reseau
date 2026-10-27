@@ -16,16 +16,22 @@ import {
 } from "@/lib/repositories/profiles";
 import { toAuthorSummary, type AuthorSummary } from "@/lib/api/mappers/profile";
 import type { Post } from "@/lib/types";
-import { getPublicUrl } from "@/lib/storage";
+import { galleryUrls, getPublicUrl } from "@/lib/storage";
 
 // Assemblage du fil de posts (F11) : une page de posts + leurs auteurs et
 // commentaires, chargés par lots (jamais de N+1). Les widgets DTO sont créés
 // côte serveur : commentaires triés par date croissante pour l'affichage.
 
+// Galerie 5 images (V1.5) : couverture + images supplémentaires, URLs publiques.
+export function postImageUrls(post: Pick<Post, "imageKey" | "imageKeys">): string[] {
+  return galleryUrls(post.imageKey, post.imageKeys);
+}
+
 export type FeedPost = {
   id: string;
   body: string;
   imageUrl: string | null;
+  imageUrls: string[];
   createdAt: string;
   authorId: string;
   commentCount: number;
@@ -158,6 +164,7 @@ async function assembleFeed(
         id: post.id,
         body: post.body,
         imageUrl: post.imageKey ? getPublicUrl(post.imageKey) : null,
+        imageUrls: postImageUrls(post),
         createdAt: post.createdAt.toISOString(),
         authorId: post.authorId,
         commentCount: counts.get(post.id) ?? 0,
@@ -184,6 +191,7 @@ export async function loadPostDetail(
 ): Promise<{
   post: Post;
   imageUrl: string | null;
+  imageUrls: string[];
   author: AuthorSummary | null;
   comments: FeedComment[];
   likeCount: number;
@@ -205,6 +213,7 @@ export async function loadPostDetail(
   return {
     post,
     imageUrl: post.imageKey ? getPublicUrl(post.imageKey) : null,
+    imageUrls: postImageUrls(post),
     author: toAuthorSummary(authorById.get(post.authorId) ?? null),
     comments,
     likeCount,

@@ -9,7 +9,7 @@ import type {
   SpaceAccessMethod,
 } from "@/lib/types";
 import type { SpaceWithMemberCount } from "@/lib/repositories/spaces";
-import { getPublicUrl } from "@/lib/storage";
+import { galleryUrls, getPublicUrl } from "@/lib/storage";
 import { toAuthorSummary } from "./profile";
 
 // Mappers de l'administration (F17). `userId` et `avatarKey` ne sortent jamais :
@@ -65,6 +65,7 @@ export function toAdminPostDto(record: AdminPostRecord) {
     id: record.post.id,
     body: record.post.body,
     imageUrl: record.post.imageKey ? getPublicUrl(record.post.imageKey) : null,
+    imageUrls: galleryUrls(record.post.imageKey, record.post.imageKeys),
     author: toAuthorSummary(record.author),
     createdAt: record.post.createdAt.toISOString(),
   };
@@ -76,6 +77,7 @@ export function toAdminProjectDto(record: AdminProjectRecord) {
     title: record.project.title,
     body: record.project.body,
     coverUrl: record.project.coverKey ? getPublicUrl(record.project.coverKey) : null,
+    imageUrls: galleryUrls(record.project.coverKey, record.project.imageKeys),
     status: record.project.status,
     author: toAuthorSummary(record.author),
     publishedAt: record.project.publishedAt?.toISOString() ?? null,

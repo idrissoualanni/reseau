@@ -48,6 +48,7 @@ function toPost(row: typeof posts.$inferSelect): Post {
     authorId: row.authorId,
     body: row.body,
     imageKey: row.imageKey,
+    imageKeys: row.imageKeys,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -60,6 +61,7 @@ function toProject(row: typeof projects.$inferSelect): Project {
     title: row.title,
     body: row.body,
     coverKey: row.coverKey,
+    imageKeys: row.imageKeys,
     status: row.status,
     publishedAt: row.publishedAt,
     type: row.type,

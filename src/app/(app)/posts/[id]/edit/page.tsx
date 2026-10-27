@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { requireSession } from "@/lib/auth";
 import { getOwnProfile } from "@/lib/profile";
 import { getOwnPost } from "@/lib/posts";
-import { getPublicUrl } from "@/lib/storage";
+import { galleryUrls, getPublicUrl } from "@/lib/storage";
 import { NotFoundError } from "@/lib/errors";
 import { PageShell } from "@/components/page-shell";
 import { Card, CardContent } from "@/components/ui/card";
@@ -55,7 +55,10 @@ export default async function EditPostPage({
             post={{
               id: post.id,
               body: post.body,
-              imageUrl: post.imageKey ? getPublicUrl(post.imageKey) : null,
+              imageKeys: [post.imageKey, ...post.imageKeys].filter(
+                (key): key is string => Boolean(key),
+              ),
+              imageUrls: galleryUrls(post.imageKey, post.imageKeys),
             }}
           />
         </CardContent>

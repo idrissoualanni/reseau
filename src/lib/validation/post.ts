@@ -28,6 +28,15 @@ export const postImageKeySchema = z
 
 export const MAX_POST_IMAGE_BYTES = MAX_IMAGE_BYTES;
 
+// Galerie 5 images (V1.5) : jusqu'à 4 images supplémentaires, la première reste `imageKey`.
+export const MAX_GALLERY_IMAGES = 4;
+
+export const galleryImageKeysSchema = z
+  .array(postImageKeySchema)
+  .max(MAX_GALLERY_IMAGES, "5 images maximum par publication.")
+  .refine((keys) => new Set(keys).size === keys.length, "Images en double.")
+  .optional();
+
 // Demande d'URL présignée d'upload d'une image de post (F12). L'identité vient
 // de la session ; le client ne fournit que le type et la taille (bornée).
 export const presignPostImageSchema = z

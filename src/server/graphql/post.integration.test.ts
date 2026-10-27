@@ -57,6 +57,7 @@ function post(overrides: Partial<Post> = {}): Post {
     authorId: "p1",
     body: "J'ai terminé mon POC React.",
     imageKey: null,
+    imageKeys: [],
     createdAt: new Date("2026-01-01T00:00:00Z"),
     updatedAt: new Date("2026-01-01T00:00:00Z"),
     ...overrides,

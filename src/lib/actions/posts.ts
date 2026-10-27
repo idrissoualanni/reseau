@@ -6,7 +6,7 @@ import { z } from "zod";
 import { requireSession } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
 import { getOwnProfile } from "@/lib/profile";
-import { getPublicUrl } from "@/lib/storage";
+import { galleryUrls, getPublicUrl } from "@/lib/storage";
 import { loadPostsFeed, type PostFeedPage } from "@/lib/posts-feed";
 import {
   addComment,
@@ -51,8 +51,16 @@ function toErrorState(error: unknown): PostFormState {
   return { error: "Une erreur est survenue, réessaie." };
 }
 
-async function requireUseCaseContext(): Promise<{ userId: string; profileId: string }> {
-  const session = await requireSession();
+// Galerie : images 2 à 5 envoyées par le formulaire (4 maximum).
+function galleryKeys(formData: FormData): string[] {
+  return formData
+    .getAll("imageKeys")
+    .map((value) => String(value))
+    .filter((value) => value.length > 0)
+    .slice(0, 4);
+}
+
+async function requireUseCaseContext(): Promise<{ userId: string; profileId: string }> {  const session = await requireSession();
   const profile = await getOwnProfile(session.user.id);
   if (!profile) redirect("/onboarding/profile");
   return { userId: session.user.id, profileId: profile.id };
@@ -66,6 +74,7 @@ export async function createPostAction(
   const parsed = createPostSchema.safeParse({
     body: String(formData.get("body") ?? ""),
     imageKey: String(formData.get("imageKey") ?? "") || undefined,
+    imageKeys: galleryKeys(formData),
   });
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
 
@@ -96,6 +105,7 @@ export async function updatePostAction(
     id: String(formData.get("id") ?? ""),
     body: String(formData.get("body") ?? ""),
     imageKey,
+    imageKeys: formData.has("imageKeys") ? galleryKeys(formData) : undefined,
   });
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
 
@@ -208,6 +218,7 @@ export type OwnPostSummary = {
   id: string;
   body: string;
   imageUrl: string | null;
+  imageUrls: string[];
   createdAt: string;
   updatedAt: string;
 };
@@ -235,6 +246,7 @@ export async function loadOwnPostsPage(input: {
       id: post.id,
       body: post.body,
       imageUrl: post.imageKey ? getPublicUrl(post.imageKey) : null,
+      imageUrls: galleryUrls(post.imageKey, post.imageKeys),
       createdAt: post.createdAt.toISOString(),
       updatedAt: post.updatedAt.toISOString(),
     })),

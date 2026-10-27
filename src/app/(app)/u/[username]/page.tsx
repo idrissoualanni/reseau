@@ -7,7 +7,7 @@ import { loadAuthorPostsFeed } from "@/lib/posts-feed";
 import { listProjectSkillsForProjects } from "@/lib/repositories/projects";
 import { findProfileSummariesByIds } from "@/lib/repositories/profiles";
 import { toAuthorSummary, type AuthorSummary } from "@/lib/api/mappers/profile";
-import { getPublicUrl } from "@/lib/storage";
+import { galleryUrls, getPublicUrl } from "@/lib/storage";
 import { PageShell } from "@/components/page-shell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/avatar";
@@ -31,6 +31,7 @@ const toFeedProject = (project: ProjectEdge["node"]) => ({
   body: project.body,
   excerpt: project.body.length <= 160 ? project.body : `${project.body.slice(0, 160).trimEnd()}…`,
   coverUrl: project.coverKey ? getPublicUrl(project.coverKey) : null,
+  imageUrls: galleryUrls(project.coverKey, project.imageKeys),
   publishedAt: project.publishedAt?.toISOString() ?? null,
   authorId: project.authorId,
 });

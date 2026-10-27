@@ -1,4 +1,4 @@
-import { getPublicUrl } from "@/lib/storage";
+import { galleryUrls, getPublicUrl } from "@/lib/storage";
 import type { ViewerContext } from "@/lib/context";
 import { listProjects } from "@/lib/projects";
 import { findProfileSummariesByIds } from "@/lib/repositories/profiles";
@@ -16,6 +16,7 @@ export type FeedProject = {
   body: string;
   excerpt: string;
   coverUrl: string | null;
+  imageUrls: string[];
   publishedAt: string | null;
   authorId: string;
 };
@@ -53,6 +54,7 @@ function toFeedProject(project: Project): FeedProject {
     body: project.body,
     excerpt: excerptOf(project.body),
     coverUrl: project.coverKey ? getPublicUrl(project.coverKey) : null,
+    imageUrls: galleryUrls(project.coverKey, project.imageKeys),
     publishedAt: project.publishedAt?.toISOString() ?? null,
     authorId: project.authorId,
   };

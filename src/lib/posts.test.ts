@@ -58,6 +58,7 @@ function post(overrides: Partial<Post> = {}): Post {
     authorId: "p1",
     body: "J'ai terminé mon POC React.",
     imageKey: null,
+    imageKeys: [],
     createdAt: new Date("2026-01-01T00:00:00Z"),
     updatedAt: new Date("2026-01-01T00:00:00Z"),
     ...overrides,
@@ -91,6 +92,7 @@ describe("createPost (F11)", () => {
       "p1",
       "J'ai terminé mon POC React.",
       null,
+      [],
     );
     expect(created.id).toBe("post-1");
   });
@@ -109,6 +111,7 @@ describe("createPost (F11)", () => {
       uuidProfile,
       "Mon POC React.",
       `posts/${uuidProfile}/img.jpg`,
+      [],
     );
     expect(created.imageKey).toBe(`posts/${uuidProfile}/img.jpg`);
   });
@@ -240,6 +243,7 @@ describe("updatePost (F11)", () => {
       "post-1",
       "p1",
       "Texte corrigé.",
+      undefined,
       undefined,
     );
     expect(updated.body).toBe("Texte corrigé.");

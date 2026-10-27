@@ -7,6 +7,7 @@ import { loadPostDetail } from "@/lib/posts-feed";
 import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ImageGallery } from "@/components/ui/image-gallery";
 import { Avatar } from "@/components/avatar";
 import { CommentThread } from "@/components/posts/comment-thread";
 import { CommentInput } from "@/components/posts/comment-input";
@@ -31,7 +32,7 @@ export default async function PostDetailPage({
   );
   if (!detail) notFound();
 
-  const { post, imageUrl, author, comments, likeCount, hasLiked } = detail;
+  const { post, imageUrls, author, comments, likeCount, hasLiked } = detail;
   const isOwner = post.authorId === profile.id;
 
   return (
@@ -72,13 +73,8 @@ export default async function PostDetailPage({
 
           <p className="text-sm whitespace-pre-wrap">{post.body}</p>
 
-          {imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- bucket post public_read (F12)
-            <img
-              src={imageUrl}
-              alt="Image du post"
-              className="bg-muted max-h-[32rem] w-full rounded-xl object-cover"
-            />
+          {imageUrls.length > 0 ? (
+            <ImageGallery images={imageUrls} alt="Image du post" />
           ) : null}
 
           <div className="border-border/60 border-t pt-3">

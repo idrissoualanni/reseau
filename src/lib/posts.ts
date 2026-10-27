@@ -19,7 +19,7 @@ import {
   type PostsCursor,
 } from "@/lib/repositories/posts";
 import type { Post, PostComment } from "@/lib/types";
-import { postImageKeySchema } from "@/lib/validation/post";
+import { galleryImageKeysSchema, postImageKeySchema } from "@/lib/validation/post";
 import { postImagePrefix } from "@/lib/storage";
 
 // Schémas partagés des posts et commentaires (F11). Les mêmes contraintes
@@ -53,6 +53,7 @@ export const createPostSchema = z
   .object({
     body: postBodySchema,
     imageKey: postImageKeySchema.nullable().optional(),
+    imageKeys: galleryImageKeysSchema,
   })
   .strict();
 export const updatePostSchema = z
@@ -61,6 +62,8 @@ export const updatePostSchema = z
     body: postBodySchema,
     // Absent = conserver l'image, null = la retirer, clé = la remplacer.
     imageKey: postImageKeySchema.nullable().optional(),
+    // Absent = conserver la galerie, tableau = la remplacer (max 4).
+    imageKeys: galleryImageKeysSchema,
   })
   .strict();
 export const createCommentSchema = z
@@ -85,14 +88,22 @@ export type PostLikeResult = {
 // `ctx.profileId` (jamais un identifiant reçu du client) ; la propriété est
 // vérifiée ici, pas dans le transport.
 
+// Galerie : chaque clé doit appartenir au membre (préfixe `posts/{profileId}/`).
+function assertPostImagesOwned(keys: Array<string | null>, profileId: string): void {
+  for (const key of keys) {
+    if (key && !key.startsWith(postImagePrefix(profileId))) {
+      throw new ValidationError("Clé d'image invalide.");
+    }
+  }
+}
+
 export async function createPost(ctx: UseCaseContext, input: CreatePostInput): Promise<Post> {
   // Appartenance de l'image : la clé doit porter le profileId du membre
   // (F12) — sinon un membre pourrait référencer le fichier d'un autre.
   const imageKey = input.imageKey ?? null;
-  if (imageKey && !imageKey.startsWith(postImagePrefix(ctx.profileId))) {
-    throw new ValidationError("Clé d'image invalide.");
-  }
-  return insertPost(ctx.profileId, input.body, imageKey);
+  const imageKeys = input.imageKeys ?? [];
+  assertPostImagesOwned([imageKey, ...imageKeys], ctx.profileId);
+  return insertPost(ctx.profileId, input.body, imageKey, imageKeys);
 }
 
 export async function deletePost(ctx: UseCaseContext, id: string): Promise<void> {
@@ -116,12 +127,14 @@ export async function updatePost(
   if (input.imageKey && !input.imageKey.startsWith(postImagePrefix(ctx.profileId))) {
     throw new ValidationError("Clé d'image invalide.");
   }
+  if (input.imageKeys) assertPostImagesOwned(input.imageKeys, ctx.profileId);
 
   const updated = await updatePostById(
     input.id,
     ctx.profileId,
     input.body,
     input.imageKey,
+    input.imageKeys,
   );
   if (!updated) throw new NotFoundError("Post introuvable.");
   return updated;

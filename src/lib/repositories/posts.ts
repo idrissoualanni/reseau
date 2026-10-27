@@ -7,8 +7,13 @@ import type { Post, PostComment } from "@/lib/types";
 // (post → commentaires, commentaire → réponses) sont gérées par les FK
 // `ON DELETE CASCADE` en base, pas ici.
 
-export async function insertPost(authorId: string, body: string, imageKey: string | null): Promise<Post> {
-  const [row] = await db.insert(posts).values({ authorId, body, imageKey }).returning();
+export async function insertPost(
+  authorId: string,
+  body: string,
+  imageKey: string | null,
+  imageKeys: string[] = [],
+): Promise<Post> {
+  const [row] = await db.insert(posts).values({ authorId, body, imageKey, imageKeys }).returning();
   return row;
 }
 
@@ -47,12 +52,14 @@ export async function updatePostById(
   authorId: string,
   body: string,
   imageKey?: string | null,
+  imageKeys?: string[],
 ): Promise<Post | null> {
-  const patch: { body: string; updatedAt: Date; imageKey?: string | null } = {
+  const patch: { body: string; updatedAt: Date; imageKey?: string | null; imageKeys?: string[] } = {
     body,
     updatedAt: new Date(),
   };
   if (imageKey !== undefined) patch.imageKey = imageKey;
+  if (imageKeys !== undefined) patch.imageKeys = imageKeys;
   const [row] = await db
     .update(posts)
     .set(patch)

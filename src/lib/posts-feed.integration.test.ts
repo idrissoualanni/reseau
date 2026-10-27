@@ -25,6 +25,11 @@ vi.mock("@/lib/repositories/profiles", () => ({
 
 vi.mock("@/lib/storage", () => ({
   getPublicUrl: vi.fn((key: string) => `https://cdn.test/${key}`),
+  galleryUrls: vi.fn((cover: string | null, extra: string[] = []) =>
+    [cover, ...extra]
+      .filter((key): key is string => Boolean(key))
+      .map((key) => `https://cdn.test/${key}`),
+  ),
   postImagePrefix: vi.fn((id: string) => `posts/${id}/`),
 }));
 
@@ -46,6 +51,7 @@ function post(overrides: Partial<Post> = {}): Post {
     authorId: "p1",
     body: "J'ai terminé mon POC React.",
     imageKey: null,
+    imageKeys: [],
     createdAt: new Date("2026-01-01T00:00:00Z"),
     updatedAt: new Date("2026-01-01T00:00:00Z"),
     ...overrides,

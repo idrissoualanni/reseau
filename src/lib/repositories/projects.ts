@@ -40,6 +40,7 @@ function toProject(row: ProjectRow): Project {
     title: row.title,
     body: row.body,
     coverKey: row.coverKey,
+    imageKeys: row.imageKeys,
     status: row.status,
     publishedAt: row.publishedAt,
     type: row.type as ProjectType,
@@ -107,6 +108,7 @@ export type NewProject = {
   title: string;
   body: string;
   coverKey?: string | null;
+  imageKeys?: string[];
   type?: ProjectType;
 };
 
@@ -149,6 +151,7 @@ export type ProjectPatch = {
   title?: string;
   body?: string;
   coverKey?: string | null;
+  imageKeys?: string[];
   type?: ProjectType;
 };
 

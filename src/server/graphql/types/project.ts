@@ -39,7 +39,7 @@ import {
   followProjectSchema,
   listProjectsQuerySchema as listProjectsV15QuerySchema,
 } from "@/lib/validation/project";
-import { getPublicUrl } from "@/lib/storage";
+import { galleryUrls, getPublicUrl } from "@/lib/storage";
 import { requireProfile, run, validateInput } from "@/server/graphql/errors";
 import { PageInfoRef } from "./connection";
 import { ProfileSummaryRef } from "./profile";
@@ -76,6 +76,10 @@ export const ProjectRef = builder.objectRef<Project>("Project").implement({
       nullable: true,
       resolve: (project) =>
         project.coverKey ? getPublicUrl(project.coverKey) : null,
+    }),
+    imageUrls: t.stringList({
+      description: "Galerie du projet : couverture puis images supplémentaires (5 max).",
+      resolve: (project) => galleryUrls(project.coverKey, project.imageKeys),
     }),
     publishedAt: t.field({
       type: "DateTime",

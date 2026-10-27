@@ -57,6 +57,16 @@ function coverKey(formData: FormData): string | null | undefined {
   return value.length > 0 ? value : null;
 }
 
+// Galerie 5 images (V1.5) : images 2 à 5 renvoyées par le formulaire.
+function galleryKeys(formData: FormData): string[] | undefined {
+  if (!formData.has("imageKeys")) return undefined;
+  return formData
+    .getAll("imageKeys")
+    .map(String)
+    .filter((value) => value.length > 0)
+    .slice(0, 4);
+}
+
 function toErrorState(error: unknown): ProjectFormState {
   if (error instanceof AppError) {
     if (error.code === "UNAUTHENTICATED") {
@@ -86,6 +96,7 @@ export async function createProjectAction(
     body: text(formData, "body"),
     skillSlugs: skillSlugs(formData),
     coverKey: coverKey(formData),
+    imageKeys: galleryKeys(formData),
     type: text(formData, "type") || undefined,
   });
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
@@ -116,6 +127,7 @@ export async function updateProjectAction(
     body: text(formData, "body"),
     skillSlugs: skillSlugs(formData),
     coverKey: coverKey(formData),
+    imageKeys: galleryKeys(formData),
     type: text(formData, "type") || undefined,
   });
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };

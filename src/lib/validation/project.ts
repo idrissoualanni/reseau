@@ -57,6 +57,15 @@ const updateImageKeySchema = z
   .max(300, "Clé d'image invalide.")
   .regex(/^projects\/[0-9a-f-]{36}\/updates\/[A-Za-z0-9._-]+$/i, "Clé d'image invalide.");
 
+// Galerie 5 images (V1.5) : 4 images supplémentaires, couverture comprise = 5 maximum.
+export const MAX_PROJECT_GALLERY_IMAGES = 4;
+
+const galleryKeysSchema = z
+  .array(coverKeySchema)
+  .max(MAX_PROJECT_GALLERY_IMAGES, "5 images maximum par projet.")
+  .refine((keys) => new Set(keys).size === keys.length, "Images en double.")
+  .optional();
+
 const titleSchema = z
   .string()
   .trim()
@@ -75,6 +84,7 @@ export const createProjectSchema = z
     body: bodySchema,
     skillSlugs: skillSlugsSchema.default([]),
     coverKey: coverKeySchema.nullable().optional(),
+    imageKeys: galleryKeysSchema,
     type: projectTypeSchema.optional(),
   })
   .strict();
@@ -85,6 +95,7 @@ export const updateProjectSchema = z
     body: bodySchema.optional(),
     skillSlugs: skillSlugsSchema.optional(),
     coverKey: coverKeySchema.nullable().optional(),
+    imageKeys: galleryKeysSchema,
     type: projectTypeSchema.optional(),
   })
   .strict()
@@ -96,6 +107,7 @@ export const updateProjectSchema = z
 export const publishProjectSchema = z
   .object({
     coverKey: coverKeySchema.nullable().optional(),
+    imageKeys: galleryKeysSchema,
   })
   .strict();
 

@@ -101,6 +101,11 @@ function assertCoverOwnership(coverKey: string, profileId: string): void {
   }
 }
 
+// Galerie 5 images (V1.5) : chaque image supplémentaire appartient au projet du membre.
+function assertGalleryOwnership(keys: string[] | undefined, profileId: string): void {
+  for (const key of keys ?? []) assertCoverOwnership(key, profileId);
+}
+
 async function resolveSkillIds(slugs: string[]): Promise<string[]> {
   const ids: string[] = [];
   for (const slug of slugs) {
@@ -115,12 +120,14 @@ export async function createProject(
   input: CreateProjectInput,
 ): Promise<Project> {
   if (input.coverKey) assertCoverOwnership(input.coverKey, ctx.profileId);
+  assertGalleryOwnership(input.imageKeys, ctx.profileId);
 
   const project = await insertProject({
     authorId: ctx.profileId,
     title: input.title,
     body: input.body,
     coverKey: input.coverKey ?? null,
+    imageKeys: input.imageKeys ?? [],
     type: input.type,
   });
 
@@ -138,11 +145,13 @@ export async function updateProject(
   const existing = await findOwnedProjectById(id, ctx.profileId);
   if (!existing) throw new NotFoundError("Projet introuvable.");
   if (input.coverKey) assertCoverOwnership(input.coverKey, ctx.profileId);
+  assertGalleryOwnership(input.imageKeys, ctx.profileId);
 
   const patch: ProjectPatch = {};
   if (input.title !== undefined) patch.title = input.title;
   if (input.body !== undefined) patch.body = input.body;
   if (input.coverKey !== undefined) patch.coverKey = input.coverKey;
+  if (input.imageKeys !== undefined) patch.imageKeys = input.imageKeys;
   if (input.type !== undefined) patch.type = input.type;
 
   const updated = await updateOwnedProject(id, ctx.profileId, patch);
@@ -169,16 +178,21 @@ export async function publishProject(
   ctx: UseCaseContext,
   id: string,
   coverKey?: string | null,
+  imageKeys?: string[],
 ): Promise<Project> {
   const project = await findOwnedProjectById(id, ctx.profileId);
   if (!project) throw new NotFoundError("Projet introuvable.");
   if (project.title.trim().length === 0 || project.body.trim().length === 0) {
     throw new RuleViolationError("Titre et texte requis pour publier.");
   }
-  if (coverKey) {
-    assertCoverOwnership(coverKey, ctx.profileId);
-    const withCover = await updateOwnedProject(id, ctx.profileId, { coverKey });
-    if (!withCover) throw new NotFoundError("Projet introuvable.");
+  if (coverKey) assertCoverOwnership(coverKey, ctx.profileId);
+  assertGalleryOwnership(imageKeys, ctx.profileId);
+  if (coverKey || imageKeys) {
+    const patch: ProjectPatch = {};
+    if (coverKey) patch.coverKey = coverKey;
+    if (imageKeys) patch.imageKeys = imageKeys;
+    const withImages = await updateOwnedProject(id, ctx.profileId, patch);
+    if (!withImages) throw new NotFoundError("Projet introuvable.");
   }
 
   const published = await markProjectPublished(id, ctx.profileId, new Date());
