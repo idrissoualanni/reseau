@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { requireSession } from "@/lib/auth";
 import { getOwnProfile } from "@/lib/profile";
 import { getOwnPost } from "@/lib/posts";
-import { galleryUrls, getPublicUrl } from "@/lib/storage";
+import { galleryUrls } from "@/lib/storage";
 import { NotFoundError } from "@/lib/errors";
 import { PageShell } from "@/components/page-shell";
 import { Card, CardContent } from "@/components/ui/card";
