@@ -140,6 +140,7 @@ describe("galerie de projets (V1.5)", () => {
       createProject(ctx, {
         title: "Mon projet",
         body: "Description",
+        skillSlugs: [],
         imageKeys: ["projects/00000000-0000-0000-0000-000000000002/x.jpg"],
       }),
     ).rejects.toThrow(ForbiddenError);
