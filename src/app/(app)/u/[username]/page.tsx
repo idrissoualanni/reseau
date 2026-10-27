@@ -15,6 +15,7 @@ import { SkillBadge } from "@/components/skill-badge";
 import { Button } from "@/components/ui/button";
 import { ProjectCard } from "@/components/projects/project-card";
 import { PostCard } from "@/components/posts/post-card";
+import { MessageButton } from "@/components/messages/message-button";
 import type { Skill } from "@/lib/types";
 
 type ProjectEdge = {
@@ -106,7 +107,9 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
                   <Link href="/me/projects/new">Nouveau projet</Link>
                 </Button>
               </div>
-            ) : null}
+            ) : (
+              <MessageButton profileId={profile.id} />
+            )}
           </div>
 
           {profile.bio ? <p className="text-sm leading-relaxed">{profile.bio}</p> : null}

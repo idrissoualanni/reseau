@@ -3,6 +3,7 @@ import {
   FolderKanban,
   Layers,
   MessageSquare,
+  MessagesSquare,
   PenLine,
   Shield,
   UserRound,
@@ -21,6 +22,7 @@ export type NavItem = {
 export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Projets", icon: Layers },
   { href: "/posts", label: "Posts", icon: MessageSquare },
+  { href: "/messages", label: "Messages", icon: MessagesSquare },
   { href: "/spaces", label: "Espaces", icon: Users },
   { href: "/search", label: "Recherche", icon: Compass },
   { href: "/me/projects", label: "Mes projets", icon: FolderKanban },

@@ -1,0 +1,856 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import dynamic from "next/dynamic";
+import { useLiveQuery } from "@neon/realtime-react";
+import type { SealedLiveQuery } from "@neon/realtime/client";
+import type { EmojiClickData } from "emoji-picker-react";
+import {
+  ArrowLeft,
+  Loader2,
+  Lock,
+  MessageSquare,
+  Send,
+  ShieldCheck,
+  SmilePlus,
+} from "lucide-react";
+import { Avatar } from "@/components/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  Bubble,
+  BubbleContent,
+  BubbleReactions,
+} from "@/components/ui/bubble";
+import {
+  Message,
+  MessageAvatar,
+  MessageContent,
+  MessageFooter,
+  MessageHeader,
+} from "@/components/ui/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@/components/ui/message-scroller";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import {
+  decryptMessage,
+  decryptReaction,
+  encryptMessage,
+  encryptReaction,
+  loadConversationKey,
+  messageAad,
+  reactionAad,
+  type Identity,
+} from "@/lib/crypto/messaging";
+import type {
+  ConversationDto,
+  LiveMessageRow,
+  MessageDto,
+  ParticipantDto,
+  UiMessage,
+  UiReaction,
+} from "@/components/messages/types";
+
+const EmojiPicker = dynamic(
+  () => import("emoji-picker-react").then((module) => module.default),
+  { ssr: false },
+);
+
+const MAX_MESSAGE_LENGTH = 4000;
+
+type Bootstrap = {
+  rows: LiveMessageRow[];
+  nextCursor: string | null;
+};
+
+function participant(conversation: ConversationDto, currentProfileId: string): ParticipantDto {
+  return (
+    conversation.participants.find((item) => item.id !== currentProfileId) ??
+    conversation.participants[0]
+  );
+}
+
+function dtoToRow(message: MessageDto): LiveMessageRow {
+  return {
+    id: message.id,
+    conversation_id: message.conversationId,
+    sender_id: message.senderId,
+    client_id: message.clientId,
+    ciphertext: message.ciphertext,
+    iv: message.iv,
+    key_version: message.keyVersion,
+    sender_key_id: message.senderKeyId,
+    created_at: message.createdAt,
+    edited_at: message.editedAt,
+    deleted_at: message.deletedAt,
+    reactions: (message.reactions ?? []).map((reaction) => ({
+      profile_id: reaction.profileId,
+      ciphertext: reaction.ciphertext,
+      iv: reaction.iv,
+      key_version: reaction.keyVersion,
+      created_at: reaction.createdAt,
+      updated_at: reaction.updatedAt,
+    })),
+  };
+}
+
+function mergeRows(live: readonly LiveMessageRow[], older: LiveMessageRow[]): LiveMessageRow[] {
+  const byId = new Map<string, LiveMessageRow>();
+  for (const row of older) byId.set(row.id, row);
+  for (const row of live) byId.set(row.id, row);
+  return [...byId.values()].sort((first, second) => {
+    const firstTime = new Date(first.created_at).getTime();
+    const secondTime = new Date(second.created_at).getTime();
+    return firstTime === secondTime
+      ? first.id.localeCompare(second.id)
+      : firstTime - secondTime;
+  });
+}
+
+function timeLabel(value: string): string {
+  const date = new Date(value);
+  return date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+}
+
+function groupReactions(reactions: UiReaction[]): UiReaction[] {
+  return [...reactions].sort((first, second) => second.profileIds.length - first.profileIds.length);
+}
+
+export function MessageThread({
+  conversation,
+  currentProfileId,
+  identity,
+  realtimeAvailable,
+  onBack,
+  onSent,
+}: {
+  conversation: ConversationDto;
+  currentProfileId: string;
+  identity: Identity;
+  realtimeAvailable: boolean;
+  onBack: () => void;
+  onSent: () => void;
+}) {
+  const [key, setKey] = useState<CryptoKey | null>(null);
+  const [keyError, setKeyError] = useState<string | null>(null);
+  const [bootstrap, setBootstrap] = useState<Bootstrap | null>(null);
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
+  const [sealed, setSealed] = useState<SealedLiveQuery<LiveMessageRow> | null>(null);
+  const [liveError, setLiveError] = useState<string | null>(null);
+  const effectiveLiveError = realtimeAvailable ? liveError : "Temps réel non configuré.";
+
+  useEffect(() => {
+    let cancelled = false;
+    loadConversationKey({
+      conversationId: conversation.id,
+      createdBy: conversation.createdBy,
+      profileId: currentProfileId,
+      identity,
+    })
+      .then((loaded) => {
+        if (!cancelled) setKey(loaded);
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setKeyError(
+          error instanceof Error ? error.message : "Impossible de charger la clé de conversation.",
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [conversation.id, conversation.createdBy, currentProfileId, identity]);
+
+  useEffect(() => {
+    if (!key) return;
+    let cancelled = false;
+    fetch(`/api/conversations/${conversation.id}/messages?first=50`, { cache: "no-store" })
+      .then(async (response) => {
+        const payload = (await response.json()) as {
+          items?: MessageDto[];
+          nextCursor?: string | null;
+          error?: { message?: string };
+        };
+        if (!response.ok) {
+          throw new Error(payload.error?.message ?? "Impossible de charger les messages.");
+        }
+        if (cancelled) return;
+        setBootstrap({
+          rows: (payload.items ?? []).map(dtoToRow),
+          nextCursor: payload.nextCursor ?? null,
+        });
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setBootstrapError(
+            error instanceof Error ? error.message : "Impossible de charger les messages.",
+          );
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [key, conversation.id]);
+
+  const refreshQuery = useCallback(async (): Promise<SealedLiveQuery<LiveMessageRow>> => {
+    const response = await fetch(`/api/conversations/${conversation.id}/live`, {
+      method: "POST",
+      cache: "no-store",
+    });
+    const payload = (await response.json()) as {
+      sealedQuery?: SealedLiveQuery<LiveMessageRow>;
+      error?: { message?: string };
+    };
+    if (!response.ok || !payload.sealedQuery) {
+      throw new Error(payload.error?.message ?? "Temps réel indisponible.");
+    }
+    return payload.sealedQuery;
+  }, [conversation.id]);
+
+  useEffect(() => {
+    if (!key || !realtimeAvailable) return;
+    let cancelled = false;
+    refreshQuery()
+      .then((query) => {
+        if (!cancelled) setSealed(query);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setLiveError(error instanceof Error ? error.message : "Temps réel indisponible.");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [key, refreshQuery, realtimeAvailable]);
+
+  if (keyError) {
+    return (
+      <ThreadState
+        icon={<Lock className="size-6" />}
+        title="Chiffrement en attente"
+        description={keyError}
+      />
+    );
+  }
+
+  if (!key || !bootstrap) {
+    return (
+      <div className="flex h-full flex-col">
+        <ThreadHeader conversation={conversation} currentProfileId={currentProfileId} onBack={onBack} />
+        <div className="flex-1 space-y-4 p-6">
+          {bootstrapError ? (
+            <p role="alert" className="text-destructive text-sm">
+              {bootstrapError}
+            </p>
+          ) : (
+            <>
+              <Skeleton className="h-12 w-2/3" />
+              <Skeleton className="ml-auto h-16 w-3/4" />
+              <Skeleton className="h-12 w-1/2" />
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (sealed && realtimeAvailable) {
+    return (
+      <LiveThread
+        conversation={conversation}
+        currentProfileId={currentProfileId}
+        identity={identity}
+        conversationKey={key}
+        bootstrap={bootstrap}
+        sealed={sealed}
+        refreshQuery={refreshQuery}
+        onBack={onBack}
+        onSent={onSent}
+      />
+    );
+  }
+
+  return (
+    <ThreadView
+      conversation={conversation}
+      currentProfileId={currentProfileId}
+      identity={identity}
+      conversationKey={key}
+      rows={bootstrap.rows}
+      initialNextCursor={bootstrap.nextCursor}
+      liveStatus={effectiveLiveError ? "offline" : "connecting"}
+      liveError={effectiveLiveError}
+      onBack={onBack}
+      onSent={onSent}
+    />
+  );
+}
+
+function LiveThread({
+  conversation,
+  currentProfileId,
+  identity,
+  conversationKey,
+  bootstrap,
+  sealed,
+  refreshQuery,
+  onBack,
+  onSent,
+}: {
+  conversation: ConversationDto;
+  currentProfileId: string;
+  identity: Identity;
+  conversationKey: CryptoKey;
+  bootstrap: Bootstrap;
+  sealed: SealedLiveQuery<LiveMessageRow>;
+  refreshQuery: () => Promise<SealedLiveQuery<LiveMessageRow>>;
+  onBack: () => void;
+  onSent: () => void;
+}) {
+  const { data, status, error } = useLiveQuery<LiveMessageRow>(sealed, {
+    initialData: bootstrap.rows,
+    refreshQuery,
+  });
+
+  return (
+    <ThreadView
+      conversation={conversation}
+      currentProfileId={currentProfileId}
+      identity={identity}
+      conversationKey={conversationKey}
+      rows={data ?? bootstrap.rows}
+      initialNextCursor={bootstrap.nextCursor}
+      liveStatus={status}
+      liveError={status === "error" ? (error?.message ?? "Temps réel indisponible.") : null}
+      onBack={onBack}
+      onSent={onSent}
+    />
+  );
+}
+
+function ThreadHeader({
+  conversation,
+  currentProfileId,
+  onBack,
+}: {
+  conversation: ConversationDto;
+  currentProfileId: string;
+  onBack?: () => void;
+}) {
+  const other = participant(conversation, currentProfileId);
+  return (
+    <header className="flex h-16 shrink-0 items-center gap-3 border-b px-4">
+      {onBack ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          onClick={onBack}
+          className="md:hidden"
+          aria-label="Retour aux conversations"
+        >
+          <ArrowLeft />
+        </Button>
+      ) : null}
+      <Avatar name={other.displayName} src={other.avatarUrl} size="md" />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold">{other.displayName}</p>
+        <p className="text-muted-foreground flex items-center gap-1 text-[11px]">
+          <ShieldCheck className="size-3 text-[#2E9E5B]" />
+          Chiffré de bout en bout
+        </p>
+      </div>
+    </header>
+  );
+}
+
+function ThreadView({
+  conversation,
+  currentProfileId,
+  identity,
+  conversationKey,
+  rows,
+  initialNextCursor,
+  liveStatus,
+  liveError,
+  onBack,
+  onSent,
+}: {
+  conversation: ConversationDto;
+  currentProfileId: string;
+  identity: Identity;
+  conversationKey: CryptoKey;
+  rows: readonly LiveMessageRow[];
+  initialNextCursor: string | null;
+  liveStatus: string;
+  liveError: string | null;
+  onBack: () => void;
+  onSent: () => void;
+}) {
+  const [older, setOlder] = useState<LiveMessageRow[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [olderError, setOlderError] = useState<string | null>(null);
+  const [display, setDisplay] = useState<UiMessage[]>([]);
+  const [decrypting, setDecrypting] = useState(true);
+  const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [pickerFor, setPickerFor] = useState<string | null>(null);
+  const [reactionError, setReactionError] = useState<string | null>(null);
+  const readMarker = useRef<string | null>(null);
+
+  const messages = useMemo(() => mergeRows(rows, older), [rows, older]);
+  const other = participant(conversation, currentProfileId);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function decode() {
+      const decoded = await Promise.all(
+        messages.map(async (row): Promise<UiMessage> => {
+          let plaintext: string | null = null;
+          try {
+            plaintext = await decryptMessage(
+              conversationKey,
+              { ciphertext: row.ciphertext, iv: row.iv },
+              messageAad({
+                conversationId: conversation.id,
+                messageId: row.id,
+                senderId: row.sender_id,
+                keyVersion: row.key_version,
+              }),
+            );
+          } catch {
+            plaintext = null;
+          }
+
+          const reactionMap = new Map<string, Set<string>>();
+          for (const reaction of row.reactions ?? []) {
+            try {
+              const emoji = await decryptReaction(
+                conversationKey,
+                { ciphertext: reaction.ciphertext, iv: reaction.iv },
+                reactionAad({
+                  messageId: row.id,
+                  profileId: reaction.profile_id,
+                  keyVersion: reaction.key_version,
+                }),
+              );
+              const profiles = reactionMap.get(emoji) ?? new Set<string>();
+              profiles.add(reaction.profile_id);
+              reactionMap.set(emoji, profiles);
+            } catch {
+              // Une réaction illisible est ignorée, sans bloquer le message.
+            }
+          }
+
+          return {
+            id: row.id,
+            senderId: row.sender_id,
+            createdAt: row.created_at,
+            text: plaintext,
+            reactions: groupReactions(
+              [...reactionMap.entries()].map(([emoji, profiles]) => ({
+                emoji,
+                profileIds: [...profiles],
+              })),
+            ),
+          };
+        }),
+      );
+      if (!cancelled) {
+        setDisplay(decoded);
+        setDecrypting(false);
+      }
+    }
+    void decode();
+    return () => {
+      cancelled = true;
+    };
+  }, [messages, conversationKey, conversation.id]);
+
+  useEffect(() => {
+    const last = messages.at(-1);
+    if (!last || readMarker.current === last.id) return;
+    readMarker.current = last.id;
+    void fetch(`/api/conversations/${conversation.id}/read`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+  }, [messages, conversation.id]);
+
+  async function loadOlder() {
+    if (!nextCursor || loadingOlder) return;
+    setLoadingOlder(true);
+    setOlderError(null);
+    try {
+      const response = await fetch(
+        `/api/conversations/${conversation.id}/messages?first=50&after=${encodeURIComponent(nextCursor)}`,
+        { cache: "no-store" },
+      );
+      const payload = (await response.json()) as {
+        items?: MessageDto[];
+        nextCursor?: string | null;
+        error?: { message?: string };
+      };
+      if (!response.ok) {
+        throw new Error(payload.error?.message ?? "Impossible de charger les messages précédents.");
+      }
+      setOlder((current) => [...current, ...(payload.items ?? []).map(dtoToRow)]);
+      setNextCursor(payload.nextCursor ?? null);
+    } catch (error: unknown) {
+      setOlderError(
+        error instanceof Error ? error.message : "Impossible de charger les messages précédents.",
+      );
+    } finally {
+      setLoadingOlder(false);
+    }
+  }
+
+  async function send(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
+    const body = text.trim();
+    if (!body || sending) return;
+    setSending(true);
+    setSendError(null);
+    try {
+      const messageId = crypto.randomUUID();
+      const envelope = await encryptMessage(
+        conversationKey,
+        body,
+        messageAad({
+          conversationId: conversation.id,
+          messageId,
+          senderId: currentProfileId,
+          keyVersion: 1,
+        }),
+      );
+      const response = await fetch(`/api/conversations/${conversation.id}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId: messageId,
+          ciphertext: envelope.ciphertext,
+          iv: envelope.iv,
+          keyVersion: 1,
+          senderKeyId: identity.keyId,
+        }),
+      });
+      const payload = (await response.json()) as { error?: { message?: string } };
+      if (!response.ok) {
+        throw new Error(payload.error?.message ?? "Le message n'a pas été envoyé.");
+      }
+      setText("");
+      onSent();
+    } catch (error: unknown) {
+      setSendError(error instanceof Error ? error.message : "Le message n'a pas été envoyé.");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function toggleReaction(messageId: string, emoji: string) {
+    setReactionError(null);
+    const current = display.find((message) => message.id === messageId);
+    const existing = current?.reactions.find((reaction) =>
+      reaction.profileIds.includes(currentProfileId),
+    );
+    try {
+      if (existing?.emoji === emoji) {
+        const response = await fetch(`/api/messages/${messageId}/reaction`, {
+          method: "DELETE",
+        });
+        if (!response.ok) throw new Error("La réaction n'a pas été retirée.");
+      } else {
+        const envelope = await encryptReaction(
+          conversationKey,
+          emoji,
+          reactionAad({ messageId, profileId: currentProfileId, keyVersion: 1 }),
+        );
+        const response = await fetch(`/api/messages/${messageId}/reaction`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ciphertext: envelope.ciphertext,
+            iv: envelope.iv,
+            keyVersion: 1,
+          }),
+        });
+        const payload = (await response.json()) as { error?: { message?: string } };
+        if (!response.ok) {
+          throw new Error(payload.error?.message ?? "La réaction n'a pas été enregistrée.");
+        }
+      }
+      setPickerFor(null);
+    } catch (error: unknown) {
+      setReactionError(error instanceof Error ? error.message : "Réaction impossible.");
+    }
+  }
+
+  function onEmojiClick(data: EmojiClickData) {
+    if (!pickerFor) return;
+    void toggleReaction(pickerFor, data.emoji);
+  }
+
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <ThreadHeader
+        conversation={conversation}
+        currentProfileId={currentProfileId}
+        onBack={onBack}
+      />
+
+      {liveError ? (
+        <div className="border-b bg-[#F6F8FC] px-4 py-2 text-xs text-[#10203F] dark:bg-muted">
+          Temps réel indisponible : {liveError}. Les messages restent consultables.
+        </div>
+      ) : null}
+
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        {decrypting && display.length === 0 ? (
+          <div className="flex-1 space-y-4 p-6">
+            <Skeleton className="h-12 w-2/3" />
+            <Skeleton className="ml-auto h-16 w-3/4" />
+            <Skeleton className="h-12 w-1/2" />
+          </div>
+        ) : display.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
+            <span className="bg-secondary flex size-14 items-center justify-center rounded-full">
+              <MessageSquare className="text-muted-foreground size-6" />
+            </span>
+            <div>
+              <p className="font-medium">Aucun message</p>
+              <p className="text-muted-foreground text-sm">
+                Écris le premier message à {other.displayName}.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <MessageScrollerProvider autoScroll defaultScrollPosition="end">
+            <MessageScroller>
+              <MessageScrollerViewport>
+                <MessageScrollerContent className="gap-4 px-4 py-6">
+                  {nextCursor ? (
+                    <div className="flex justify-center">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={loadOlder}
+                        disabled={loadingOlder}
+                      >
+                        {loadingOlder ? <Loader2 className="animate-spin" /> : null}
+                        {loadingOlder ? "Chargement…" : "Messages précédents"}
+                      </Button>
+                    </div>
+                  ) : null}
+                  {olderError ? (
+                    <p role="alert" className="text-destructive text-center text-xs">
+                      {olderError}
+                    </p>
+                  ) : null}
+                  {display.map((message, index) => {
+                    const isOwn = message.senderId === currentProfileId;
+                    const showAvatar = !isOwn;
+                    return (
+                      <MessageScrollerItem
+                        key={message.id}
+                        messageId={message.id}
+                        scrollAnchor={index === display.length - 1}
+                      >
+                        <Message align={isOwn ? "end" : "start"}>
+                          {showAvatar ? (
+                            <MessageAvatar>
+                              <Avatar
+                                name={other.displayName}
+                                src={other.avatarUrl}
+                                size="sm"
+                                className="size-8"
+                              />
+                            </MessageAvatar>
+                          ) : null}
+                          <MessageContent>
+                            {!isOwn ? (
+                              <MessageHeader>{other.displayName}</MessageHeader>
+                            ) : null}
+                            <Bubble
+                              align={isOwn ? "end" : "start"}
+                              variant={isOwn ? "default" : "secondary"}
+                            >
+                              <BubbleContent
+                                className={cn(
+                                  "rounded-[14px] px-3.5 py-2",
+                                  isOwn && "bg-[#2F66DB] text-white",
+                                )}
+                              >
+                                {message.text ?? (
+                                  <span className="italic opacity-70">
+                                    Message illisible (clé absente)
+                                  </span>
+                                )}
+                              </BubbleContent>
+                              {message.reactions.length > 0 ? (
+                                <BubbleReactions
+                                  side="bottom"
+                                  align={isOwn ? "end" : "start"}
+                                >
+                                  {message.reactions.map((reaction) => (
+                                    <button
+                                      key={reaction.emoji}
+                                      type="button"
+                                      onClick={() => void toggleReaction(message.id, reaction.emoji)}
+                                      aria-label={`Réagir ${reaction.emoji}`}
+                                      aria-pressed={reaction.profileIds.includes(currentProfileId)}
+                                      className={cn(
+                                        "rounded-full px-1 transition-colors duration-[180ms]",
+                                        reaction.profileIds.includes(currentProfileId) &&
+                                          "bg-primary/10",
+                                      )}
+                                    >
+                                      {reaction.emoji}
+                                      {reaction.profileIds.length > 1
+                                        ? ` ${reaction.profileIds.length}`
+                                        : ""}
+                                    </button>
+                                  ))}
+                                </BubbleReactions>
+                              ) : null}
+                            </Bubble>
+                            <MessageFooter className="gap-2">
+                              <span>{timeLabel(message.createdAt)}</span>
+                              <button
+                                type="button"
+                                onClick={() => setPickerFor(message.id)}
+                                aria-label="Ajouter une réaction"
+                                className="hover:text-foreground text-muted-foreground transition-colors duration-[180ms]"
+                              >
+                                <SmilePlus className="size-3.5" />
+                              </button>
+                            </MessageFooter>
+                          </MessageContent>
+                        </Message>
+                      </MessageScrollerItem>
+                    );
+                  })}
+                </MessageScrollerContent>
+              </MessageScrollerViewport>
+              <MessageScrollerButton />
+            </MessageScroller>
+          </MessageScrollerProvider>
+        )}
+
+        {pickerFor ? (
+          <>
+            <button
+              type="button"
+              aria-label="Fermer le sélecteur d'emoji"
+              className="fixed inset-0 z-40 cursor-default bg-transparent"
+              onClick={() => setPickerFor(null)}
+            />
+            <div className="fixed right-4 bottom-28 z-50 overflow-hidden rounded-[14px] shadow-lg md:right-8">
+              <EmojiPicker
+                onEmojiClick={onEmojiClick}
+                theme="auto"
+                width={320}
+                height={380}
+                lazyLoadEmojis
+                previewConfig={{ showPreview: false }}
+              />
+            </div>
+          </>
+        ) : null}
+      </div>
+
+      <div className="shrink-0 border-t px-4 py-3">
+        {sendError ? (
+          <p role="alert" className="text-destructive mb-2 text-xs">
+            {sendError}
+          </p>
+        ) : null}
+        {reactionError ? (
+          <p role="alert" className="text-destructive mb-2 text-xs">
+            {reactionError}
+          </p>
+        ) : null}
+        <form onSubmit={send} className="flex items-end gap-2">
+          <Textarea
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                void send();
+              }
+            }}
+            placeholder={`Écrire à ${other.displayName}…`}
+            maxLength={MAX_MESSAGE_LENGTH}
+            rows={1}
+            className="max-h-32 min-h-10 resize-none rounded-[14px] py-2"
+            aria-label="Message"
+          />
+          <Button
+            type="submit"
+            size="icon"
+            disabled={sending || text.trim().length === 0}
+            aria-label="Envoyer le message"
+            className="shrink-0 rounded-[14px]"
+          >
+            {sending ? <Loader2 className="animate-spin" /> : <Send />}
+          </Button>
+        </form>
+        <p className="text-muted-foreground mt-1 flex items-center gap-1 text-[10px]">
+          <Lock className="size-2.5" />
+          Chiffré sur cet appareil · Entrée pour envoyer · Maj+Entrée pour un saut de ligne
+          {liveStatus === "connecting" ? " · connexion…" : ""}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ThreadState({
+  icon,
+  title,
+  description,
+}: {
+  icon: ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
+      <span className="bg-secondary flex size-14 items-center justify-center rounded-full">
+        {icon}
+      </span>
+      <div>
+        <p className="font-medium">{title}</p>
+        <p className="text-muted-foreground mt-1 max-w-sm text-sm">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+export function ThreadPlaceholder() {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
+      <span className="bg-secondary flex size-14 items-center justify-center rounded-full">
+        <ShieldCheck className="text-muted-foreground size-6" />
+      </span>
+      <div>
+        <p className="font-medium">Choisis une conversation</p>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Les messages sont chiffrés de bout en bout. Seuls les participants peuvent les lire.
+        </p>
+      </div>
+    </div>
+  );
+}
