@@ -12,7 +12,7 @@ import {
 } from "@/components/messages/message-thread";
 import type { ConversationDto } from "@/components/messages/types";
 import { Button } from "@/components/ui/button";
-import { ensurePublishedIdentity, type Identity } from "@/lib/crypto/messaging";
+import { ensurePublishedIdentity, loadPreviewKeys, decryptMessageEnvelope, type Identity } from "@/lib/crypto/messaging";
 import { cn } from "@/lib/utils";
 
 export function MessagesShell({
@@ -35,6 +35,8 @@ export function MessagesShell({
   const [identityError, setIdentityError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [client, setClient] = useState<RealtimeClient | null>(null);
+  const [previewKeys, setPreviewKeys] = useState<Map<string, CryptoKey> | null>(null);
+  const [previews, setPreviews] = useState<Record<string, string>>({});
 
   const activeConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === activeId) ?? null,
@@ -74,6 +76,53 @@ export function MessagesShell({
       cancelled = true;
     };
   }, [currentProfileId]);
+
+  useEffect(() => {
+    if (!identity) return;
+    let cancelled = false;
+    loadPreviewKeys(identity)
+      .then((keys) => {
+        if (!cancelled) setPreviewKeys(keys);
+      })
+      .catch(() => {
+        if (!cancelled) setPreviewKeys(new Map());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [identity]);
+
+  useEffect(() => {
+    if (!previewKeys) return;
+    let cancelled = false;
+    const entries = conversations.filter(
+      (conversation) => conversation.lastMessage && previewKeys.has(conversation.id),
+    );
+
+    void Promise.all(
+      entries.map(async (conversation) => {
+        const key = previewKeys.get(conversation.id);
+        if (!key || !conversation.lastMessage) return null;
+        try {
+          const text = await decryptMessageEnvelope(key, conversation.id, conversation.lastMessage);
+          return [conversation.id, text] as const;
+        } catch {
+          return null;
+        }
+      }),
+    ).then((results) => {
+      if (cancelled) return;
+      const next: Record<string, string> = {};
+      for (const result of results) {
+        if (result) next[result[0]] = result[1];
+      }
+      setPreviews(next);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [previewKeys, conversations]);
 
   useEffect(() => {
     const url = process.env.NEXT_PUBLIC_NEON_REALTIME_URL;
@@ -119,6 +168,7 @@ export function MessagesShell({
         <ConversationList
           conversations={conversations}
           currentProfileId={currentProfileId}
+          previews={previews}
           activeId={activeId}
           loading={refreshing && conversations.length === 0}
           onSelect={select}

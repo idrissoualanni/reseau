@@ -35,12 +35,14 @@ export function ConversationList({
   currentProfileId,
   activeId,
   loading,
+  previews,
   onSelect,
 }: {
   conversations: ConversationDto[];
   currentProfileId: string;
   activeId: string | null;
   loading: boolean;
+  previews: Record<string, string>;
   onSelect: (id: string) => void;
 }) {
   const [query, setQuery] = useState("");
@@ -133,7 +135,13 @@ export function ConversationList({
                         <Lock className="size-3 shrink-0" />
                         <span className="truncate">
                           {conversation.lastMessage
-                            ? "Message chiffré"
+                            ? previews[conversation.id]
+                              ? `${
+                                  conversation.lastMessage.senderId === currentProfileId
+                                    ? "Vous : "
+                                    : ""
+                                }${previews[conversation.id]}`
+                              : "Message chiffré"
                             : "Démarrer la conversation"}
                         </span>
                       </span>

@@ -552,6 +552,39 @@ export async function upsertConversationKeys(
   return inserted.map(toConversationKey);
 }
 
+// Enveloppes nécessaires pour déchiffrer l'aperçu du dernier message : la clé
+// du lecteur + la clé publique du créateur (qui a enveloppé la clé).
+export type ConversationKeyHint = {
+  conversationId: string;
+  keyId: string;
+  wrappedKey: string;
+  iv: string;
+  creatorProfileId: string;
+  creatorKeyId: string;
+  creatorPublicKeyJwk: Record<string, unknown>;
+};
+
+export async function listConversationKeyHints(
+  profileId: string,
+): Promise<ConversationKeyHint[]> {
+  const rows = await db
+    .select({
+      conversationId: conversationKeys.conversationId,
+      keyId: conversationKeys.keyId,
+      wrappedKey: conversationKeys.wrappedKey,
+      iv: conversationKeys.iv,
+      creatorProfileId: conversations.createdBy,
+      creatorKeyId: profileKeys.keyId,
+      creatorPublicKeyJwk: profileKeys.publicKeyJwk,
+    })
+    .from(conversationKeys)
+    .innerJoin(conversations, eq(conversations.id, conversationKeys.conversationId))
+    .innerJoin(profileKeys, eq(profileKeys.profileId, conversations.createdBy))
+    .where(eq(conversationKeys.profileId, profileId))
+    .orderBy(desc(conversationKeys.createdAt));
+  return rows;
+}
+
 export async function listConversationKeysForProfile(
   conversationId: string,
   profileId: string,

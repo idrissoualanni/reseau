@@ -12,6 +12,8 @@ import {
   findProfileKey,
   insertDirectConversation,
   insertMessage,
+  listConversationKeyHints,
+  type ConversationKeyHint,
   listConversationKeysForProfile,
   listConversationsForProfile,
   listMessages,
@@ -280,6 +282,18 @@ export async function getConversationKeyBundle(
     })),
     wrappedKeys,
   };
+}
+
+// Aperçus : une seule enveloppe par conversation (la plus récente).
+export async function listConversationPreviewKeys(
+  ctx: UseCaseContext,
+): Promise<ConversationKeyHint[]> {
+  const hints = await listConversationKeyHints(ctx.profileId);
+  const seen = new Map<string, ConversationKeyHint>();
+  for (const hint of hints) {
+    if (!seen.has(hint.conversationId)) seen.set(hint.conversationId, hint);
+  }
+  return [...seen.values()];
 }
 
 export async function saveConversationKeys(

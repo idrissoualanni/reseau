@@ -38,6 +38,16 @@ export type CipherEnvelope = {
   keyVersion: number;
 };
 
+export type ConversationKeyHint = {
+  conversationId: string;
+  keyId: string;
+  wrappedKey: string;
+  iv: string;
+  creatorProfileId: string;
+  creatorKeyId: string;
+  creatorPublicKeyJwk: JsonWebKey;
+};
+
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
@@ -343,6 +353,61 @@ export async function loadConversationKey(input: {
   ]);
   keyCache.set(input.conversationId, key);
   return key;
+}
+
+// Aperçus : charge en une requête les clés des conversations de la liste.
+export async function loadPreviewKeys(identity: Identity): Promise<Map<string, CryptoKey>> {
+  const keys = new Map<string, CryptoKey>();
+  const response = await fetch("/api/conversations/previews", { cache: "no-store" });
+  if (!response.ok) return keys;
+  const payload = (await response.json()) as { items?: ConversationKeyHint[] };
+  const hints = payload.items ?? [];
+
+  await Promise.all(
+    hints.map(async (hint) => {
+      const cached = keyCache.get(hint.conversationId);
+      if (cached) {
+        keys.set(hint.conversationId, cached);
+        return;
+      }
+      if (hint.keyId !== identity.keyId) return;
+      try {
+        const key = await unwrapConversationKey(
+          identity.privateKey,
+          {
+            profileId: hint.creatorProfileId,
+            keyId: hint.creatorKeyId,
+            publicKeyJwk: hint.creatorPublicKeyJwk,
+          },
+          {
+            profileId: identity.profileId,
+            keyId: hint.keyId,
+            wrappedKey: hint.wrappedKey,
+            iv: hint.iv,
+          },
+          hint.conversationId,
+        );
+        keyCache.set(hint.conversationId, key);
+        keys.set(hint.conversationId, key);
+      } catch {
+        // Clé illisible : l'aperçu reste masqué, la conversation reste utilisable.
+      }
+    }),
+  );
+  return keys;
+}
+
+export async function decryptMessageEnvelope(
+  key: CryptoKey,
+  conversationId: string,
+  message: { id: string; senderId: string; keyVersion: number; ciphertext: string; iv: string },
+): Promise<string> {
+  return decryptMessage(key, message, messageAad({
+    conversationId,
+    messageId: message.id,
+    senderId: message.senderId,
+    keyVersion: message.keyVersion,
+  }));
 }
 
 export function messageAad(input: {
