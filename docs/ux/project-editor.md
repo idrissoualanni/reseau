@@ -12,7 +12,7 @@
 1. **Titre du projet** (obligatoire, 3–120 car.) : champ de saisie.
 2. **Texte du projet** (facultatif, ≤ 5000 car.) : zone de texte multiligne.
 3. **Compétences** (facultatif, max 10) : champ avec autocomplétion (référentiel `skills`).
-4. **Couverture** (optionnel) : upload d'image (présigné, type `project-cover`), preview, suppression.
+4. **Couverture** (V1.5 : galerie de 5 images) : upload présigné par image (`project-cover`), vignettes avec la première marquée « Couverture », retrait possible ; publication bloquée pendant l'envoi.
 5. **Actions** : « Enregistrer » (brouillon), « Publier » (édition), « Retour » (annuler).
 6. **Actions d'édition** : « Publier » / « Dépublier », « Supprimer » (avec confirmation).
 

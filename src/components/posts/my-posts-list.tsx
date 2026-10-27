@@ -62,10 +62,10 @@ export function MyPostsList({
       {posts.map((post) => (
         <Card key={post.id}>
           <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start">
-            {post.imageUrl ? (
+            {post.imageUrls.length > 0 ? (
               // eslint-disable-next-line @next/next/no-img-element -- bucket post public_read
               <img
-                src={post.imageUrl}
+                src={post.imageUrls[0]}
                 alt=""
                 className="bg-muted h-20 w-full rounded-lg object-cover sm:w-28"
                 loading="lazy"

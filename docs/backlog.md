@@ -5,9 +5,18 @@
 > Une idée utile se note ici au lieu d'être codée (règle « pas de fonctionnalité
 > hors de la phase en cours »).
 
-> F11 (posts texte + commentaires imbriqués) et F12 (image unique sur les posts)
-> sont livrés en V1 (2026-10-10) — voir `docs/features/F11-posts.md` et
+> F11 (posts texte + commentaires imbriqués) et F12 (galerie de 5 images sur les
+> posts) sont livrés en V1 → V1.5 (2026-10-27) — voir `docs/features/F11-posts.md` et
 > `docs/features/F12-posts-images.md`. Le fil libre enrichi (vidéo) reste ici.
+
+## Galerie d'images (V1.5 — après livraison)
+
+- [ ] **Réordonnancement par glisser-déposer** : la couverture est aujourd'hui la
+  première image ; changer l'ordre impose de retirer puis réajouter.
+- [ ] **Nettoyage des fichiers orphelins** : retirer une image d'un post ou d'un
+  projet ne supprime pas l'objet du bucket.
+- [ ] **Recadrage / zoom** de la couverture avant publication.
+- [ ] **Visionneuse plein écran** (lightbox) au clic sur une image du détail.
 
 ## Temps réel / messagerie (V2.5 et après)
 

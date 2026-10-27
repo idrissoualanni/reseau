@@ -17,7 +17,7 @@ import {
 import { PROJECT_TYPES, PROJECT_TYPE_LABELS } from "@/lib/project-types";
 import { TextareaField } from "@/components/textarea-field";
 import { ProjectSkillsInput } from "@/components/projects/project-skills-input";
-import { ProjectCoverUpload } from "@/components/projects/project-cover-upload";
+import { GalleryUploader } from "@/components/ui/gallery-uploader";
 import {
   createProjectAction,
   updateProjectAction,
@@ -33,66 +33,34 @@ type ProjectFormProps = {
   mode: "create" | "edit";
   project?: Project;
   initialSkills?: Skill[];
-  coverUrl?: string | null;
+  coverKeys?: string[];
+  coverUrls?: string[];
 };
 
 const initialState: ProjectFormState = {};
 
-type PresignResponse = { uploadUrl: string; key: string; expiresIn: number };
-
-// Éditeur de projet (F05/F06) : création (Enregistrer le brouillon / Publier) ou
-// édition (Enregistrer). Couverture F06 : presign PUT avant l'action serveur.
-export function ProjectForm({ mode, project, initialSkills = [], coverUrl = null }: ProjectFormProps) {
+// Éditeur de projet (F05/F06 (galerie V1.5)) : création (Enregistrer le brouillon /
+// Publier) ou édition (Enregistrer). Galerie de 5 images maximum, la première
+// servant de couverture ; l'upload présigné se fait au choix des fichiers.
+export function ProjectForm({
+  mode,
+  project,
+  initialSkills = [],
+  coverKeys = [],
+  coverUrls = [],
+}: ProjectFormProps) {
   const action = mode === "create" ? createProjectAction : updateProjectAction;
   const [state, formAction, pending] = useActionState(action, initialState);
   const [title, setTitle] = useState(project?.title ?? "");
-  const [coverFile, setCoverFile] = useState<File | null>(null);
-  const [coverRemoved, setCoverRemoved] = useState(false);
-  const [coverError, setCoverError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [projectType, setProjectType] = useState<ProjectType>(project?.type ?? "personal");
 
   const canPublish = title.trim().length >= 3;
 
-  // Presign PUT de la couverture, puis envoi de l'action serveur. La clé est
-  // injectée dans le FormData (vide = suppression en édition).
-  async function submitWithCover(formData: FormData) {
-    if (coverFile) {
-      try {
-        const res = await fetch("/api/uploads/presign", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            kind: "project-cover",
-            contentType: coverFile.type,
-            size: coverFile.size,
-          }),
-        });
-        if (!res.ok) {
-          const body = await res.json().catch(() => null);
-          throw new Error(body?.error?.message ?? "L'upload a échoué.");
-        }
-        const { uploadUrl, key } = (await res.json()) as PresignResponse;
-        const put = await fetch(uploadUrl, {
-          method: "PUT",
-          headers: { "Content-Type": coverFile.type },
-          body: coverFile,
-        });
-        if (!put.ok) throw new Error("L'upload de l'image a échoué.");
-        formData.set("coverKey", key);
-      } catch (error) {
-        setCoverError(error instanceof Error ? error.message : "L'upload a échoué.");
-        return;
-      }
-    } else if (coverRemoved) {
-      formData.set("coverKey", "");
-    }
-    return formAction(formData);
-  }
-
   return (
     <Card>
       <CardContent className="flex flex-col gap-6 p-4 sm:p-6">
-        <form action={submitWithCover} className="flex flex-col gap-6">
+        <form action={formAction} className="flex flex-col gap-6">
           {mode === "edit" && project ? (
             <input type="hidden" name="id" value={project.id} />
           ) : null}
@@ -163,20 +131,12 @@ export function ProjectForm({ mode, project, initialSkills = [], coverUrl = null
             error={state.fieldErrors?.skillSlugs}
           />
 
-          <ProjectCoverUpload
-            initialUrl={coverUrl}
-            error={coverError ?? undefined}
-            disabled={pending}
-            onFileChange={(file) => {
-              setCoverError(null);
-              setCoverFile(file);
-              if (file) setCoverRemoved(false);
-            }}
-            onRemove={() => {
-              setCoverError(null);
-              setCoverFile(null);
-              setCoverRemoved(true);
-            }}
+          <GalleryUploader
+            kind="project-cover"
+            coverField="coverKey"
+            initialKeys={coverKeys}
+            initialUrls={coverUrls}
+            onUploadingChange={setUploading}
           />
 
           <div className="flex flex-wrap items-center gap-3">
@@ -187,12 +147,12 @@ export function ProjectForm({ mode, project, initialSkills = [], coverUrl = null
                   name="submit"
                   value="save"
                   variant="outline"
-                  disabled={pending}
+                  disabled={pending || uploading}
                 >
                   {pending ? <Loader2 aria-hidden className="animate-spin" /> : null}
                   Enregistrer le brouillon
                 </Button>
-                <Button type="submit" name="submit" value="publish" disabled={pending || !canPublish}>
+                <Button type="submit" name="submit" value="publish" disabled={pending || uploading || !canPublish}>
                   {pending ? <Loader2 aria-hidden className="animate-spin" /> : null}
                   Publier
                 </Button>

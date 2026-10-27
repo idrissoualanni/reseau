@@ -44,4 +44,4 @@
 Unitaires : création, édition, j'aime, réponse, cascade de suppression, **groupement temporel du fil** (`posts-grouping.test.ts`). Intégration : requête avec jeu de données et propagation des j'aime. E2E : publier (page dédiée) → retour au fil → aimer → commenter → répondre → modifier → supprimer.
 
 ## Hors périmètre
-Commentaires riches (images, mentions), modération, plusieurs images par post, vidéo.
+Commentaires riches (images, mentions), modération, vidéo.

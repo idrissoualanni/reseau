@@ -32,12 +32,16 @@
   la conversation.
 - [ ] **Fonction de saisie/présence** : contrat WebSocket, jeton court, TTL, limites.
   Aucun événement persisté.
-- [ ] **Schéma messagerie** : conversations, participants, messages, réactions,
-  accusés, clés publiques, clés de conversation enveloppées. Migration additive.
-- [ ] **Crypto E2E client** : ECDH P-256 + HKDF + AES-256-GCM, clé privée IndexedDB,
+- [x] **Schéma messagerie** : conversations, participants, messages, réactions,
+  accusés, clés publiques, clés de conversation enveloppées. Migration additive
+  `0011_v2_messaging.sql` appliquée et vérifiée sur Neon `dev` (7 tables).
+- [x] **Crypto E2E client** : ECDH P-256 + HKDF + AES-256-GCM, clé privée IndexedDB,
   aucun recouvrement en V2.
-- [ ] **UI messagerie** : `/messages`, liste de conversations, fil, saisie, réactions,
-  indicateur de saisie, présence, pagination.
+- [x] **UI messagerie** : `/messages`, liste de conversations, fil, saisie, réactions,
+  pagination, aperçus déchiffrés côté client. Restent la saisie/présence temps réel.
+- [ ] **Galerie de 5 images (posts et projets)** — fait en V1.5 : `image_keys`
+  (migration 0012), `GalleryUploader` + `ImageGallery`, `imageUrls` GraphQL,
+  tests `src/lib/galleries.test.ts`. Reste à vérifier dans le navigateur connecté.
 - [ ] **Galerie 5 images** : posts et projets, première image = couverture, carrousel.
 - [ ] **Séparation admin** : route group et modules serveur dédiés, gardes API.
 - [ ] **Vérification navigateur authentifiée** des parcours V1.5/V2 — **intervention

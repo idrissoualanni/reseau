@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ImageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { ImageGallery } from "@/components/ui/image-gallery";
 import { Avatar } from "@/components/avatar";
 import { SkillBadge } from "@/components/skill-badge";
 import type { FeedProject } from "@/lib/feed";
@@ -30,12 +31,12 @@ function formatDate(iso: string): string {
 export function ProjectCard({ project, skills, author }: ProjectCardProps) {
   return (
     <Card className="overflow-hidden">
-      {project.coverUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- bucket F06 différé
-        <img
-          src={project.coverUrl}
-          alt=""
-          className="aspect-[2/1] w-full object-cover"
+      {project.imageUrls.length > 0 ? (
+        <ImageGallery
+          images={project.imageUrls}
+          href={`/projects/${project.id}`}
+          alt={`Aperçu de ${project.title}`}
+          imageClassName="aspect-[2/1] max-h-none"
         />
       ) : (
         <div

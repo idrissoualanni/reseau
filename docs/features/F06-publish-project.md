@@ -7,7 +7,7 @@
 ## Règles métier
 1. Publier = passer `draft → published`, poser `published_at`. Titre et texte obligatoires ; l'**image est optionnelle** mais recommandée.
 2. **Dépublier** = `published → draft` ; le projet disparaît des listes.
-3. Image de couverture : **une seule**, JPEG/PNG/WebP, **≤ 5 Mo**, dimension max 4000 px. Le serveur n'accepte que les types autorisés.
+3. Image de couverture (V1.5 : galerie de 5 images maximum) : JPEG/PNG/WebP, **≤ 5 Mo**, dimension max 4000 px. Le serveur n'accepte que les types autorisés. La première image est la couverture (`projects.cover_key`), les 4 suivantes vivent dans `projects.image_keys` (tableau ordonné, `cardinality ≤ 4`, migration 0012 additive).
 4. Upload **présigné** : le navigateur envoie directement le fichier à Neon Storage. Le serveur ne relaie pas l'image.
 5. La clé de l'image est `projects/{profileId}/{uuid}.{ext}` ; le serveur vérifie qu'elle appartient à l'utilisateur avant de l'enregistrer.
 6. À la publication / dépublication : recalcul des niveaux `demonstrated` des compétences étiquetées (`proof-model.md`).

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { ImageGallery } from "@/components/ui/image-gallery";
 import { Avatar } from "@/components/avatar";
 import { PostLikeButton } from "@/components/posts/post-like-button";
 import type { FeedPost } from "@/lib/posts-feed";
@@ -70,19 +71,13 @@ export function PostCard({ post, author }: PostCardProps) {
           <p className="text-base leading-relaxed whitespace-pre-wrap">{post.body}</p>
         </Link>
 
-        {post.imageUrl ? (
-          <Link
+        {post.imageUrls.length > 0 ? (
+          <ImageGallery
+            images={post.imageUrls}
             href={`/posts/${post.id}`}
-            className="focus-visible:ring-ring block rounded-xl outline-none focus-visible:ring-2"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element -- bucket post public_read (F12) */}
-            <img
-              src={post.imageUrl}
-              alt="Image du post"
-              className="bg-muted max-h-96 w-full rounded-xl object-cover"
-              loading="lazy"
-            />
-          </Link>
+            alt="Image du post"
+            imageClassName="max-h-96 rounded-[14px]"
+          />
         ) : null}
 
         <div className="border-border/60 flex items-center gap-4 border-t pt-3">
