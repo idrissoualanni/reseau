@@ -38,5 +38,22 @@ for d in "$here" "$base"/reseau* "$here"/.opencode/worktrees/*; do
   [ -d "$d/dist" ] && rm -rf "$d/dist" 2>/dev/null && echo "dist supprimé : $d"
 done
 
+# 6. Gros dossiers de temp régénérables (installeurs, caches navigateur)
+for d in \
+  "$LOCALAPPDATA/Temp/vscode-stable-user-x64" \
+  "$LOCALAPPDATA/Temp/msedgecrxedge_BITS_4876_760476866" \
+  "$LOCALAPPDATA/Temp/_uninstall339B42B5" \
+  "$LOCALAPPDATA/Temp/BRL000042c4"; do
+  if [ -d "$d" ]; then rm -r "$d" 2>/dev/null && echo "temp supprimé : $d"; fi
+done
+
+# 7. Logs et snapshots OpenCode (régénérables, jamais opencode.db)
+if [ -d "$HOME/.local/share/opencode/log" ]; then
+  find "$HOME/.local/share/opencode/log" -mindepth 1 -delete 2>/dev/null && echo "logs OpenCode supprimés"
+fi
+if [ -d "$HOME/.local/share/opencode/snapshot" ]; then
+  find "$HOME/.local/share/opencode/snapshot" -mindepth 1 -delete 2>/dev/null && echo "snapshots OpenCode supprimés"
+fi
+
 echo "=== Disque après ==="
 df -h /c | tail -1

@@ -31,18 +31,27 @@
   (`srv-db4ek92jnfac73b4uij0`). Ne jamais coller le secret dans un ticket, un log ou
   la conversation.
 - [ ] **Fonction de saisie/présence** : contrat WebSocket, jeton court, TTL, limites.
-  Aucun événement persisté.
-- [x] **Schéma messagerie** : conversations, participants, messages, réactions,
-  accusés, clés publiques, clés de conversation enveloppées. Migration additive
-  `0011_v2_messaging.sql` appliquée et vérifiée sur Neon `dev` (7 tables).
-- [x] **Crypto E2E client** : ECDH P-256 + HKDF + AES-256-GCM, clé privée IndexedDB,
-  aucun recouvrement en V2.
-- [x] **UI messagerie** : `/messages`, liste de conversations, fil, saisie, réactions,
-  pagination, aperçus déchiffrés côté client. Restent la saisie/présence temps réel.
-- [ ] **Galerie de 5 images (posts et projets)** — fait en V1.5 : `image_keys`
-  (migration 0012), `GalleryUploader` + `ImageGallery`, `imageUrls` GraphQL,
-  tests `src/lib/galleries.test.ts`. Reste à vérifier dans le navigateur connecté.
-- [ ] **Galerie 5 images** : posts et projets, première image = couverture, carrousel.
+  Aucun événement persisté. **Reste à faire** : déployer la Neon Function et le jeton
+  court ; l'envoi et la lecture des messages ne doivent pas en dépendre.
+- [x] **Schéma messagerie** (2026-10-27) : `conversations`, `conversation_participants`,
+  `messages`, `message_reactions`, `message_receipts`, `profile_keys`,
+  `conversation_keys` + enums, index et contraintes. Migration additive
+  `drizzle/0011_v2_messaging.sql` appliquée sur Neon dev et vérifiée (7 tables).
+- [x] **Crypto E2E client** (2026-10-27) : ECDH P-256 + HKDF-SHA-256 + AES-256-GCM,
+  clé privée non exportable dans IndexedDB, clé de conversation enveloppée par
+  participant, AAD liant conversation/message/expéditeur. 6 tests verts.
+- [x] **UI messagerie** (2026-10-27) : `/messages`, liste de conversations avec
+  recherche, fil temps réel (live query scellée), composer, réactions chiffrées,
+  pagination par curseur, bouton « Message » sur les profils publics.
+  Manque : indicateur de saisie/présence (ligne ci-dessus).
+- [x] **Aperçu déchiffré dans la liste des conversations** (2026-10-27) :
+  `GET /api/conversations/previews` (lot de clés) + déchiffrement client.
+- [ ] **Vérification navigateur de la messagerie** (session réelle, deux comptes) —
+  **intervention utilisateur**.
+- [x] **Galerie de 5 images (posts et projets)** (2026-10-27) : `image_keys`
+  (migration 0012 appliquée sur Neon dev), `GalleryUploader` + `ImageGallery`,
+  `imageUrls` GraphQL, tests `src/lib/galleries.test.ts`. Reste à vérifier dans le
+  navigateur connecté.
 - [ ] **Séparation admin** : route group et modules serveur dédiés, gardes API.
 - [ ] **Vérification navigateur authentifiée** des parcours V1.5/V2 — **intervention
   utilisateur** (session réelle).
