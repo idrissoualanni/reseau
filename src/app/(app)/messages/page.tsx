@@ -1,8 +1,11 @@
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import { getOwnProfile } from "@/lib/profile";
-import { listMyConversations } from "@/lib/messaging";
-import { toConversationSummaryDto } from "@/lib/api/mappers/messaging";
+import { listMyContactRequests, listMyConversations } from "@/lib/messaging";
+import {
+  toContactRequestDto,
+  toConversationSummaryDto,
+} from "@/lib/api/mappers/messaging";
 import { MessagesShell } from "@/components/messages/messages-shell";
 
 export const instant = false;
@@ -16,10 +19,12 @@ export default async function MessagesPage({
   const profile = await getOwnProfile(session.user.id);
   if (!profile) redirect("/onboarding/profile");
 
-  const conversations = await listMyConversations({
-    userId: session.user.id,
-    profileId: profile.id,
-  });
+  const context = { userId: session.user.id, profileId: profile.id };
+  const [conversations, requests] = await Promise.all([
+    listMyConversations(context),
+    listMyContactRequests(context),
+  ]);
+  const requestItems = requests.map((row) => toContactRequestDto(row, profile.id));
   const { c } = await searchParams;
 
   return (
@@ -27,6 +32,10 @@ export default async function MessagesPage({
       currentProfileId={profile.id}
       initialConversations={conversations.map(toConversationSummaryDto)}
       initialConversationId={c ?? null}
+      initialRequests={{
+        incoming: requestItems.filter((item) => item.direction === "incoming"),
+        outgoing: requestItems.filter((item) => item.direction === "outgoing"),
+      }}
     />
   );
 }

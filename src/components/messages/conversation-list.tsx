@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Lock, Search } from "lucide-react";
 import { Avatar } from "@/components/avatar";
@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { ConversationDto } from "@/components/messages/types";
 
-function relativeTime(value: string | null): string {
+export function relativeTime(value: string | null): string {
   if (!value) return "";
   const date = new Date(value);
   const diff = Date.now() - date.getTime();
@@ -23,13 +23,15 @@ function relativeTime(value: string | null): string {
   return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
 }
 
-function otherParticipant(conversation: ConversationDto, currentProfileId: string) {
+export function otherParticipant(conversation: ConversationDto, currentProfileId: string) {
   return (
     conversation.participants.find((participant) => participant.id !== currentProfileId) ??
     conversation.participants[0]
   );
 }
 
+// Corps du sélecteur de conversation : recherche + liste. Affiché dans le
+// panneau déroulant de `ConversationSwitcher`.
 export function ConversationList({
   conversations,
   currentProfileId,
@@ -47,41 +49,37 @@ export function ConversationList({
 }) {
   const [query, setQuery] = useState("");
 
-  const filtered = conversations.filter((conversation) => {
-    const other = otherParticipant(conversation, currentProfileId);
+  const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return true;
-    return (
-      other.displayName.toLowerCase().includes(needle) ||
-      other.username.toLowerCase().includes(needle)
-    );
-  });
+    if (!needle) return conversations;
+    return conversations.filter((conversation) => {
+      const other = otherParticipant(conversation, currentProfileId);
+      return (
+        other.displayName.toLowerCase().includes(needle) ||
+        other.username.toLowerCase().includes(needle)
+      );
+    });
+  }, [conversations, currentProfileId, query]);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="space-y-3 border-b px-4 py-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Messages</h1>
-          <span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
-            <Lock className="size-3" />
-            E2E
-          </span>
-        </div>
-        <div className="relative">
-          <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Rechercher une conversation"
-            className="pl-9"
-            aria-label="Rechercher une conversation"
-          />
-        </div>
+      <div className="relative shrink-0 border-b p-2">
+        <Search
+          className="text-muted-foreground pointer-events-none absolute top-1/2 left-5 size-4 -translate-y-1/2"
+          aria-hidden="true"
+        />
+        <Input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Rechercher une conversation"
+          className="h-9 rounded-[10px] border-0 bg-[#F6F8FC] pl-9 shadow-none dark:bg-muted"
+          aria-label="Rechercher une conversation"
+        />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
         {loading && conversations.length === 0 ? (
-          <div className="space-y-3 p-4">
+          <div className="space-y-3 p-2">
             {[0, 1, 2, 3].map((index) => (
               <div key={index} className="flex items-center gap-3">
                 <Skeleton className="size-10 rounded-full" />
@@ -93,15 +91,16 @@ export function ConversationList({
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-6 text-center">
+          <div className="space-y-2 p-4 text-center">
             <p className="text-muted-foreground text-sm">
               {conversations.length === 0
-                ? "Aucune conversation. Ouvre un profil pour envoyer un message."
+                ? "Aucune conversation pour le moment."
                 : "Aucune conversation ne correspond."}
             </p>
+            {conversations.length === 0 ? <MessagesEmptyLink /> : null}
           </div>
         ) : (
-          <ul className="p-2" aria-label="Conversations">
+          <ul aria-label="Conversations" className="space-y-0.5">
             {filtered.map((conversation) => {
               const other = otherParticipant(conversation, currentProfileId);
               const active = conversation.id === activeId;
@@ -112,7 +111,7 @@ export function ConversationList({
                     onClick={() => onSelect(conversation.id)}
                     aria-current={active ? "true" : undefined}
                     className={cn(
-                      "hover:bg-muted/70 flex w-full items-center gap-3 rounded-[14px] px-3 py-2.5 text-left transition-colors duration-[180ms]",
+                      "hover:bg-muted/70 flex w-full items-center gap-3 rounded-[12px] px-2.5 py-2 text-left transition-colors duration-[180ms] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
                       active && "bg-muted",
                     )}
                   >
@@ -132,7 +131,7 @@ export function ConversationList({
                         </span>
                       </span>
                       <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
-                        <Lock className="size-3 shrink-0" />
+                        <Lock className="size-3 shrink-0" aria-hidden="true" />
                         <span className="truncate">
                           {conversation.lastMessage
                             ? previews[conversation.id]
@@ -158,18 +157,16 @@ export function ConversationList({
           </ul>
         )}
       </div>
-
-      <div className="text-muted-foreground border-t px-4 py-3 text-[11px]">
-        Les messages sont chiffrés sur cet appareil. Le serveur ne peut pas les lire.
-      </div>
     </div>
   );
 }
 
-// Lien conservé pour les états vides hors composant.
 export function MessagesEmptyLink() {
   return (
-    <Link href="/search" className="text-primary text-sm underline-offset-4 hover:underline">
+    <Link
+      href="/search"
+      className="text-primary text-sm underline-offset-4 hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 rounded-sm outline-none"
+    >
       Trouver un profil
     </Link>
   );

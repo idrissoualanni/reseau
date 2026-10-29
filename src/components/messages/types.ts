@@ -42,6 +42,26 @@ export type ConversationDto = {
   lastMessage: MessageDto | null;
 };
 
+// Demande de contact (aucun texte : le serveur ne voit rien).
+export type ContactRequestDto = {
+  id: string;
+  status: "pending" | "accepted" | "declined";
+  direction: "incoming" | "outgoing";
+  createdAt: string;
+  respondedAt: string | null;
+  profile: {
+    id: string;
+    username: string;
+    displayName: string;
+    avatarUrl: string | null;
+  };
+};
+
+export type ContactRequestsState = {
+  incoming: ContactRequestDto[];
+  outgoing: ContactRequestDto[];
+};
+
 // Ligne Realtime (snake_case) : le SQL scellé renvoie la forme Postgres brute.
 export type LiveMessageRow = {
   id: string;

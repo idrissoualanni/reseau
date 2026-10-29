@@ -4,28 +4,33 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createRealtimeClient, type RealtimeClient } from "@neon/realtime/client";
 import { RealtimeProvider } from "@neon/realtime-react";
-import { Loader2, Lock, RefreshCw } from "lucide-react";
-import { ConversationList } from "@/components/messages/conversation-list";
+import { Loader2, Lock, RefreshCw, X } from "lucide-react";
+import { ConversationSwitcher } from "@/components/messages/conversation-switcher";
 import {
   MessageThread,
   ThreadPlaceholder,
 } from "@/components/messages/message-thread";
-import type { ConversationDto } from "@/components/messages/types";
+import type {
+  ContactRequestsState,
+  ConversationDto,
+} from "@/components/messages/types";
 import { Button } from "@/components/ui/button";
 import { ensurePublishedIdentity, loadPreviewKeys, decryptMessageEnvelope, type Identity } from "@/lib/crypto/messaging";
-import { cn } from "@/lib/utils";
 
 export function MessagesShell({
   currentProfileId,
   initialConversations,
   initialConversationId,
+  initialRequests,
 }: {
   currentProfileId: string;
   initialConversations: ConversationDto[];
   initialConversationId: string | null;
+  initialRequests: ContactRequestsState;
 }) {
   const router = useRouter();
   const [conversations, setConversations] = useState(initialConversations);
+  const [requests, setRequests] = useState(initialRequests);
   const [activeId, setActiveId] = useState<string | null>(() =>
     initialConversationId && initialConversations.some((item) => item.id === initialConversationId)
       ? initialConversationId
@@ -37,13 +42,15 @@ export function MessagesShell({
   const [client, setClient] = useState<RealtimeClient | null>(null);
   const [previewKeys, setPreviewKeys] = useState<Map<string, CryptoKey> | null>(null);
   const [previews, setPreviews] = useState<Record<string, string>>({});
+  const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
+  const [requestError, setRequestError] = useState<string | null>(null);
 
   const activeConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === activeId) ?? null,
     [conversations, activeId],
   );
 
-  const refreshConversations = useCallback(async () => {
+  const refreshConversations = useCallback(async (): Promise<ConversationDto[]> => {
     setRefreshing(true);
     try {
       const response = await fetch("/api/conversations", { cache: "no-store" });
@@ -51,9 +58,29 @@ export function MessagesShell({
         items?: ConversationDto[];
         error?: { message?: string };
       };
-      if (response.ok && payload.items) setConversations(payload.items);
+      if (response.ok && payload.items) {
+        setConversations(payload.items);
+        return payload.items;
+      }
+      return [];
+    } catch {
+      return [];
     } finally {
       setRefreshing(false);
+    }
+  }, []);
+
+  const refreshRequests = useCallback(async () => {
+    try {
+      const response = await fetch("/api/conversation-requests", { cache: "no-store" });
+      if (!response.ok) return;
+      const payload = (await response.json()) as Partial<ContactRequestsState>;
+      setRequests({
+        incoming: payload.incoming ?? [],
+        outgoing: payload.outgoing ?? [],
+      });
+    } catch {
+      // Le bandeau temps réel signale déjà une coupure ; on garde l'état connu.
     }
   }, []);
 
@@ -136,50 +163,113 @@ export function MessagesShell({
   }, []);
 
   useEffect(() => {
-    const interval = window.setInterval(() => {
+    const refresh = () => {
       void refreshConversations();
-    }, 20_000);
-    const onFocus = () => void refreshConversations();
-    window.addEventListener("focus", onFocus);
+      void refreshRequests();
+    };
+    const interval = window.setInterval(refresh, 20_000);
+    window.addEventListener("focus", refresh);
     return () => {
       window.clearInterval(interval);
-      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("focus", refresh);
     };
-  }, [refreshConversations]);
+  }, [refreshConversations, refreshRequests]);
 
   function select(id: string) {
     setActiveId(id);
     router.replace(`/messages?c=${id}`, { scroll: false });
   }
 
-  function back() {
-    setActiveId(null);
-    router.replace("/messages", { scroll: false });
+  async function acceptRequest(id: string) {
+    setPendingRequestId(id);
+    setRequestError(null);
+    try {
+      const response = await fetch(`/api/conversation-requests/${id}/accept`, {
+        method: "POST",
+      });
+      const payload = (await response.json()) as {
+        conversationId?: string;
+        error?: { message?: string };
+      };
+      if (!response.ok || !payload.conversationId) {
+        setRequestError(payload.error?.message ?? "Impossible d'accepter la demande.");
+        return;
+      }
+      const items = await refreshConversations();
+      await refreshRequests();
+      if (items.some((conversation) => conversation.id === payload.conversationId)) {
+        select(payload.conversationId);
+      }
+    } catch {
+      setRequestError("Impossible d'accepter la demande.");
+    } finally {
+      setPendingRequestId(null);
+    }
+  }
+
+  async function declineRequest(id: string) {
+    setPendingRequestId(id);
+    setRequestError(null);
+    try {
+      const response = await fetch(`/api/conversation-requests/${id}/decline`, {
+        method: "POST",
+      });
+      if (!response.ok) {
+        const payload = (await response.json()) as { error?: { message?: string } };
+        setRequestError(payload.error?.message ?? "Impossible de refuser la demande.");
+        return;
+      }
+      await refreshRequests();
+    } catch {
+      setRequestError("Impossible de refuser la demande.");
+    } finally {
+      setPendingRequestId(null);
+    }
   }
 
   const content = (
-    <div className="flex h-[calc(100dvh-3rem)] min-h-0 md:h-dvh">
-      <aside
-        className={cn(
-          "bg-background min-h-0 w-full shrink-0 border-r md:flex md:w-80 lg:w-96",
-          activeId ? "hidden md:flex" : "flex",
-        )}
-      >
-        <ConversationList
+    <div className="flex h-[calc(100dvh-3rem)] min-h-0 flex-col md:h-dvh">
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b px-2 sm:px-4">
+        <ConversationSwitcher
           conversations={conversations}
           currentProfileId={currentProfileId}
-          previews={previews}
           activeId={activeId}
           loading={refreshing && conversations.length === 0}
+          previews={previews}
+          requests={requests}
+          pendingRequestId={pendingRequestId}
           onSelect={select}
+          onAcceptRequest={(id) => void acceptRequest(id)}
+          onDeclineRequest={(id) => void declineRequest(id)}
         />
-      </aside>
+        <span className="text-muted-foreground ml-auto hidden items-center gap-1 text-[11px] sm:inline-flex">
+          <Lock className="size-3" aria-hidden="true" />
+          Chiffré de bout en bout
+        </span>
+      </header>
 
-      <section className={cn("min-w-0 flex-1", activeId ? "flex" : "hidden md:flex")}>
+      {requestError ? (
+        <div
+          role="alert"
+          className="bg-destructive/5 text-destructive flex items-center gap-2 border-b px-4 py-2 text-xs"
+        >
+          <span className="flex-1">{requestError}</span>
+          <button
+            type="button"
+            onClick={() => setRequestError(null)}
+            aria-label="Fermer le message d'erreur"
+            className="hover:bg-destructive/10 rounded-sm p-0.5 transition-colors duration-[180ms]"
+          >
+            <X className="size-3.5" aria-hidden="true" />
+          </button>
+        </div>
+      ) : null}
+
+      <section className="flex min-h-0 flex-1 flex-col">
         {identityError ? (
           <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
             <span className="bg-secondary flex size-14 items-center justify-center rounded-full">
-              <Lock className="size-6" />
+              <Lock className="size-6" aria-hidden="true" />
             </span>
             <div>
               <p className="font-medium">Chiffrement indisponible</p>
@@ -196,21 +286,22 @@ export function MessagesShell({
           </div>
         ) : !identity ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
-            <Loader2 className="text-muted-foreground size-6 animate-spin" />
+            <Loader2 className="text-muted-foreground size-6 animate-spin" aria-hidden="true" />
             <p className="text-muted-foreground text-sm">
               Préparation de la clé de chiffrement…
             </p>
           </div>
         ) : activeConversation ? (
-          <MessageThread
-            key={activeConversation.id}
-            conversation={activeConversation}
-            currentProfileId={currentProfileId}
-            identity={identity}
-            realtimeAvailable={client !== null}
-            onBack={back}
-            onSent={() => void refreshConversations()}
-          />
+          <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col">
+            <MessageThread
+              key={activeConversation.id}
+              conversation={activeConversation}
+              currentProfileId={currentProfileId}
+              identity={identity}
+              realtimeAvailable={client !== null}
+              onSent={() => void refreshConversations()}
+            />
+          </div>
         ) : (
           <ThreadPlaceholder />
         )}

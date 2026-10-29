@@ -6,12 +6,12 @@ import { useLiveQuery } from "@neon/realtime-react";
 import type { SealedLiveQuery } from "@neon/realtime/client";
 import type { EmojiClickData } from "emoji-picker-react";
 import {
-  ArrowLeft,
   Loader2,
   Lock,
   MessageSquare,
   Send,
   ShieldCheck,
+  Smile,
   SmilePlus,
 } from "lucide-react";
 import { Avatar } from "@/components/avatar";
@@ -128,14 +128,12 @@ export function MessageThread({
   currentProfileId,
   identity,
   realtimeAvailable,
-  onBack,
   onSent,
 }: {
   conversation: ConversationDto;
   currentProfileId: string;
   identity: Identity;
   realtimeAvailable: boolean;
-  onBack: () => void;
   onSent: () => void;
 }) {
   const [key, setKey] = useState<CryptoKey | null>(null);
@@ -244,7 +242,6 @@ export function MessageThread({
   if (!key || !bootstrap) {
     return (
       <div className="flex h-full flex-col">
-        <ThreadHeader conversation={conversation} currentProfileId={currentProfileId} onBack={onBack} />
         <div className="flex-1 space-y-4 p-6">
           {bootstrapError ? (
             <p role="alert" className="text-destructive text-sm">
@@ -272,7 +269,6 @@ export function MessageThread({
         bootstrap={bootstrap}
         sealed={sealed}
         refreshQuery={refreshQuery}
-        onBack={onBack}
         onSent={onSent}
       />
     );
@@ -288,7 +284,6 @@ export function MessageThread({
       initialNextCursor={bootstrap.nextCursor}
       liveStatus={effectiveLiveError ? "offline" : "connecting"}
       liveError={effectiveLiveError}
-      onBack={onBack}
       onSent={onSent}
     />
   );
@@ -302,7 +297,6 @@ function LiveThread({
   bootstrap,
   sealed,
   refreshQuery,
-  onBack,
   onSent,
 }: {
   conversation: ConversationDto;
@@ -312,7 +306,6 @@ function LiveThread({
   bootstrap: Bootstrap;
   sealed: SealedLiveQuery<LiveMessageRow>;
   refreshQuery: () => Promise<SealedLiveQuery<LiveMessageRow>>;
-  onBack: () => void;
   onSent: () => void;
 }) {
   const { data, status, error } = useLiveQuery<LiveMessageRow>(sealed, {
@@ -330,45 +323,8 @@ function LiveThread({
       initialNextCursor={bootstrap.nextCursor}
       liveStatus={status}
       liveError={status === "error" ? (error?.message ?? "Temps réel indisponible.") : null}
-      onBack={onBack}
       onSent={onSent}
     />
-  );
-}
-
-function ThreadHeader({
-  conversation,
-  currentProfileId,
-  onBack,
-}: {
-  conversation: ConversationDto;
-  currentProfileId: string;
-  onBack?: () => void;
-}) {
-  const other = participant(conversation, currentProfileId);
-  return (
-    <header className="flex h-16 shrink-0 items-center gap-3 border-b px-4">
-      {onBack ? (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          onClick={onBack}
-          className="md:hidden"
-          aria-label="Retour aux conversations"
-        >
-          <ArrowLeft />
-        </Button>
-      ) : null}
-      <Avatar name={other.displayName} src={other.avatarUrl} size="md" />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold">{other.displayName}</p>
-        <p className="text-muted-foreground flex items-center gap-1 text-[11px]">
-          <ShieldCheck className="size-3 text-[#2E9E5B]" />
-          Chiffré de bout en bout
-        </p>
-      </div>
-    </header>
   );
 }
 
@@ -381,7 +337,6 @@ function ThreadView({
   initialNextCursor,
   liveStatus,
   liveError,
-  onBack,
   onSent,
 }: {
   conversation: ConversationDto;
@@ -392,7 +347,6 @@ function ThreadView({
   initialNextCursor: string | null;
   liveStatus: string;
   liveError: string | null;
-  onBack: () => void;
   onSent: () => void;
 }) {
   const [older, setOlder] = useState<LiveMessageRow[]>([]);
@@ -405,8 +359,20 @@ function ThreadView({
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [pickerFor, setPickerFor] = useState<string | null>(null);
+  const [composePicker, setComposePicker] = useState(false);
+  const [caret, setCaret] = useState<number | null>(null);
   const [reactionError, setReactionError] = useState<string | null>(null);
   const readMarker = useRef<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (caret === null) return;
+    const element = textareaRef.current;
+    if (!element) return;
+    element.focus();
+    element.setSelectionRange(caret, caret);
+    setCaret(null);
+  }, [caret]);
 
   const messages = useMemo(() => mergeRows(rows, older), [rows, older]);
   const other = participant(conversation, currentProfileId);
@@ -601,14 +567,23 @@ function ThreadView({
     void toggleReaction(pickerFor, data.emoji);
   }
 
+  // Insère l'emoji au curseur (pas à la fin) et rend le focus au champ.
+  function insertEmoji(emoji: string) {
+    const element = textareaRef.current;
+    const start = element?.selectionStart ?? text.length;
+    const end = element?.selectionEnd ?? text.length;
+    const next = `${text.slice(0, start)}${emoji}${text.slice(end)}`;
+    if (next.length > MAX_MESSAGE_LENGTH) return;
+    setText(next);
+    setCaret(start + emoji.length);
+  }
+
+  function onComposeEmoji(data: EmojiClickData) {
+    insertEmoji(data.emoji);
+  }
+
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <ThreadHeader
-        conversation={conversation}
-        currentProfileId={currentProfileId}
-        onBack={onBack}
-      />
-
       {liveError ? (
         <div className="border-b bg-[#F6F8FC] px-4 py-2 text-xs text-[#10203F] dark:bg-muted">
           Temps réel indisponible : {liveError}. Les messages restent consultables.
@@ -729,7 +704,10 @@ function ThreadView({
                               <span>{timeLabel(message.createdAt)}</span>
                               <button
                                 type="button"
-                                onClick={() => setPickerFor(message.id)}
+                                onClick={() => {
+                                  setPickerFor(message.id);
+                                  setComposePicker(false);
+                                }}
                                 aria-label="Ajouter une réaction"
                                 className="hover:text-foreground text-muted-foreground transition-colors duration-[180ms]"
                               >
@@ -770,7 +748,27 @@ function ThreadView({
         ) : null}
       </div>
 
-      <div className="shrink-0 border-t px-4 py-3">
+      <div className="relative shrink-0 border-t px-4 py-3">
+        {composePicker ? (
+          <>
+            <button
+              type="button"
+              aria-label="Fermer le sélecteur d'emoji"
+              className="fixed inset-0 z-40 cursor-default bg-transparent"
+              onClick={() => setComposePicker(false)}
+            />
+            <div className="absolute right-2 bottom-full z-50 mb-2 overflow-hidden rounded-[14px] shadow-lg sm:right-4">
+              <EmojiPicker
+                onEmojiClick={onComposeEmoji}
+                theme="auto"
+                width={320}
+                height={360}
+                lazyLoadEmojis
+                previewConfig={{ showPreview: false }}
+              />
+            </div>
+          </>
+        ) : null}
         {sendError ? (
           <p role="alert" className="text-destructive mb-2 text-xs">
             {sendError}
@@ -783,6 +781,7 @@ function ThreadView({
         ) : null}
         <form onSubmit={send} className="flex items-end gap-2">
           <Textarea
+            ref={textareaRef}
             value={text}
             onChange={(event) => setText(event.target.value)}
             onKeyDown={(event) => {
@@ -797,6 +796,22 @@ function ThreadView({
             className="max-h-32 min-h-10 resize-none rounded-[14px] py-2"
             aria-label="Message"
           />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              setComposePicker((open) => !open);
+              setPickerFor(null);
+            }}
+            disabled={sending}
+            aria-label="Insérer un emoji"
+            aria-haspopup="dialog"
+            aria-expanded={composePicker}
+            className="shrink-0 rounded-[14px]"
+          >
+            <Smile />
+          </Button>
           <Button
             type="submit"
             size="icon"
