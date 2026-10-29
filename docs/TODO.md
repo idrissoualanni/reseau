@@ -190,6 +190,24 @@
   création F05 + édition F06 ; aperçu + retrait ; tests de validation. Mergé sur `dev`.
 
 ## Designer / UI
+- [x] **DESIGN.md et agents de design (2026-10-29)** — `DESIGN.md` créé (14 sections +
+  références par écran), agents `designer`/`frontend` renforcés (`.claude` + `.opencode`),
+  rules `design-ui.md` et `frontend-ux.md` (chemins `src/**` corrigés, miroirs OpenCode).
+- [x] **Tokens v2 (2026-10-29)** — surface `#F6F8FC`, texte `#10203F`, rayon 14 px, Inter,
+  `shadow-card`, motion 180 ms, palette sombre dérivée. **Primaire conservée en violet
+  `#7C3AED`** ; le bleu `#2F66DB` d'`AGENTS.md` est remplacé.
+- [ ] **Primitives UI manquantes** : `dialog`, `alert-dialog`, `sonner` (toast), `alert`,
+  `table`. À ajouter via shadcn **et** documenter dans `DESIGN.md` §6 avant tout usage.
+  **Intervention dev** (installation + revue).
+- [ ] **Audit visuel 360 / 768 / 1024 px** de chaque écran avec la checklist `DESIGN.md` §13 —
+  **intervention utilisateur** (session réelle) + disque libre pour `npm run build`.
+- [x] **Playwright (2026-10-29)** — `@playwright/test` + `playwright.config.ts`
+  (Chrome système, desktop + mobile), `e2e/smoke.spec.ts`, scripts `test:e2e` /
+  `test:e2e:ui`, doc `docs/testing-e2e.md`, skill CLI `.agents/skills/playwright-cli/`.
+- [ ] **Navigateur Playwright en CI** : installer Chromium (`npx playwright install chromium`)
+  ou définir `PLAYWRIGHT_CHANNEL=` ; réparer/supprimer les specs obsolètes de `tests/`.
+- [x] **Agentation** — `agentation` en devDependency, monté dans le layout **en
+  développement uniquement** (retour visuel pour les agents). Aucun impact production.
 - [x] **Ergonomie des posts** : **fait (2026-10-11)** — fil groupé par jour, hiérarchie de la
   carte de post, composition sur page dédiée `/posts/new`, aperçu image fidèle, mise en
   évidence du post publié (ancre `#post-<id>`). Aucune migration, aucune API modifiée.
