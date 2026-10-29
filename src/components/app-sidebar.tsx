@@ -2,11 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronsUpDown, LogOut, UserRound } from "lucide-react";
+import {
+  ChevronsUpDown,
+  LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Settings,
+  UserRound,
+} from "lucide-react";
 import { NAV_ITEMS, ADMIN_NAV_ITEM } from "@/components/navigation";
 import { signOutAction } from "@/lib/actions/auth";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar } from "@/components/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +26,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -36,18 +44,46 @@ export type SidebarUser = {
   email?: string;
 };
 
+// Repli/dépli de la sidebar (icône explicite demandée en revue UI).
+function SidebarCollapseButton() {
+  const { state, toggleSidebar, isMobile, openMobile } = useSidebar();
+  const collapsed = isMobile ? !openMobile : state === "collapsed";
+  const label = collapsed ? "Déplier le menu" : "Replier le menu";
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="text-muted-foreground hover:text-foreground"
+      onClick={toggleSidebar}
+      aria-label={label}
+      title={label}
+    >
+      {collapsed ? (
+        <PanelLeftOpen className="size-4" aria-hidden="true" />
+      ) : (
+        <PanelLeftClose className="size-4" aria-hidden="true" />
+      )}
+    </Button>
+  );
+}
+
 export function AppSidebar({ user, isAdmin = false }: { user: SidebarUser | null; isAdmin?: boolean }) {
   const pathname = usePathname();
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2">
-          <Link href="/" className="text-foreground text-base font-semibold tracking-tight">
+        <div className="flex items-center gap-2 px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+          <Link
+            href="/"
+            className="text-foreground text-base font-semibold tracking-tight group-data-[collapsible=icon]:hidden"
+          >
             Réseau
           </Link>
-          <div className="ml-auto">
-            <ThemeToggle />
+          <div className="ml-auto group-data-[collapsible=icon]:ml-0">
+            <SidebarCollapseButton />
           </div>
         </div>
       </SidebarHeader>
@@ -126,6 +162,12 @@ export function AppSidebar({ user, isAdmin = false }: { user: SidebarUser | null
                   <Link href={user ? `/u/${user.username}` : "/me/profile"}>
                     <UserRound />
                     Mon profil
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings">
+                    <Settings />
+                    Paramètres
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem variant="destructive" asChild>

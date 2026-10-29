@@ -328,6 +328,16 @@
   **clé serveur** (l'accès `/admin` par rôle ne suffit pas côté serveur).
   **Intervention utilisateur** : fournir la clé serveur.
 
+## UI — revue Agentation (2026-10-29)
+- [x] **Messagerie** : le blocage de clé dit maintenant quoi faire (ouvrir le navigateur
+  d'origine) et la liste parle de **contacts**, plus de « conversations ».
+- [x] **Sidebar** : l'en-tête porte l'icône de **repli/dépli** ; le thème vit sur
+  `/settings` (F40, `docs/ux/settings.md`), accessible depuis le menu utilisateur.
+- [ ] **Supprimer `src/components/theme-toggle.tsx`** (plus importé) — **intervention
+  utilisateur** : autorisation de suppression (règle « fichiers obsolètes »).
+- [ ] **Vérification navigateur** de `/settings` (trois choix, persistance après
+  rechargement) — **intervention utilisateur**.
+
 ## À faire par l'utilisateur (nécessite son intervention)
 - ✅ **Cookie de session — vérifié le 2026-10-28** : plus aucun fichier suivi ne contient le
   motif (`git grep -l` sur `__Secure-neon-auth`, `neon-auth.session` et un JWT) ; seul
