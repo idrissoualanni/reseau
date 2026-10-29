@@ -93,3 +93,67 @@ export async function sealMessagesQuery(
 ): Promise<SealedLiveQuery<LiveMessageRow>> {
   return realtimeServer().seal({ query: messagesLiveQuery(profileId, conversationId) });
 }
+
+export type LiveTypingRow = {
+  profile_id: string;
+  display_name: string;
+  updated_at: string;
+};
+
+export type LivePresenceRow = {
+  profile_id: string;
+  last_seen_at: string | null;
+};
+
+// La saisie est éphémère : le client filtre sur `updated_at` (6 s) car une
+// ligne expirée ne déclenche aucune notification Realtime.
+export function typingLiveQuery(
+  profileId: string,
+  conversationId: string,
+): RawSqlQuery<LiveTypingRow> {
+  return rawSql<LiveTypingRow>(
+    `SELECT t.profile_id, p.display_name, t.updated_at
+     FROM conversation_typing t
+     INNER JOIN profiles p ON p.id = t.profile_id
+     WHERE t.conversation_id = $1
+       AND t.profile_id <> $2
+       AND EXISTS (
+         SELECT 1 FROM conversation_participants cp
+         WHERE cp.conversation_id = $1 AND cp.profile_id = $2
+       )
+     ORDER BY t.updated_at DESC`,
+    [pgParam.text("uuid", conversationId), pgParam.text("uuid", profileId)],
+  );
+}
+
+export function presenceLiveQuery(
+  profileId: string,
+  conversationId: string,
+): RawSqlQuery<LivePresenceRow> {
+  return rawSql<LivePresenceRow>(
+    `SELECT cp.profile_id, pp.last_seen_at
+     FROM conversation_participants cp
+     LEFT JOIN profile_presence pp ON pp.profile_id = cp.profile_id
+     WHERE cp.conversation_id = $1
+       AND cp.profile_id <> $2
+       AND EXISTS (
+         SELECT 1 FROM conversation_participants me
+         WHERE me.conversation_id = $1 AND me.profile_id = $2
+       )`,
+    [pgParam.text("uuid", conversationId), pgParam.text("uuid", profileId)],
+  );
+}
+
+export async function sealTypingQuery(
+  profileId: string,
+  conversationId: string,
+): Promise<SealedLiveQuery<LiveTypingRow>> {
+  return realtimeServer().seal({ query: typingLiveQuery(profileId, conversationId) });
+}
+
+export async function sealPresenceQuery(
+  profileId: string,
+  conversationId: string,
+): Promise<SealedLiveQuery<LivePresenceRow>> {
+  return realtimeServer().seal({ query: presenceLiveQuery(profileId, conversationId) });
+}

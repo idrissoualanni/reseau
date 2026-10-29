@@ -640,6 +640,33 @@ export const messageReceipts = pgTable(
   ],
 );
 
+// Signal de saisie éphémère : une ligne par participant actif, rafraîchie par
+// le client puis supprimée quand il arrête d'écrire.
+export const conversationTyping = pgTable(
+  "conversation_typing",
+  {
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => conversations.id, { onDelete: "cascade" }),
+    profileId: uuid("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.conversationId, t.profileId] }),
+    index("conversation_typing_updated_idx").on(t.updatedAt),
+  ],
+);
+
+// Battement de présence : `last_seen_at` est rafraîchi par le client.
+export const profilePresence = pgTable("profile_presence", {
+  profileId: uuid("profile_id")
+    .primaryKey()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 // Clé publique E2E du profil. Aucune clé privée ne quitte le client.
 export const profileKeys = pgTable(
   "profile_keys",

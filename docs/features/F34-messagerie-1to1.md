@@ -121,11 +121,16 @@ Voir `.claude/rules/messagerie-e2e.md`. Résumé :
 
 ## Saisie et présence
 
-- Neon Function WebSocket, jeton court signé par Next.js.
-- `typing.start` / `typing.stop` : TTL 5 s, jamais persistés.
-- `presence.update` : état par conversation, TTL 30 s, best effort.
-- Limites : 10 événements/s/utilisateur, payload ≤ 1 Ko.
-- Une fonction absente ou en erreur ne bloque **jamais** l'envoi de messages.
+- Transport : **Neon Realtime** (deux requêtes scellées supplémentaires), pas de
+  WebSocket maison ni de Neon Function.
+- Saisie : `POST /api/conversations/[id]/typing` écrit `conversation_typing`
+  (upsert), puis supprime la ligne quand la personne s'arrête. Le client envoie au
+  plus un signal toutes les 2,5 s ; l'indicateur expire après 6 s côté client.
+- Présence : `POST /api/presence` rafraîchit `profile_presence.last_seen_at` au
+  montage puis toutes les 45 s (et au retour d'onglet). « En ligne » = moins de 90 s.
+- Une panne du temps réel ne bloque **jamais** l'envoi : repli sur l'historique REST.
+- Aucun polling de la liste : rafraîchissement sur focus, après une action, et par
+  le fil temps réel.
 
 ## UI / UX
 
@@ -139,13 +144,17 @@ Voir `.claude/rules/messagerie-e2e.md`. Résumé :
 - Réactions : pastilles sous la bulle, picker accessible distinct du composer.
 - États : chargement (`Skeleton`), vide, erreur, reconnexion, clé absente,
   demande en attente.
-- Tokens : `#2F66DB`, `#12A594`, `#F6F8FC`, `#10203F`, radius 14 px,
+- Indicateurs : pastille « En ligne / Vu il y a… » dans l'en-tête du fil, ligne
+  « *Nom* écrit… » au-dessus du composer (`aria-live`).
+- Tokens : `#7C3AED`, `#12A594`, `#F6F8FC`, `#10203F`, radius 14 px,
   motion 180 ms ease-out.
 
 ## Sécurité
 
 - Aucun contenu clair ni clé privée dans les logs, erreurs, analytics ou base.
 - `NEON_REALTIME_SECRET` serveur uniquement ; jamais dans le bundle.
+- `NEXT_PUBLIC_NEON_REALTIME_URL` (même URL `wss://`) est la seule variable
+  Realtime exposée au navigateur.
 - Requêtes live filtrées par appartenance ; test d'accès croisé obligatoire.
 - Rate limiting sur l'envoi et les réactions.
 - Taille max d'un message : 16 Ko chiffré.
@@ -160,7 +169,8 @@ Voir `.claude/rules/messagerie-e2e.md`. Résumé :
   non-destinataire → 404, double acceptation idempotente, refus puis nouvel envoi.
 - Live query : un membre ne reçoit pas les messages d'une autre conversation.
 - Réactions : une par personne, chiffrée, retrait idempotent.
-- Saisie/présence : expiration TTL, jeton invalide refusé.
+- Saisie/présence : fenêtres 6 s / 90 s testées (`src/lib/realtime/signals.test.ts`),
+  non-membre refusé sur les routes `typing` et `presence`.
 - UI : envoi optimiste sans doublon, reconnexion sans trou, emoji inséré au curseur.
 - Aucun secret dans le bundle client.
 

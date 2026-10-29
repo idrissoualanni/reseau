@@ -52,11 +52,14 @@ import {
 import type {
   ConversationDto,
   LiveMessageRow,
+  LivePresenceRow,
+  LiveTypingRow,
   MessageDto,
   ParticipantDto,
   UiMessage,
   UiReaction,
 } from "@/components/messages/types";
+import { isOnline, isTyping, presenceLabel } from "@/lib/realtime/signals";
 
 const EmojiPicker = dynamic(
   () => import("emoji-picker-react").then((module) => module.default),
@@ -141,6 +144,9 @@ export function MessageThread({
   const [bootstrap, setBootstrap] = useState<Bootstrap | null>(null);
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const [sealed, setSealed] = useState<SealedLiveQuery<LiveMessageRow> | null>(null);
+  const [typingSealed, setTypingSealed] = useState<SealedLiveQuery<LiveTypingRow> | null>(null);
+  const [presenceSealed, setPresenceSealed] =
+    useState<SealedLiveQuery<LivePresenceRow> | null>(null);
   const [liveError, setLiveError] = useState<string | null>(null);
   const effectiveLiveError = realtimeAvailable ? liveError : "Temps réel non configuré.";
 
@@ -197,27 +203,41 @@ export function MessageThread({
     };
   }, [key, conversation.id]);
 
-  const refreshQuery = useCallback(async (): Promise<SealedLiveQuery<LiveMessageRow>> => {
+  const fetchLive = useCallback(async () => {
     const response = await fetch(`/api/conversations/${conversation.id}/live`, {
       method: "POST",
       cache: "no-store",
     });
     const payload = (await response.json()) as {
       sealedQuery?: SealedLiveQuery<LiveMessageRow>;
+      typingQuery?: SealedLiveQuery<LiveTypingRow>;
+      presenceQuery?: SealedLiveQuery<LivePresenceRow>;
       error?: { message?: string };
     };
     if (!response.ok || !payload.sealedQuery) {
       throw new Error(payload.error?.message ?? "Temps réel indisponible.");
     }
-    return payload.sealedQuery;
+    return payload as {
+      sealedQuery: SealedLiveQuery<LiveMessageRow>;
+      typingQuery?: SealedLiveQuery<LiveTypingRow>;
+      presenceQuery?: SealedLiveQuery<LivePresenceRow>;
+    };
   }, [conversation.id]);
+
+  const refreshQuery = useCallback(
+    async (): Promise<SealedLiveQuery<LiveMessageRow>> => (await fetchLive()).sealedQuery,
+    [fetchLive],
+  );
 
   useEffect(() => {
     if (!key || !realtimeAvailable) return;
     let cancelled = false;
-    refreshQuery()
-      .then((query) => {
-        if (!cancelled) setSealed(query);
+    fetchLive()
+      .then((payload) => {
+        if (cancelled) return;
+        setSealed(payload.sealedQuery);
+        if (payload.typingQuery) setTypingSealed(payload.typingQuery);
+        if (payload.presenceQuery) setPresenceSealed(payload.presenceQuery);
       })
       .catch((error: unknown) => {
         if (!cancelled) {
@@ -227,7 +247,7 @@ export function MessageThread({
     return () => {
       cancelled = true;
     };
-  }, [key, refreshQuery, realtimeAvailable]);
+  }, [key, fetchLive, realtimeAvailable]);
 
   if (keyError) {
     return (
@@ -268,6 +288,8 @@ export function MessageThread({
         conversationKey={key}
         bootstrap={bootstrap}
         sealed={sealed}
+        typingSealed={typingSealed}
+        presenceSealed={presenceSealed}
         refreshQuery={refreshQuery}
         onSent={onSent}
       />
@@ -296,6 +318,8 @@ function LiveThread({
   conversationKey,
   bootstrap,
   sealed,
+  typingSealed,
+  presenceSealed,
   refreshQuery,
   onSent,
 }: {
@@ -305,6 +329,8 @@ function LiveThread({
   conversationKey: CryptoKey;
   bootstrap: Bootstrap;
   sealed: SealedLiveQuery<LiveMessageRow>;
+  typingSealed: SealedLiveQuery<LiveTypingRow> | null;
+  presenceSealed: SealedLiveQuery<LivePresenceRow> | null;
   refreshQuery: () => Promise<SealedLiveQuery<LiveMessageRow>>;
   onSent: () => void;
 }) {
@@ -321,6 +347,8 @@ function LiveThread({
       conversationKey={conversationKey}
       rows={data ?? bootstrap.rows}
       initialNextCursor={bootstrap.nextCursor}
+      typingSealed={typingSealed}
+      presenceSealed={presenceSealed}
       liveStatus={status}
       liveError={status === "error" ? (error?.message ?? "Temps réel indisponible.") : null}
       onSent={onSent}
@@ -335,6 +363,8 @@ function ThreadView({
   conversationKey,
   rows,
   initialNextCursor,
+  typingSealed,
+  presenceSealed,
   liveStatus,
   liveError,
   onSent,
@@ -345,6 +375,8 @@ function ThreadView({
   conversationKey: CryptoKey;
   rows: readonly LiveMessageRow[];
   initialNextCursor: string | null;
+  typingSealed?: SealedLiveQuery<LiveTypingRow> | null;
+  presenceSealed?: SealedLiveQuery<LivePresenceRow> | null;
   liveStatus: string;
   liveError: string | null;
   onSent: () => void;
@@ -364,6 +396,46 @@ function ThreadView({
   const [reactionError, setReactionError] = useState<string | null>(null);
   const readMarker = useRef<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const typingSentAt = useRef(0);
+  const typingActive = useRef(false);
+  const typingStopTimer = useRef<number | null>(null);
+  const postTyping = useCallback(
+    (typing: boolean) => {
+      void fetch(`/api/conversations/${conversation.id}/typing`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ typing }),
+      }).catch(() => undefined);
+    },
+    [conversation.id],
+  );
+  const stopTyping = useCallback(() => {
+    if (typingStopTimer.current !== null) {
+      window.clearTimeout(typingStopTimer.current);
+      typingStopTimer.current = null;
+    }
+    if (typingActive.current) {
+      typingActive.current = false;
+      postTyping(false);
+    }
+  }, [postTyping]);
+
+  useEffect(() => stopTyping, [stopTyping]);
+
+  function onTextChange(value: string) {
+    setText(value);
+    if (!value.trim()) {
+      stopTyping();
+      return;
+    }
+    if (!typingActive.current || Date.now() - typingSentAt.current > 2_500) {
+      typingSentAt.current = Date.now();
+      typingActive.current = true;
+      postTyping(true);
+    }
+    if (typingStopTimer.current !== null) window.clearTimeout(typingStopTimer.current);
+    typingStopTimer.current = window.setTimeout(stopTyping, 3_000);
+  }
 
   useEffect(() => {
     if (caret === null) return;
@@ -515,6 +587,7 @@ function ThreadView({
       if (!response.ok) {
         throw new Error(payload.error?.message ?? "Le message n'a pas été envoyé.");
       }
+      stopTyping();
       setText("");
       onSent();
     } catch (error: unknown) {
@@ -589,6 +662,14 @@ function ThreadView({
           Temps réel indisponible : {liveError}. Les messages restent consultables.
         </div>
       ) : null}
+
+      <div className="flex items-center gap-2.5 border-b px-4 py-2">
+        <Avatar name={other.displayName} src={other.avatarUrl} size="sm" className="size-8" />
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium">{other.displayName}</p>
+          <PresenceLine sealed={presenceSealed} />
+        </div>
+      </div>
 
       <div className="relative flex min-h-0 flex-1 flex-col">
         {decrypting && display.length === 0 ? (
@@ -779,11 +860,13 @@ function ThreadView({
             {reactionError}
           </p>
         ) : null}
+        <TypingLine sealed={typingSealed} name={other.displayName} />
         <form onSubmit={send} className="flex items-end gap-2">
           <Textarea
             ref={textareaRef}
             value={text}
-            onChange={(event) => setText(event.target.value)}
+            onChange={(event) => onTextChange(event.target.value)}
+            onBlur={stopTyping}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
@@ -829,6 +912,69 @@ function ThreadView({
         </p>
       </div>
     </div>
+  );
+}
+
+// Horloge locale : les fenêtres de saisie/présence expirent sans notification SQL.
+function useNow(intervalMs: number): number | null {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    const tick = () => setNow(Date.now());
+    const first = window.setTimeout(tick, 0);
+    const timer = window.setInterval(tick, intervalMs);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(timer);
+    };
+  }, [intervalMs]);
+  return now;
+}
+
+function PresenceLine({ sealed }: { sealed?: SealedLiveQuery<LivePresenceRow> | null }) {
+  if (!sealed) {
+    return <span className="text-muted-foreground text-xs">Présence indisponible</span>;
+  }
+  return <PresenceLive sealed={sealed} />;
+}
+
+function PresenceLive({ sealed }: { sealed: SealedLiveQuery<LivePresenceRow> }) {
+  const { data } = useLiveQuery<LivePresenceRow>(sealed, { initialData: [] });
+  const now = useNow(15_000);
+  const row = data?.[0];
+  const online = now !== null && isOnline(row?.last_seen_at, now);
+  return (
+    <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
+      <span
+        aria-hidden="true"
+        className={cn(
+          "size-1.5 rounded-full",
+          online ? "bg-[#2E9E5B]" : "bg-muted-foreground/40",
+        )}
+      />
+      {now === null ? "…" : presenceLabel(row?.last_seen_at, now)}
+    </span>
+  );
+}
+
+function TypingLine({
+  sealed,
+  name,
+}: {
+  sealed?: SealedLiveQuery<LiveTypingRow> | null;
+  name: string;
+}) {
+  if (!sealed) return null;
+  return <TypingLive sealed={sealed} name={name} />;
+}
+
+function TypingLive({ sealed, name }: { sealed: SealedLiveQuery<LiveTypingRow>; name: string }) {
+  const { data } = useLiveQuery<LiveTypingRow>(sealed, { initialData: [] });
+  const now = useNow(1_500);
+  const active = now !== null && (data ?? []).some((row) => isTyping(row.updated_at, now));
+  return (
+    <p aria-live="polite" className="text-muted-foreground h-4 truncate text-[11px]">
+      {active ? `${name} écrit…` : ""}
+    </p>
   );
 }
 

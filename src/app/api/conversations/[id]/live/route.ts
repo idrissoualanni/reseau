@@ -1,7 +1,11 @@
 import { requireSession } from "@/lib/auth";
 import { requireOwnProfile } from "@/lib/profile";
 import { findParticipant } from "@/lib/repositories/messaging";
-import { sealMessagesQuery } from "@/lib/realtime/server";
+import {
+  sealMessagesQuery,
+  sealPresenceQuery,
+  sealTypingQuery,
+} from "@/lib/realtime/server";
 import { NotFoundError } from "@/lib/errors";
 import { ok, withApi } from "@/lib/api/respond";
 import { guardMutation } from "@/lib/api/security";
@@ -20,6 +24,10 @@ export const POST = withApi(async (request: Request, context: RouteContext) => {
   const { id } = await context.params;
   const participant = await findParticipant(id, profile.id);
   if (!participant) throw new NotFoundError("Conversation introuvable.");
-  const sealedQuery = await sealMessagesQuery(profile.id, id);
-  return ok({ sealedQuery });
+  const [sealedQuery, typingQuery, presenceQuery] = await Promise.all([
+    sealMessagesQuery(profile.id, id),
+    sealTypingQuery(profile.id, id),
+    sealPresenceQuery(profile.id, id),
+  ]);
+  return ok({ sealedQuery, typingQuery, presenceQuery });
 });

@@ -3,6 +3,7 @@ import { PageShell } from "@/components/page-shell";
 import { ThemeSettings } from "@/components/settings/theme-settings";
 
 export const metadata: Metadata = { title: "Paramètres" };
+export const instant = false;
 
 export default function SettingsPage() {
   return (

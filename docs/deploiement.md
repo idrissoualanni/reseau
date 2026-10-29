@@ -38,13 +38,15 @@ typecheck / build verts, migrations additives appliquées sur Neon **dev**.
 
 ## Variables d'environnement
 Les noms sont dans `.env.example`. Les valeurs se saisissent dans Render, jamais dans
-le dépôt. Pour la V2 : `NEON_REALTIME_URL` et `NEON_REALTIME_SECRET`
-(**serveur uniquement**, jamais préfixé `NEXT_PUBLIC_`).
+le dépôt. Pour la V2 : `NEON_REALTIME_URL`, `NEON_REALTIME_SECRET`
+(**serveur uniquement**) et `NEXT_PUBLIC_NEON_REALTIME_URL` (même URL `wss://`,
+seule variable Realtime exposée au navigateur). Toute modification d'une variable
+`NEXT_PUBLIC_*` exige un redéploiement.
 
 ## Services Render
 - **Un seul service web Next.js** pour le frontend, l'API REST, GraphQL et l'auth.
 - **Aucun service de signalisation** en V2 : la saisie/présence passe par Neon
-  Functions. La signalisation WebRTC/TURN est en V3.
+  Realtime (tables courtes). La signalisation WebRTC/TURN est en V3.
 - Neon Realtime est un service managé Neon, pas un service Render.
 
 ## Historique — état du 07/10/2026 (obsolète)
