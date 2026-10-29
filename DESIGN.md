@@ -161,6 +161,7 @@ locale** : elle s'ajoute ici d'abord.
 | `EmptyState` | — | — | icône 24, titre, une phrase, une action |
 | `ErrorState` | — | — | cause, action « Réessayer » |
 | `PageShell` | fil, dense | 640 / 960 | en-tête, contenu, marges |
+| Sélecteur d'apparence | trois cartes-radio (Clair/Sombre/Système) | 44 px min | actif (bordure + anneau), hover, focus-visible, `aria-checked` |
 | `ProjectCard` | catalogue, profil | — | hover, focus, brouillon |
 | `PostCard` | fil, détail | — | hover, focus, actions |
 | `FormField` / `TextareaField` | — | — | label, aide, erreur `role="alert"` |
@@ -432,6 +433,7 @@ Mapping shadcn : `--background` = page, `--card` = surface blanche, `--accent` =
 | Messages `/messages` | `docs/ux/messaging.md` | Signal, WhatsApp | Liste + fil ; bandeau chiffrement discret ; bulles max 75 % ; composer 44 px |
 | Admin `/admin` | `docs/ux/admin-plateforme.md` | Vercel, Linear | Densité élevée, tableaux sobres, actions destructives nommées |
 | Espaces `/spaces` | `docs/ux/spaces.md` | Notion, Circle | Cartes d'espace, accès lisible, un CTA « Rejoindre » |
+| Paramètres `/settings` | `docs/ux/settings.md` | Linear settings, Raycast | Une section, trois cartes-radio ; aucun bouton « Enregistrer » |
 
 ## 16. Décisions à valider
 
