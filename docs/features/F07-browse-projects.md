@@ -9,7 +9,7 @@
 2. Accessible aux **membres connectés** uniquement.
 3. Pagination par **curseur** (20 par page, « Voir plus »). Jamais d'`OFFSET`.
 4. Filtre facultatif par compétence (`skill`).
-5. Chaque carte : image de couverture (ou visuel par défaut), titre, extrait du texte, auteur (nom + avatar + lien profil), compétences (max 3 + « +n »).
+5. Chaque carte : visuel plein cadre avec **titre et extrait en surimpression**, auteur (nom + avatar + lien profil), **compteurs** (réactions, commentaires, abonnés), compétences (max 3 + « +n »).
 6. Détail d'un projet : texte complet, image, auteur, toutes les compétences. Un brouillon n'est visible que de son auteur.
 7. Les projets de l'utilisateur lui-même apparaissent aussi dans la liste.
 
