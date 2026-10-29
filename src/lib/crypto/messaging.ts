@@ -177,7 +177,7 @@ export async function ensurePublishedIdentity(profileId: string): Promise<Identi
   if (payload.key) {
     if (!local || local.keyId !== payload.key.keyId) {
       throw new E2EKeyError(
-        "Ce compte possède déjà une clé de chiffrement sur un autre navigateur. La récupération n'est pas disponible en V2.",
+        "Ta clé privée est enregistrée dans le navigateur où tu as activé la messagerie. Ouvre Réseau depuis ce navigateur pour lire tes messages. La récupération sur un nouvel appareil n'est pas encore disponible.",
       );
     }
     return local;

@@ -71,9 +71,9 @@ export function ConversationList({
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Rechercher une conversation"
-          className="h-9 rounded-[10px] border-0 bg-[#F6F8FC] pl-9 shadow-none dark:bg-muted"
-          aria-label="Rechercher une conversation"
+          placeholder="Rechercher un contact"
+          className="bg-muted/60 h-9 rounded-[10px] border-0 pl-9 shadow-none"
+          aria-label="Rechercher un contact"
         />
       </div>
 
@@ -94,13 +94,13 @@ export function ConversationList({
           <div className="space-y-2 p-4 text-center">
             <p className="text-muted-foreground text-sm">
               {conversations.length === 0
-                ? "Aucune conversation pour le moment."
-                : "Aucune conversation ne correspond."}
+                ? "Aucun contact pour le moment."
+                : "Aucun contact ne correspond."}
             </p>
             {conversations.length === 0 ? <MessagesEmptyLink /> : null}
           </div>
         ) : (
-          <ul aria-label="Conversations" className="space-y-0.5">
+          <ul aria-label="Contacts" className="space-y-0.5">
             {filtered.map((conversation) => {
               const other = otherParticipant(conversation, currentProfileId);
               const active = conversation.id === activeId;
@@ -141,7 +141,7 @@ export function ConversationList({
                                     : ""
                                 }${previews[conversation.id]}`
                               : "Message chiffré"
-                            : "Démarrer la conversation"}
+                            : "Démarrer la discussion"}
                         </span>
                       </span>
                     </span>
