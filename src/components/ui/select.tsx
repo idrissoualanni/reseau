@@ -63,7 +63,7 @@ function SelectTrigger({
       type="button"
       data-slot="select-trigger"
       className={cn(
-        "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:truncate",
+        "border-input bg-background placeholder:text-muted-foreground flex h-11 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-base whitespace-nowrap transition-[color,background-color,border-color,box-shadow] duration-[180ms] ease-out outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm [&>span]:truncate",
         className,
       )}
       {...props}

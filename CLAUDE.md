@@ -54,7 +54,7 @@ Commandes slash : `/brainstorm` `/plan` `/build` `/new-feature` `/change-feature
 | Base de données, index | `docs/data-model.md` |
 | Procédure des agents | `docs/workflow.md` |
 | Principes d'ingénierie | `docs/engineering-principles.md` |
-| Design system | `docs/design-system.md` |
+| **UI / design (référence opposable)** | `DESIGN.md` puis `docs/design-system.md` |
 | Skills à installer | `docs/skills-to-install.md` |
 | Décisions ouvertes | `docs/open-decisions.md` |
 

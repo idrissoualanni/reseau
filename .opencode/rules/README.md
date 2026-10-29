@@ -5,6 +5,10 @@ autoritaire reste `.claude/rules/` (également importée par `CLAUDE.md`).
 
 - `authentification.md` — parcours Neon Auth : envoi OTP, message neutre,
   bouton « œil », layout auth sans sidebar.
+- `design-ui.md` — UI et design system : `DESIGN.md` prioritaire, tokens, contrastes
+  vérifiés, composants autorisés, états et checklist (miroir de `.claude/rules/design-ui.md`).
+- `frontend-ux.md` — fiche UX avant chaque page, tokens, mobile 360 px, cinq états,
+  accessibilité (miroir de `.claude/rules/frontend-ux.md`).
 - `api-graphql.md` — GraphQL (Yoga + Pothos) : périmètre ADR 0002, scalars Pothos,
   limites de sécurité, DataLoaders (miroir de `.claude/rules/api-graphql.md`).
 - `worktrees.md` — jonction node_modules via PowerShell, jamais `mklink /J` depuis
@@ -28,7 +32,7 @@ autoritaire reste `.claude/rules/` (également importée par `CLAUDE.md`).
   `react/no-unescaped-entities`, écrire `&apos;`.
 - Le reste : `.claude/rules/` (`api-rest.md`, `architecture.md`,
   `base-de-donnees.md`, `chiffrement-e2e.md`, `conventions.md`, `database.md`,
-  `devops-render.md`, `donnees-personnelles.md`, `frontend-ux.md`, `git-workflow.md`,
+  `devops-render.md`, `donnees-personnelles.md`, `git-workflow.md`,
   `hooks.md`, `nextjs.md`, `prompt-loop.md`, `securite`/`security.md`,
   `webrtc.md`).
 

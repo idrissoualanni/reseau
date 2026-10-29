@@ -585,7 +585,7 @@ function ThreadView({
   return (
     <div className="flex h-full min-h-0 flex-col">
       {liveError ? (
-        <div className="border-b bg-[#F6F8FC] px-4 py-2 text-xs text-[#10203F] dark:bg-muted">
+        <div className="border-b bg-background px-4 py-2 text-xs text-foreground dark:bg-muted">
           Temps réel indisponible : {liveError}. Les messages restent consultables.
         </div>
       ) : null}
@@ -664,7 +664,7 @@ function ThreadView({
                               <BubbleContent
                                 className={cn(
                                   "rounded-[14px] px-3.5 py-2",
-                                  isOwn && "bg-[#2F66DB] text-white",
+                                  isOwn && "bg-primary text-primary-foreground",
                                 )}
                               >
                                 {message.text ?? (

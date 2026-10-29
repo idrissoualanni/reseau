@@ -97,3 +97,11 @@ docs/prompt-loop/
 .claude/commands/loop.md
 .opencode/agents/prompt-loop.md
 .opencode/commands/loop.md
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
+
+# Playwright — rapports et artefacts
+/playwright-report/
+/test-results/
+/blob-report/
+/playwright/.cache/

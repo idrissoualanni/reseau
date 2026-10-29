@@ -1,127 +1,74 @@
-# Design system — phase 1
+# Design system — journal d'implémentation
 
-> Cadre validé le 08/10/2026 (brainstorm, docs/brainstorming.md). Le détail — accent,
-> typographies, composants — est finalisé par l'agent frontend (skill `frontend-design`)
-> **dans la limite de ce cadre**. Ce document est la référence : tout écart se justifie ici.
+> **La référence UI/UX est `DESIGN.md`** (couleurs, typographie, composants, patterns,
+> checklist). En cas de conflit, `DESIGN.md` gagne. Ce fichier ne décrit que l'état
+> d'implémentation et l'historique des décisions.
 
 ## 1. Contexte
 
-Réseau social modulable, phase 1 (docs/phases.md) : inscription/connexion, profil étudiant
-minimal, publication d'activités. Communauté étudiante curieuse, mais le profil sert aussi
-au recrutement : l'identité doit être **accueillante** et **crédible**.
+Réseau social modulable : le profil se construit sur des preuves (projets, compétences).
+Communauté étudiante curieuse, mais le profil sert aussi au recrutement : l'identité doit
+être **accueillante** et **crédible**. Mobile-first, réseau lent.
 
-## 2. Décisions validées
+## 2. État actuel des tokens
 
-| Sujet | Décision |
+| Sujet | Implémentation |
 |---|---|
-| Personnalité | **Épuré moderne** — sobre, chaleureux sans être enfantin (repères : Instagram, Vercel, Linear) |
-| Thème | **Clair + sombre** — `prefers-color-scheme` + bascule manuelle |
-| Couleur d'accent | À finaliser par l'agent frontend (direction probable : indigo/violet) |
-| Approche | **Tailwind CSS v4 + shadcn/ui** (Radix UI) — tokens = variables CSS |
-| Périphérique | Mobile-first · réseau lent · petits écrans |
+| Couleur primaire | Violet `#7C3AED` (sombre `#A78BFA`) — décision du 2026-10-29 |
+| Accent de marque | Teal `#12A594` (sombre `#2DD4BF`), icônes et halos uniquement |
+| Neutres | Surface `#F6F8FC`, texte `#10203F`, carte `#FFFFFF` |
+| Succès / danger | `#2E9E5B` / `#D64545` ; variantes AA `success-strong` `#157347` et `danger-strong` `#B42323` |
+| Rayon | `--radius: 0.875rem` (14 px), échelle 10 / 12 / 14 / 18 |
+| Typographie | Inter (UI), Geist Mono (code) — variables `--font-inter` et `--font-geist-mono` |
+| Ombres | `shadow-card` et `shadow-popover` (voir `DESIGN.md` §5) |
+| Motion | `180 ms`, courbe `cubic-bezier(0.2, 0.8, 0.2, 1)` |
+| Thème | Clair + sombre par classe (`next-themes`), `prefers-reduced-motion` respecté |
+| Largeurs | `max-w-content` 640 px · `max-w-wide` 960 px · `max-w-admin` 1200 px |
 
-## 3. Tokens (variables CSS, Tailwind v4)
+Le bloc de tokens complet, prêt à copier, vit dans `DESIGN.md` §14 et dans
+`src/app/globals.css`. **Ne pas dupliquer les valeurs ailleurs.**
 
-- **Couleurs sémantiques** : `background`, `foreground`, `card`, `primary`, `primary-foreground`,
-  `secondary`, `muted`, `muted-foreground`, `border`, `input`, `danger`, `success`, `ring`.
-  Chaque couleur existe dans les deux thèmes (clair/sombre) avec un contraste **AA**.
-- **Rayon** : échelle courte (petit/moyen/plein) — cohérente composants ↔ cartes.
-- **Espacement** : échelle base 4 px (`0.25rem` → multiples).
-- **Ombres** : douces et discrètes (cartes, menus).
-- **Typographie** : paire lisible UI + titres (choix final par l'agent frontend ; UI ≥ 14 px,
-  hauteur de ligne confortable, hiérarchie claire).
-- **Motion** : courte (≤ 200 ms), uniquement décorative, `prefers-reduced-motion` respecté.
-- Largeur de contenu max 640 px (mobile/feed) · 960 px (pages denses).
+## 3. Composants
 
-## 4. Composants phase 1
+- Primitifs : `src/components/ui/**` (shadcn/ui, `new-york`, base `neutral`, lucide).
+- Maison : `PageShell`, `EmptyState`, `ErrorState`, `FormField`, `TextareaField`,
+  `UsernameField`, `Avatar`, `SkillBadge`, `SkillsField`, `ProjectCard`, `PostCard`,
+  `ImageUploader`, `GalleryUploader`, `ImageGallery`.
+- Inventaire, variantes et états : `DESIGN.md` §6.
+- **Absents** : `Dialog`, `AlertDialog`, `Toast`/`sonner`, `Alert`, `Table`. Ne pas les
+  utiliser tant qu'ils ne sont pas ajoutés et documentés.
 
-Bouton (primaire / secondaire / ghost / danger, avec états focus/hover/disabled)
-· champ de formulaire (label, message d'erreur, état invalid)
-· carte d'activité (auteur, date, contenu, pastilles)
-· navigation (top desktop, bottom mobile)
-· avatar (avec initiales en secours)
-· pastille de compétence (petite, discrète)
-· états vides et chargement (skeleton)
-· notification (toast)
+## 4. Historique
 
-Composants maison obligatoires : `PageShell`, `EmptyState`, `ErrorState`, `ProjectCard`,
-`ProfileHeader`, `SkillBadge`, `ImageUploader`.
+### Lot 0 — socle (2026-10-09)
+- Tokens shadcn + Tailwind v4, thème clair/sombre, `FormField`, navigation haute/basse.
+- Accent de l'époque : violet `oklch(0.541 0.281 293.009)` ; typographie Geist.
+- Cibles tactiles `h-11`, largeurs 640/960.
 
-Hors périmètre phase 1 : messagerie, appels, fil de réseau, CV — rien d'UI ne les anticipe.
+### Lot 1 — auth (2026-10-09)
+- `FormField` (label lié, `aria-invalid`, erreur `role="alert"`), `AuthFormSkeleton`.
+- Cartes d'auth `max-w-sm` centrées, `h1` unique, **aucune top bar ni sidebar**.
 
-## 5. Règles produit
+### Lot 2 — profil (2026-10-09)
+- `TextareaField`, `UsernameField`, `Avatar` (initiales), `SkillBadge`, `SkillsField`.
+- `SkillBadge` : `declared` = `secondary`, `demonstrated` = succès + icône + libellé.
 
-1. **Réseau lent** : skeleton au chargement, lazy loading, JS client minimal, aucune
-   animation bloquante.
-2. **Accessibilité AA** dans les deux thèmes : contrastes vérifiés, focus visible,
-   libellés associés aux champs, cibles tactiles ≥ 44 px.
-3. **Cœur générique** : aucun composant ni style spécifique « étudiant » dans le core —
-   le module `etudiant` (champs profil) reste isolé, conformément à la règle profils-modulaires.
-4. État de chargement et erreurs toujours prévus (réseau lent) : jamais d'écran blanc.
-5. Le sens d'un badge ne repose jamais sur la couleur seule (icône + libellé).
-6. Formulaires : validation Zod côté client **et** serveur · erreurs sous le champ ·
-   bouton désactivé pendant l'envoi · pas de perte de saisie sur erreur · messages en
-   français, simples.
+### Lot 3 — design system v2 (2026-10-29)
+- **`DESIGN.md` créé** : source UI/UX opposable (14 sections + références par écran).
+- Tokens alignés : surface `#F6F8FC`, texte `#10203F`, rayon 14 px, Inter, ombres
+  `shadow-card`/`shadow-popover`, motion 180 ms, palette sombre dérivée.
+- Primaire **conservée en violet** (décision utilisateur) ; le bleu `#2F66DB` d'`AGENTS.md`
+  est remplacé.
+- Tokens sémantiques AA ajoutés : `success-strong`, `danger-strong`, `brand`, `warning`, `info`.
+- `Button`/`Input`/`Textarea`/`Select` : 44 px, rayon 14, transition 180 ms.
+- `Badge` succès : `success-strong` + blanc (5,87:1) au lieu de `success` + blanc (3,41:1).
+- Couleurs en dur purgées de `message-thread.tsx` ; `bubble.tsx` dérive déjà du primaire.
+- Agents `designer`/`frontend` et rules `design-ui`/`frontend-ux` mis à jour
+  (chemins `src/**` corrigés, `DESIGN.md` en tête de lecture).
 
-## 6. Navigation V1
+## 5. Reste à faire
 
-Barre basse sur mobile (Projets · Recherche · Mon profil), barre haute sur desktop.
-Pages : `/` (projets), `/search`, `/u/[username]`, `/projects/[id]`, `/me/profile`,
-`/me/projects`, `/sign-in`, `/sign-up`.
-
-## 7. Critères de réussite
-
-- L'app scaffold (page de base) est remplacée par une UI aux tokens du design system,
-  thème clair + sombre fonctionnel, mobile-first.
-- Les composants phase 1 existent (au moins bouton, champ, carte, navigation) et passent
-  un contrôle d'accessibilité de base (contrastes, focus, labels).
-- `npm run build` + `npm run lint` verts sur la branche `frontend`.
-- Rien de spécifique étudiant dans le core ; le module etudiant est dans son propre dossier.
-
-## 8. Répartition
-
-L'agent frontend implémente ce cadre (tokens + composants) et tranche le détail :
-accent exact, typographies, variantes de composants. Toute décision notable est consignée
-ici (section « Notes ») pour être visible.
-
-### Notes
-- (à compléter par l'agent frontend au fil des choix)
-
-#### Lot 0 — choix consignés (2026-10-09)
-- **Accent** : violet. Clair `--primary` violet-600, texte blanc (AA) ; sombre
-  `--primary` violet-400, texte sombre — le bouton primaire reste AA dans les deux thèmes.
-- **Neutres** : base `neutral` de shadcn/ui (surfaces, bordures, `muted`).
-- **Typographies** : Geist (UI) + Geist Mono (code), déjà câblées par le layout.
-- **Rayon** : `--radius` 0.625 rem, échelle `sm/md/lg/xl`.
-- **Largeurs de contenu** : `max-w-content` 40 rem (640 px), `max-w-wide` 60 rem (960 px).
-- **Cibles tactiles** : boutons et champ ≥ 44 px (`h-11`), y compris la nav mobile.
-- **Nouveaux tokens** : `success` / `success-foreground`, alias `danger` = `destructive`.
-- **Navigation** : `Projets` (`/`), `Recherche` (`/search`), `Mon profil` (`/me/profile`),
-  barre haute ≥ `md`, barre basse < `md`.
-
-#### Lot 1 — auth : composants ajoutés (2026-10-09)
-- `FormField` : label lié, `aria-invalid`, erreur `role="alert"`, aide contextuelle —
-  brique commune des formulaires (au-dessus d'`Input`).
-- `TurnstileWidget` : Cloudflare Turnstile rendu automatiquement (champ caché
-  `cf-turnstile-response` lu par l'action serveur) ; masqué si la clé publique est absente.
-- `AuthFormSkeleton` : coquille des écrans d'auth lisant `useSearchParams()`
-  (`/sign-in`, `/verify-email`) — évite un écran vide pendant l'hydratation.
-- Écrans d'auth : carte `max-w-sm` centrée, titre `h1` (les `CardTitle` ne portent pas
-  le titre de page), liens d'action en `text-primary`.
-
-#### Lot 2 — profil (F03/F04/F10) : composants ajoutés (2026-10-09)
-- `Textarea` (primitif) + `TextareaField` : champ multiligne accessible (label lié,
-  erreur `role="alert"`), pendant de `FormField` pour la bio et les textes longs.
-- `UsernameField` : champ username avec vérification de disponibilité débattue (350 ms)
-  via `GET /api/profiles/username-available`, normalisation en minuscules côté client,
-  message en `aria-live` (icône + texte, jamais la couleur seule).
-- `Avatar` : repli sur les initiales du nom affiché. **Aucune image distante** tant que
-  le bucket n'est pas tranché (F06) ; `props.src` prévu mais non alimenté en V1.
-- `SkillBadge` : pastille de compétence. `declared` = `secondary`, `demonstrated` =
-  `success` + icône `BadgeCheck` + libellé lecteur d'écran (« démontrée »/« déclarée »).
-  Suppression possible via un bouton nommé.
-- `SkillsField` : saisie avec autocomplétion (`GET /api/skills?q=`), compteur `n/30`,
-  ajout/retrait optimistes avec actions serveur, liste vide expliquée. Limite à 30
-  compétences rappelée à l'écran.
-- Pages : `/onboarding/profile` (carte unique) et `/me/profile` (en-tête + sections
-  « Informations » et « Compétences »).
+- Ajouter `dialog`, `alert-dialog`, `sonner`, `alert`, `table` si un écran en a besoin
+  (ajout + mise à jour de `DESIGN.md` §6).
+- Audit visuel 360 / 768 / 1024 px de chaque écran (checklist `DESIGN.md` §13).
+- Vérifier les contrastes après tout nouveau composant.
