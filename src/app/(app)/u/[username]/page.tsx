@@ -4,8 +4,9 @@ import { requireSession } from "@/lib/auth";
 import { getOwnProfile, getPublicProfile } from "@/lib/profile";
 import { listProjects } from "@/lib/projects";
 import { loadAuthorPostsFeed } from "@/lib/posts-feed";
-import { listProjectSkillsForProjects } from "@/lib/repositories/projects";
+import { listProjectSkillsForProjects, countProjectCommentsForProjects, countProjectFollowersForProjects, countProjectReactionsForProjects } from "@/lib/repositories/projects";
 import { findProfileSummariesByIds } from "@/lib/repositories/profiles";
+import { projectCountsOf } from "@/lib/feed";
 import { toAuthorSummary, type AuthorSummary } from "@/lib/api/mappers/profile";
 import { galleryUrls, getPublicUrl } from "@/lib/storage";
 import { PageShell } from "@/components/page-shell";
@@ -23,9 +24,13 @@ type ProjectEdge = {
   node: Awaited<ReturnType<typeof listProjects>>["edges"][number]["node"];
   skills: Skill[];
   author: AuthorSummary | null;
+  counts: { reactions: number; comments: number; followers: number };
 };
 
-const toFeedProject = (project: ProjectEdge["node"]) => ({
+const toFeedProject = (
+  project: ProjectEdge["node"],
+  counts: ProjectEdge["counts"],
+) => ({
   id: project.id,
   title: project.title,
   body: project.body,
@@ -34,6 +39,9 @@ const toFeedProject = (project: ProjectEdge["node"]) => ({
   imageUrls: galleryUrls(project.coverKey, project.imageKeys),
   publishedAt: project.publishedAt?.toISOString() ?? null,
   authorId: project.authorId,
+  reactionCount: counts.reactions,
+  commentCount: counts.comments,
+  followerCount: counts.followers,
 });
 
 // Profil public F08 : identité, compétences, projets publiés et posts.
@@ -63,8 +71,14 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   let projectEdges: ProjectEdge[] = [];
   if (projectsPage.edges.length > 0) {
     const projectIds = projectsPage.edges.map((edge) => edge.node.id);
-    const authorRows = await findProfileSummariesByIds([profile.id]);
-    const skillRows = await listProjectSkillsForProjects(projectIds);
+    const [authorRows, skillRows, reactionCounts, commentCounts, followerCounts] =
+      await Promise.all([
+        findProfileSummariesByIds([profile.id]),
+        listProjectSkillsForProjects(projectIds),
+        countProjectReactionsForProjects(projectIds),
+        countProjectCommentsForProjects(projectIds),
+        countProjectFollowersForProjects(projectIds),
+      ]);
     const author = authorRows[0] ?? null;
     const skillsByProject = new Map<string, Skill[]>();
     for (const row of skillRows) {
@@ -77,6 +91,11 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
       node: edge.node,
       skills: skillsByProject.get(edge.node.id) ?? [],
       author: toAuthorSummary(author),
+      counts: projectCountsOf(edge.node.id, {
+        reactions: reactionCounts,
+        comments: commentCounts,
+        followers: followerCounts,
+      }),
     }));
   }
 
@@ -155,7 +174,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {projectEdges.map((edge) => (
-              <ProjectCard key={edge.cursor} project={toFeedProject(edge.node)} skills={edge.skills} author={edge.author} />
+              <ProjectCard key={edge.cursor} project={toFeedProject(edge.node, edge.counts)} skills={edge.skills} author={edge.author} />
             ))}
           </div>
         )}

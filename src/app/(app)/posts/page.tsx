@@ -31,10 +31,9 @@ export default async function PostsPage() {
             Publie une activité et discute avec la communauté.
           </p>
         </div>
-        <Button asChild>
+        <Button asChild size="icon" aria-label="Publier un post" title="Publier un post">
           <Link href="/posts/new">
-            <Plus aria-hidden />
-            Publier
+            <Plus aria-hidden="true" />
           </Link>
         </Button>
       </div>
@@ -51,7 +50,7 @@ export default async function PostsPage() {
           }
         />
       ) : (
-        <PostFeed initialPage={feed} nowIso={new Date().toISOString()} />
+        <PostFeed initialPage={feed} />
       )}
     </PageShell>
   );

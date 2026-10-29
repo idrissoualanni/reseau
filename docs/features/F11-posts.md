@@ -33,7 +33,8 @@
 - [x] Les réponses sont affichées avec indentation (max 3 niveaux visuels).
 - [x] L'auteur supprime son commentaire ; les réponses sont retirées en cascade.
 - [x] Aucune donnée privée dans les réponses API.
-- [x] Le fil est groupé par jour (« Aujourd'hui », « Hier », puis la date) sans fusionner deux jours.
+- [x] Le fil est **continu** (plus de séparateurs de jour) ; l'heure reste sur chaque carte.
+- [x] Chaque carte affiche les **compteurs** (j'aime, commentaires) et un **aperçu des 2 derniers commentaires** avec « Voir les N commentaires ».
 - [x] Publier se fait sur une page dédiée `/posts/new` ; après publication, retour au fil avec le post mis en évidence.
 - [x] L'auteur modifie le texte et l'image de son post depuis `/posts/[id]/edit`.
 - [x] Les posts possèdent un bouton « J'aime » persistant (compteur et état par membre).
