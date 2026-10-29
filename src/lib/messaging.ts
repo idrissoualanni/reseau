@@ -3,13 +3,16 @@ import { decodeCursor, encodeCursor } from "@/lib/pagination";
 import type { UseCaseContext } from "@/lib/context";
 import {
   deleteMessageReaction,
+  findContactRequestById,
   findConversationByDirectKey,
   findConversationById,
   findConversationSummary,
   findMessageById,
   findMessageByClientId,
   findParticipant,
+  findPendingContactRequest,
   findProfileKey,
+  insertContactRequest,
   insertDirectConversation,
   insertMessage,
   listConversationKeyHints,
@@ -18,17 +21,21 @@ import {
   listConversationsForProfile,
   listMessages,
   listParticipants,
+  listPendingContactRequestsForProfile,
   listProfileKeys,
   listReactionsForMessages,
+  markContactRequestResponded,
   markMessageDelivered,
   updateParticipantReadAt,
   upsertConversationKeys,
   upsertMessageReaction,
   upsertProfileKey,
+  type ContactRequestWithProfiles,
   type MessagesCursor,
 } from "@/lib/repositories/messaging";
 import { findProfileById } from "@/lib/repositories/profiles";
 import type {
+  ContactRequest,
   Conversation,
   ConversationKey,
   ConversationSummary,
@@ -92,6 +99,105 @@ export async function startDirectConversation(
 
 export async function listMyConversations(ctx: UseCaseContext): Promise<ConversationSummary[]> {
   return listConversationsForProfile(ctx.profileId, MAX_CONVERSATIONS);
+}
+
+// Ouvre une conversation existante ; ne crée rien (une demande de contact est
+// requise pour une nouvelle paire).
+export async function findDirectConversation(
+  ctx: UseCaseContext,
+  participantId: string,
+): Promise<ConversationSummary | null> {
+  if (participantId === ctx.profileId) {
+    throw new RuleViolationError("Impossible de démarrer une conversation avec soi-même.");
+  }
+  const conversation = await findConversationByDirectKey(
+    directKeyFor(ctx.profileId, participantId),
+  );
+  if (!conversation) return null;
+  return findConversationSummary(conversation.id, ctx.profileId);
+}
+
+// ─── Demandes de contact ────────────────────────────────────────────────────
+
+export async function requestContact(
+  ctx: UseCaseContext,
+  participantId: string,
+): Promise<{ request: ContactRequest; wasCreated: boolean }> {
+  if (participantId === ctx.profileId) {
+    throw new RuleViolationError("Impossible de s'envoyer une demande de contact.");
+  }
+  const participant = await findProfileById(participantId);
+  if (!participant) throw new NotFoundError("Profil introuvable.");
+
+  const conversation = await findConversationByDirectKey(
+    directKeyFor(ctx.profileId, participantId),
+  );
+  if (conversation) {
+    throw new ConflictError("Une conversation existe déjà avec ce profil.");
+  }
+
+  const reverse = await findPendingContactRequest(participantId, ctx.profileId);
+  if (reverse) {
+    throw new ConflictError(
+      "Ce profil t'a déjà envoyé une demande de contact : accepte-la dans Messages.",
+    );
+  }
+
+  const pending = await findPendingContactRequest(ctx.profileId, participantId);
+  if (pending) return { request: pending, wasCreated: false };
+
+  return { request: await insertContactRequest(ctx.profileId, participantId), wasCreated: true };
+}
+
+export async function listMyContactRequests(
+  ctx: UseCaseContext,
+): Promise<ContactRequestWithProfiles[]> {
+  return listPendingContactRequestsForProfile(ctx.profileId);
+}
+
+export async function acceptContactRequest(
+  ctx: UseCaseContext,
+  requestId: string,
+): Promise<{ request: ContactRequest; summary: ConversationSummary }> {
+  const request = await findContactRequestById(requestId);
+  // Un non-destinataire ne doit pas pouvoir distinguer « inconnue » de « refusée ».
+  if (!request || request.recipientId !== ctx.profileId) {
+    throw new NotFoundError("Demande de contact introuvable.");
+  }
+  if (request.status === "declined") {
+    throw new ConflictError("Cette demande a déjà été refusée.");
+  }
+
+  if (request.status === "accepted") {
+    const summary = await findDirectConversation(ctx, request.requesterId);
+    if (!summary) throw new ConflictError("La conversation n'a pas pu être ouverte.");
+    return { request, summary };
+  }
+
+  const { summary } = await startDirectConversation(ctx, request.requesterId);
+  const updated =
+    (await markContactRequestResponded(requestId, ctx.profileId, "accepted")) ??
+    (await findContactRequestById(requestId)) ??
+    request;
+  return { request: updated, summary };
+}
+
+export async function declineContactRequest(
+  ctx: UseCaseContext,
+  requestId: string,
+): Promise<ContactRequest> {
+  const request = await findContactRequestById(requestId);
+  if (!request || request.recipientId !== ctx.profileId) {
+    throw new NotFoundError("Demande de contact introuvable.");
+  }
+  if (request.status === "accepted") {
+    throw new ConflictError("Cette demande a déjà été acceptée.");
+  }
+  if (request.status === "declined") return request;
+
+  const updated = await markContactRequestResponded(requestId, ctx.profileId, "declined");
+  if (!updated) throw new ConflictError("Cette demande a déjà été traitée.");
+  return updated;
 }
 
 export async function listConversationMessages(

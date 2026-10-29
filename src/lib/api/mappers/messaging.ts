@@ -1,5 +1,6 @@
 import { getPublicUrl } from "@/lib/storage";
 import type {
+  ContactRequest,
   Conversation,
   ConversationKey,
   ConversationSummary,
@@ -99,3 +100,34 @@ export function toConversationKeyDto(key: ConversationKey) {
 
 export type MessageDto = ReturnType<typeof toMessageDto>;
 export type ConversationSummaryDto = ReturnType<typeof toConversationSummaryDto>;
+
+// Demande de contact : état seul (réponse de création) puis vue avec le profil
+// de l'autre partie (liste des demandes en attente).
+export function toContactRequestStateDto(request: ContactRequest) {
+  return {
+    id: request.id,
+    status: request.status,
+    createdAt: request.createdAt.toISOString(),
+    respondedAt: request.respondedAt?.toISOString() ?? null,
+  };
+}
+
+export function toContactRequestDto(
+  row: { request: ContactRequest; requester: ProfileRef; recipient: ProfileRef },
+  currentProfileId: string,
+) {
+  const outgoing = row.request.requesterId === currentProfileId;
+  const other = outgoing ? row.recipient : row.requester;
+  return {
+    ...toContactRequestStateDto(row.request),
+    direction: outgoing ? ("outgoing" as const) : ("incoming" as const),
+    profile: {
+      id: other.id,
+      username: other.username,
+      displayName: other.displayName,
+      avatarUrl: other.avatarKey ? getPublicUrl(other.avatarKey) : null,
+    },
+  };
+}
+
+export type ContactRequestDto = ReturnType<typeof toContactRequestDto>;

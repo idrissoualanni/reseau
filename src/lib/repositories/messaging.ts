@@ -10,8 +10,10 @@ import {
   or,
   sql,
 } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db/client";
 import {
+  contactRequests,
   conversationKeys,
   conversationParticipants,
   conversations,
@@ -22,6 +24,7 @@ import {
   profiles,
 } from "@/db/schema";
 import type {
+  ContactRequest,
   Conversation,
   ConversationKey,
   ConversationParticipant,
@@ -39,6 +42,7 @@ type MessageRow = typeof messages.$inferSelect;
 type ReactionRow = typeof messageReactions.$inferSelect;
 type ProfileKeyRow = typeof profileKeys.$inferSelect;
 type ConversationKeyRow = typeof conversationKeys.$inferSelect;
+type ContactRequestRow = typeof contactRequests.$inferSelect;
 
 function toConversation(row: ConversationRow): Conversation {
   return {
@@ -124,6 +128,17 @@ function toProfileRef(row: {
     username: row.username,
     displayName: row.displayName,
     avatarKey: row.avatarKey,
+  };
+}
+
+function toContactRequest(row: ContactRequestRow): ContactRequest {
+  return {
+    id: row.id,
+    requesterId: row.requesterId,
+    recipientId: row.recipientId,
+    status: row.status,
+    createdAt: row.createdAt,
+    respondedAt: row.respondedAt,
   };
 }
 
@@ -600,4 +615,106 @@ export async function listConversationKeysForProfile(
     )
     .orderBy(desc(conversationKeys.createdAt));
   return rows.map(toConversationKey);
+}
+
+// ─── Demandes de contact ────────────────────────────────────────────────────
+
+export async function findContactRequestById(id: string): Promise<ContactRequest | null> {
+  const [row] = await db
+    .select()
+    .from(contactRequests)
+    .where(eq(contactRequests.id, id))
+    .limit(1);
+  return row ? toContactRequest(row) : null;
+}
+
+export async function findPendingContactRequest(
+  requesterId: string,
+  recipientId: string,
+): Promise<ContactRequest | null> {
+  const [row] = await db
+    .select()
+    .from(contactRequests)
+    .where(
+      and(
+        eq(contactRequests.requesterId, requesterId),
+        eq(contactRequests.recipientId, recipientId),
+        eq(contactRequests.status, "pending"),
+      ),
+    )
+    .limit(1);
+  return row ? toContactRequest(row) : null;
+}
+
+export async function insertContactRequest(
+  requesterId: string,
+  recipientId: string,
+): Promise<ContactRequest> {
+  try {
+    const [row] = await db
+      .insert(contactRequests)
+      .values({ requesterId, recipientId })
+      .returning();
+    if (!row) throw new Error("Demande non créée.");
+    return toContactRequest(row);
+  } catch (error) {
+    // Course sur l'index unique partiel : relire la demande en attente.
+    if (isUniqueViolation(error)) {
+      const existing = await findPendingContactRequest(requesterId, recipientId);
+      if (existing) return existing;
+    }
+    throw error;
+  }
+}
+
+export type ContactRequestWithProfiles = {
+  request: ContactRequest;
+  requester: ProfileRef;
+  recipient: ProfileRef;
+};
+
+export async function listPendingContactRequestsForProfile(
+  profileId: string,
+): Promise<ContactRequestWithProfiles[]> {
+  const requester = alias(profiles, "requester_profile");
+  const recipient = alias(profiles, "recipient_profile");
+  const rows = await db
+    .select({ request: contactRequests, requester, recipient })
+    .from(contactRequests)
+    .innerJoin(requester, eq(requester.id, contactRequests.requesterId))
+    .innerJoin(recipient, eq(recipient.id, contactRequests.recipientId))
+    .where(
+      and(
+        eq(contactRequests.status, "pending"),
+        or(
+          eq(contactRequests.requesterId, profileId),
+          eq(contactRequests.recipientId, profileId),
+        ),
+      ),
+    )
+    .orderBy(desc(contactRequests.createdAt));
+  return rows.map((row) => ({
+    request: toContactRequest(row.request),
+    requester: toProfileRef(row.requester),
+    recipient: toProfileRef(row.recipient),
+  }));
+}
+
+export async function markContactRequestResponded(
+  id: string,
+  recipientId: string,
+  status: "accepted" | "declined",
+): Promise<ContactRequest | null> {
+  const [row] = await db
+    .update(contactRequests)
+    .set({ status, respondedAt: new Date() })
+    .where(
+      and(
+        eq(contactRequests.id, id),
+        eq(contactRequests.recipientId, recipientId),
+        eq(contactRequests.status, "pending"),
+      ),
+    )
+    .returning();
+  return row ? toContactRequest(row) : null;
 }

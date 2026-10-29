@@ -1,8 +1,9 @@
 import { requireSession } from "@/lib/auth";
 import { requireOwnProfile } from "@/lib/profile";
-import { listMyConversations, startDirectConversation } from "@/lib/messaging";
+import { findDirectConversation, listMyConversations } from "@/lib/messaging";
 import { toConversationSummaryDto } from "@/lib/api/mappers/messaging";
-import { created, ok, parseInput, readJson, withApi } from "@/lib/api/respond";
+import { ConflictError } from "@/lib/errors";
+import { ok, parseInput, readJson, withApi } from "@/lib/api/respond";
 import { guardMutation } from "@/lib/api/security";
 import { createDirectConversationSchema } from "@/lib/validation/messaging";
 
@@ -15,16 +16,20 @@ export const GET = withApi(async () => {
   return ok({ items: conversations.map(toConversationSummaryDto) });
 });
 
+// Ouvre une conversation existante. Une nouvelle paire passe par une demande
+// de contact (`/api/conversation-requests`).
 export const POST = withApi(async (request: Request) => {
   const blocked = guardMutation(request, "/api/conversations", APP_URL, 30);
   if (blocked) return blocked;
   const session = await requireSession();
   const profile = await requireOwnProfile(session.user.id);
   const input = parseInput(createDirectConversationSchema, await readJson(request));
-  const result = await startDirectConversation(
+  const summary = await findDirectConversation(
     { userId: session.user.id, profileId: profile.id },
     input.participantId,
   );
-  const dto = toConversationSummaryDto(result.summary);
-  return result.wasCreated ? created(dto, `/api/conversations/${dto.id}`) : ok(dto);
+  if (!summary) {
+    throw new ConflictError("Aucune conversation. Envoie une demande de contact.");
+  }
+  return ok(toConversationSummaryDto(summary));
 });

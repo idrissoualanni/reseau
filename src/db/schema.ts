@@ -679,3 +679,42 @@ export const conversationKeys = pgTable(
     check("conversation_keys_algorithm_check", sql`${t.algorithm} = 'AES-256-GCM'`),
   ],
 );
+
+// Demande de contact : aucune conversation n'existe avant acceptation.
+export const contactRequestStatus = pgEnum("conversation_request_status", [
+  "pending",
+  "accepted",
+  "declined",
+]);
+
+export const contactRequests = pgTable(
+  "conversation_requests",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    requesterId: uuid("requester_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    recipientId: uuid("recipient_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    status: contactRequestStatus("status").notNull().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    respondedAt: timestamp("responded_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("conversation_requests_pending_uq")
+      .on(t.requesterId, t.recipientId)
+      .where(sql`${t.status} = 'pending'`),
+    index("conversation_requests_recipient_idx").on(
+      t.recipientId,
+      t.status,
+      t.createdAt.desc(),
+    ),
+    index("conversation_requests_requester_idx").on(
+      t.requesterId,
+      t.status,
+      t.createdAt.desc(),
+    ),
+    check("conversation_requests_distinct_check", sql`${t.requesterId} <> ${t.recipientId}`),
+  ],
+);

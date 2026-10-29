@@ -2,21 +2,26 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/repositories/messaging", () => ({
   deleteMessageReaction: vi.fn(),
+  findContactRequestById: vi.fn(),
   findConversationByDirectKey: vi.fn(),
   findConversationById: vi.fn(),
   findConversationSummary: vi.fn(),
   findMessageById: vi.fn(),
   findMessageByClientId: vi.fn(),
   findParticipant: vi.fn(),
+  findPendingContactRequest: vi.fn(),
   findProfileKey: vi.fn(),
+  insertContactRequest: vi.fn(),
   insertDirectConversation: vi.fn(),
   insertMessage: vi.fn(),
   listConversationKeysForProfile: vi.fn(),
   listConversationsForProfile: vi.fn(),
   listMessages: vi.fn(),
   listParticipants: vi.fn(),
+  listPendingContactRequestsForProfile: vi.fn(),
   listProfileKeys: vi.fn(),
   listReactionsForMessages: vi.fn(),
+  markContactRequestResponded: vi.fn(),
   markMessageDelivered: vi.fn(),
   updateParticipantReadAt: vi.fn(),
   upsertConversationKeys: vi.fn(),
@@ -37,18 +42,24 @@ import {
 import * as profilesRepo from "@/lib/repositories/profiles";
 import * as repo from "@/lib/repositories/messaging";
 import {
+  acceptContactRequest,
+  declineContactRequest,
   directKeyFor,
+  findDirectConversation,
   getConversationKeyBundle,
   listConversationMessages,
+  listMyContactRequests,
   markConversationRead,
   publishOwnKey,
   reactToMessage,
   removeMessageReaction,
+  requestContact,
   saveConversationKeys,
   sendMessage,
   startDirectConversation,
 } from "@/lib/messaging";
 import type {
+  ContactRequest,
   Conversation,
   ConversationKey,
   ConversationSummary,
@@ -442,5 +453,144 @@ describe("clés", () => {
     mocked.listConversationKeysForProfile.mockResolvedValue([wrappedKey("p1")]);
     const bundle = await getConversationKeyBundle(ctx, conversationId);
     expect(bundle.participantKeys.every((key) => !("privateKey" in key))).toBe(true);
+  });
+});
+
+function contactRequest(overrides: Partial<ContactRequest> = {}): ContactRequest {
+  return {
+    id: "r1",
+    requesterId: "p2",
+    recipientId: "p1",
+    status: "pending",
+    createdAt: new Date("2026-01-01T00:00:00Z"),
+    respondedAt: null,
+    ...overrides,
+  };
+}
+
+describe("demandes de contact", () => {
+  it("refuse une demande à soi-même", async () => {
+    await expect(requestContact(ctx, "p1")).rejects.toBeInstanceOf(RuleViolationError);
+  });
+
+  it("refuse un profil inconnu", async () => {
+    mockedProfiles.findProfileById.mockResolvedValue(null);
+    await expect(requestContact(ctx, "p2")).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it("refuse une demande si une conversation existe déjà", async () => {
+    mockedProfiles.findProfileById.mockResolvedValue(profile("p2"));
+    mocked.findConversationByDirectKey.mockResolvedValue(conversation());
+    await expect(requestContact(ctx, "p2")).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it("signale une demande inverse déjà en attente", async () => {
+    mockedProfiles.findProfileById.mockResolvedValue(profile("p2"));
+    mocked.findConversationByDirectKey.mockResolvedValue(null);
+    mocked.findPendingContactRequest.mockImplementation(async (requesterId, recipientId) =>
+      requesterId === "p2" && recipientId === "p1" ? contactRequest() : null,
+    );
+    await expect(requestContact(ctx, "p2")).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it("réutilise une demande sortante en attente", async () => {
+    mockedProfiles.findProfileById.mockResolvedValue(profile("p2"));
+    mocked.findConversationByDirectKey.mockResolvedValue(null);
+    mocked.findPendingContactRequest.mockImplementation(async (requesterId, recipientId) =>
+      requesterId === "p1" && recipientId === "p2"
+        ? contactRequest({ requesterId: "p1", recipientId: "p2" })
+        : null,
+    );
+    const result = await requestContact(ctx, "p2");
+    expect(result.wasCreated).toBe(false);
+    expect(mocked.insertContactRequest).not.toHaveBeenCalled();
+  });
+
+  it("crée une demande pour une nouvelle paire", async () => {
+    mockedProfiles.findProfileById.mockResolvedValue(profile("p2"));
+    mocked.findConversationByDirectKey.mockResolvedValue(null);
+    mocked.findPendingContactRequest.mockResolvedValue(null);
+    mocked.insertContactRequest.mockResolvedValue(
+      contactRequest({ requesterId: "p1", recipientId: "p2" }),
+    );
+    const result = await requestContact(ctx, "p2");
+    expect(result.wasCreated).toBe(true);
+    expect(result.request.requesterId).toBe("p1");
+  });
+
+  it("n'ouvre pas une conversation inexistante", async () => {
+    mocked.findConversationByDirectKey.mockResolvedValue(null);
+    await expect(findDirectConversation(ctx, "p2")).resolves.toBeNull();
+  });
+
+  it("ouvre une conversation existante sans la recréer", async () => {
+    mocked.findConversationByDirectKey.mockResolvedValue(conversation());
+    mocked.findConversationSummary.mockResolvedValue(summary());
+    const result = await findDirectConversation(ctx, "p2");
+    expect(result?.conversation.id).toBe(conversationId);
+    expect(mocked.insertDirectConversation).not.toHaveBeenCalled();
+  });
+
+  it("masque une demande dont on n'est pas le destinataire", async () => {
+    mocked.findContactRequestById.mockResolvedValue(
+      contactRequest({ recipientId: "p3" }),
+    );
+    await expect(acceptContactRequest(ctx, "r1")).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it("refuse d'accepter une demande déjà refusée", async () => {
+    mocked.findContactRequestById.mockResolvedValue(contactRequest({ status: "declined" }));
+    await expect(acceptContactRequest(ctx, "r1")).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it("accepte une demande et crée la conversation", async () => {
+    mockedProfiles.findProfileById.mockResolvedValue(profile("p2"));
+    mocked.findContactRequestById.mockResolvedValue(contactRequest());
+    mocked.findConversationByDirectKey.mockResolvedValue(null);
+    mocked.insertDirectConversation.mockResolvedValue(conversation());
+    mocked.findConversationSummary.mockResolvedValue(summary());
+    mocked.markContactRequestResponded.mockResolvedValue(
+      contactRequest({ status: "accepted", respondedAt: new Date() }),
+    );
+
+    const result = await acceptContactRequest(ctx, "r1");
+    expect(result.summary.conversation.id).toBe(conversationId);
+    expect(mocked.markContactRequestResponded).toHaveBeenCalledWith(
+      "r1",
+      "p1",
+      "accepted",
+    );
+  });
+
+  it("reste idempotent sur une demande déjà acceptée", async () => {
+    mocked.findContactRequestById.mockResolvedValue(contactRequest({ status: "accepted" }));
+    mocked.findConversationByDirectKey.mockResolvedValue(conversation());
+    mocked.findConversationSummary.mockResolvedValue(summary());
+    const result = await acceptContactRequest(ctx, "r1");
+    expect(result.summary.conversation.id).toBe(conversationId);
+    expect(mocked.markContactRequestResponded).not.toHaveBeenCalled();
+  });
+
+  it("refuse de décliner une demande acceptée", async () => {
+    mocked.findContactRequestById.mockResolvedValue(contactRequest({ status: "accepted" }));
+    await expect(declineContactRequest(ctx, "r1")).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it("décline une demande en attente", async () => {
+    mocked.findContactRequestById.mockResolvedValue(contactRequest());
+    mocked.markContactRequestResponded.mockResolvedValue(
+      contactRequest({ status: "declined", respondedAt: new Date() }),
+    );
+    const result = await declineContactRequest(ctx, "r1");
+    expect(result.status).toBe("declined");
+  });
+
+  it("liste les demandes en attente du profil", async () => {
+    mocked.listPendingContactRequestsForProfile.mockResolvedValue([
+      { request: contactRequest(), requester: profile("p2"), recipient: profile("p1") },
+    ]);
+    const result = await listMyContactRequests(ctx);
+    expect(result).toHaveLength(1);
+    expect(mocked.listPendingContactRequestsForProfile).toHaveBeenCalledWith("p1");
   });
 });

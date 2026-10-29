@@ -328,3 +328,15 @@ export type ConversationSummary = {
   lastMessage: EncryptedMessage | null;
   unreadCount: number;
 };
+
+// Demande de contact : aucun texte, uniquement un état entre deux profils.
+export type ContactRequestStatus = "pending" | "accepted" | "declined";
+
+export type ContactRequest = {
+  id: string;
+  requesterId: string;
+  recipientId: string;
+  status: ContactRequestStatus;
+  createdAt: Date;
+  respondedAt: Date | null;
+};
