@@ -26,13 +26,18 @@
 - [x] **Déclaration `neon.ts`** : buckets `asset`, `post`, `profile`, `projet`,
   `videos` + `preview.realtime` avec les deux origines. Ne pas lancer
   `neon config apply` avant que l'état live et le fichier soient alignés.
-- [ ] **Render dev — variables Realtime** — **intervention utilisateur** : ajouter
-  `NEON_REALTIME_URL` et `NEON_REALTIME_SECRET` au service `reseau`
-  (`srv-db4ek92jnfac73b4uij0`). Ne jamais coller le secret dans un ticket, un log ou
-  la conversation.
-- [ ] **Fonction de saisie/présence** : contrat WebSocket, jeton court, TTL, limites.
-  Aucun événement persisté. **Reste à faire** : déployer la Neon Function et le jeton
-  court ; l'envoi et la lecture des messages ne doivent pas en dépendre.
+- [ ] **Render dev — variables Realtime** : `NEON_REALTIME_URL`,
+  `NEXT_PUBLIC_NEON_REALTIME_URL` (même valeur) et `NEON_REALTIME_SECRET` sur le
+  service `reseau` (`srv-db4ek92jnfac73b4uij0`). Redéployer : les variables
+  `NEXT_PUBLIC_*` sont figées au build.
+- [x] **Client Realtime** (2026-10-29) : `NEXT_PUBLIC_NEON_REALTIME_URL` dans
+  `.env.local`, `.env.example` et `render.yaml`.
+- [x] **Saisie et présence** (2026-10-29) : tables `conversation_typing` et
+  `profile_presence` (migration `0014` appliquée sur Neon dev), routes `typing` et
+  `presence`, indicateurs dans le fil, suppression du polling 20 s.
+- [ ] **Vérification deux comptes** — **intervention utilisateur** : envoyer un
+  message de A vers B sans recharger, vérifier « B écrit… » et la pastille
+  « En ligne » sur le service Render dev.
 - [x] **Schéma messagerie** (2026-10-27) : `conversations`, `conversation_participants`,
   `messages`, `message_reactions`, `message_receipts`, `profile_keys`,
   `conversation_keys` + enums, index et contraintes. Migration additive

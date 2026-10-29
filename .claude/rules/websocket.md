@@ -1,5 +1,5 @@
 ---
-description: Règles du temps réel V2 — Neon Realtime pour les lignes, Neon Functions pour l'éphémère.
+description: Règles du temps réel V2 — Neon Realtime pour les lignes et les signaux courts.
 paths:
   - src/modules/messaging/**
   - src/app/api/conversations/**
@@ -13,8 +13,8 @@ paths:
 ## 0. Statut
 
 - Le temps réel est autorisé **en V2 uniquement**.
-- Architecture retenue : **Neon Realtime** pour les lignes persistées,
-  **Neon Functions WebSocket** pour les événements éphémères.
+- Architecture retenue : **Neon Realtime** pour les lignes persistées **et** pour
+  les signaux courts (saisie, présence).
 - `apps/realtime` n'est **pas** créé. Un service dédié exigerait un nouvel ADR et une
   mesure prouvant que Neon Functions ne suffit pas.
 - La V1 et la V1.5 ne doivent pas dépendre du temps réel.
@@ -25,8 +25,8 @@ paths:
 |---|---|---|
 | Messages, réactions, accusés | Neon Realtime (live query scellée) | Oui, Postgres |
 | Liste des conversations / non lus | Neon Realtime | Oui |
-| Saisie (`typing`) | Neon Function WebSocket | Non, TTL 5 s |
-| Présence | Neon Function WebSocket | Non, TTL 30 s |
+| Saisie (`typing`) | Neon Realtime + table `conversation_typing` | Éphémère, expiré côté client (6 s) |
+| Présence | Neon Realtime + table `profile_presence` | Battement 45 s, en ligne < 90 s |
 | Signalisation WebRTC | V3 — décision séparée | Non |
 | Historique / envoi | REST Next.js | Oui |
 | Fil, profil, recherche | HTTP/GraphQL | Oui |
@@ -46,17 +46,21 @@ paths:
 - Elle est **scellée** par `NEON_REALTIME_SECRET` ; le client ne peut ni la lire ni la
   modifier.
 - Le SQL filtre explicitement l'appartenance (`conversation_participants`).
-- Une requête par conversation, une pour la liste. Pas de SQL arbitraire client.
+- Une requête par conversation (messages, saisie, présence). Pas de SQL arbitraire client.
 - Renouveler la requête scellée avant expiration ; gérer `error` et la reconnexion.
 - Ne jamais mettre `NEON_REALTIME_SECRET` dans un bundle, un log ou une URL.
+- Le navigateur ne reçoit que `NEXT_PUBLIC_NEON_REALTIME_URL` (même URL `wss://`).
+- Aucun polling de la liste : focus, actions et live query suffisent.
 
-## 4. Neon Functions (éphémère)
+## 4. Signaux courts (saisie, présence)
 
-- Jeton court signé par Next.js, lié au `userId` et à la conversation.
-- `typing.start` / `typing.stop` : TTL 5 s, aucun stockage.
-- `presence.update` : TTL 30 s, best effort ; un onglet fermé brutalement expire.
-- Payload ≤ 1 Ko, 10 événements/s/utilisateur.
-- Une Function indisponible ne bloque **jamais** l'envoi ou la lecture des messages.
+- Saisie : `POST /api/conversations/[id]/typing`, upsert `conversation_typing`,
+  suppression à l'arrêt ; throttle client 2,5 s, expiration 6 s.
+- Présence : `POST /api/presence`, upsert `profile_presence.last_seen_at` ;
+  battement 45 s, « en ligne » < 90 s.
+- Une ligne expirée ne déclenche aucune notification : l'expiration est calculée
+  côté client à partir de `updated_at` / `last_seen_at`.
+- Une panne Realtime ne bloque **jamais** l'envoi ou la lecture des messages.
 - Ne jamais journaliser le contenu d'un message, même chiffré.
 
 ## 5. Chiffrement
