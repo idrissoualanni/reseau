@@ -98,6 +98,10 @@ export const saveConversationKeysSchema = z
   })
   .strict();
 
+export const typingSignalSchema = z.object({
+  typing: z.boolean(),
+});
+
 export type CreateDirectConversationInput = z.infer<typeof createDirectConversationSchema>;
 export type SendMessageInput = z.infer<typeof sendMessageSchema>;
 export type MessageReactionInput = z.infer<typeof messageReactionSchema>;

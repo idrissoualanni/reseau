@@ -162,18 +162,36 @@ export function MessagesShell({
     };
   }, []);
 
+  // Plus de polling : la liste se rafraîchit sur focus, après une action, ou
+  // par le fil temps réel. La présence, elle, envoie un battement périodique.
   useEffect(() => {
     const refresh = () => {
+      if (document.visibilityState !== "visible") return;
       void refreshConversations();
       void refreshRequests();
     };
-    const interval = window.setInterval(refresh, 20_000);
     window.addEventListener("focus", refresh);
-    return () => {
-      window.clearInterval(interval);
-      window.removeEventListener("focus", refresh);
-    };
+    return () => window.removeEventListener("focus", refresh);
   }, [refreshConversations, refreshRequests]);
+
+  useEffect(() => {
+    let stopped = false;
+    const beat = () => {
+      if (stopped || document.visibilityState !== "visible") return;
+      void fetch("/api/presence", { method: "POST", cache: "no-store" }).catch(() => undefined);
+    };
+    beat();
+    const interval = window.setInterval(beat, 45_000);
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") beat();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      stopped = true;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
 
   function select(id: string) {
     setActiveId(id);

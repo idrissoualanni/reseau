@@ -16,11 +16,13 @@ import {
   contactRequests,
   conversationKeys,
   conversationParticipants,
+  conversationTyping,
   conversations,
   messageReactions,
   messageReceipts,
   messages,
   profileKeys,
+  profilePresence,
   profiles,
 } from "@/db/schema";
 import type {
@@ -698,6 +700,44 @@ export async function listPendingContactRequestsForProfile(
     requester: toProfileRef(row.requester),
     recipient: toProfileRef(row.recipient),
   }));
+}
+
+// Saisie : upsert tant que la personne écrit, suppression dès qu'elle s'arrête.
+export async function setConversationTyping(
+  conversationId: string,
+  profileId: string,
+  typing: boolean,
+): Promise<void> {
+  if (!typing) {
+    await db
+      .delete(conversationTyping)
+      .where(
+        and(
+          eq(conversationTyping.conversationId, conversationId),
+          eq(conversationTyping.profileId, profileId),
+        ),
+      );
+    return;
+  }
+  const now = new Date();
+  await db
+    .insert(conversationTyping)
+    .values({ conversationId, profileId, updatedAt: now })
+    .onConflictDoUpdate({
+      target: [conversationTyping.conversationId, conversationTyping.profileId],
+      set: { updatedAt: now },
+    });
+}
+
+export async function touchProfilePresence(profileId: string): Promise<void> {
+  const now = new Date();
+  await db
+    .insert(profilePresence)
+    .values({ profileId, lastSeenAt: now })
+    .onConflictDoUpdate({
+      target: profilePresence.profileId,
+      set: { lastSeenAt: now },
+    });
 }
 
 export async function markContactRequestResponded(
