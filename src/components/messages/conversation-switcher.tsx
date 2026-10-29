@@ -47,8 +47,8 @@ export function ConversationSwitcher({
           type="button"
           aria-label={
             other
-              ? `Conversation avec ${other.displayName}. Changer de conversation`
-              : "Choisir une conversation"
+              ? `Contact ${other.displayName}. Changer de contact`
+              : "Choisir un contact"
           }
           aria-haspopup="dialog"
           className="hover:bg-muted/70 flex min-w-0 max-w-full flex-1 items-center gap-3 rounded-[14px] px-2 py-1.5 text-left transition-colors duration-[180ms] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:max-w-md"
@@ -63,7 +63,7 @@ export function ConversationSwitcher({
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-1.5">
               <span className="truncate text-sm font-semibold">
-                {other ? other.displayName : "Choisir une conversation"}
+                {other ? other.displayName : "Choisir un contact"}
               </span>
               {requests.incoming.length > 0 ? (
                 <span className="bg-primary text-primary-foreground inline-flex min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold">
@@ -76,8 +76,8 @@ export function ConversationSwitcher({
               {other
                 ? `@${other.username}`
                 : conversations.length === 0
-                  ? "Aucune conversation"
-                  : `${conversations.length} conversation${conversations.length > 1 ? "s" : ""}`}
+                  ? "Aucun contact"
+                  : `${conversations.length} contact${conversations.length > 1 ? "s" : ""}`}
             </span>
           </span>
           <ChevronDown className="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
@@ -87,10 +87,10 @@ export function ConversationSwitcher({
         align="start"
         sideOffset={8}
         className="w-[min(24rem,calc(100vw-1.5rem))] overflow-hidden p-0"
-        aria-label="Conversations et demandes de contact"
+        aria-label="Contacts et demandes"
       >
         <div className="flex items-center justify-between px-3 pt-3 pb-1">
-          <p className="text-sm font-semibold">Messages</p>
+          <p className="text-sm font-semibold">Contacts</p>
           <span className="text-muted-foreground inline-flex items-center gap-1 text-[11px]">
             <Lock className="size-3" aria-hidden="true" />
             E2E
