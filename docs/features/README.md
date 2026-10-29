@@ -50,6 +50,7 @@ Statuts : ✅ livré · 🟡 code livré, vérification en attente · 🔜 à d�
 | F37 | Espace recruteur | V3 | F08, F36 | ⏳ |
 | F38 | Tableau de bord université | V3 | F14, F17 | ⏳ |
 | F39 | Module entrepreneur | V3 | F14 | ⏳ |
+| F40 | Paramètres (apparence) | V1.5 | — | ✅ |
 
 > **Correctif 2026-10-26** : les lignes F18–F20 ci-dessus correspondent aux fiches
 > réellement livrées (`F18-project-catalog`, `F19-project-social`,
