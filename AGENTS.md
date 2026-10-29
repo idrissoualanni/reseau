@@ -16,6 +16,7 @@ Détails : docs/architecture.md, docs/base-de-donnees.md, docs/deploiement.md.
 - Installer : `npm install`
 - Dev : `npm run dev`
 - Tests : `npm test`
+- E2E : `npm run test:e2e` (Playwright, Chrome système)
 - Lint : `npm run lint`
 - Build : `npm run build`
 (Adapter si la stack change.)
@@ -28,6 +29,7 @@ Détails : docs/architecture.md, docs/base-de-donnees.md, docs/deploiement.md.
 - Profils modulaires : .claude/rules/profils-modulaires.md
 - Données personnelles : .claude/rules/donnees-personnelles.md
 - Base de données (Neon) : .claude/rules/base-de-donnees.md et .claude/rules/database.md
+- UI / design : DESIGN.md (référence opposable), .claude/rules/design-ui.md et .claude/rules/frontend-ux.md
 - Miroirs OpenCode : .opencode/rules/README.md
 
 ## Workflow git
@@ -130,16 +132,18 @@ par l'utilisateur et celles qui nécessitent son intervention.
 
 | Token | Valeur |
 |---|---|
-| `color.primary` | `#2F66DB` |
-| `color.accent` | `#12A594` |
+| `color.primary` | `#7C3AED` (sombre `#A78BFA`) — décision du 2026-10-29, le bleu `#2F66DB` est remplacé |
+| `color.accent` | `#12A594` — icônes/halos uniquement, jamais du texte sur blanc |
 | `color.surface` | `#F6F8FC` |
 | `color.text` | `#10203F` |
-| `color.success` / `color.danger` | `#2E9E5B` / `#D64545` |
+| `color.success` / `color.danger` | `#2E9E5B` / `#D64545` — texte et badges : `#157347` / `#B42323` |
 | `radius` | `14px` |
-| `font` | Sans arrondie (Inter, system-ui) |
-| `space` | `8px` (échelle 4 / 8 / 16 / 24) |
+| `font` | Inter, system-ui (Geist Mono pour le code) |
+| `space` | 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 |
 | `shadow` | `shadow.card` = douce, diffuse |
 | `motion` | `180ms ease-out` |
+
+La référence complète (contrastes, composants, patterns, checklist) est **`DESIGN.md`**.
 
 ## Sidebar shadcn/ui
 
@@ -170,6 +174,7 @@ Détails : docs/architecture.md, docs/base-de-donnees.md, docs/deploiement.md.
 - Installer : `npm install`
 - Dev : `npm run dev`
 - Tests : `npm test`
+- E2E : `npm run test:e2e` (Playwright, Chrome système)
 - Lint : `npm run lint`
 - Build : `npm run build`
 (Adapter si la stack change.)
@@ -182,6 +187,7 @@ Détails : docs/architecture.md, docs/base-de-donnees.md, docs/deploiement.md.
 - Profils modulaires : .claude/rules/profils-modulaires.md
 - Données personnelles : .claude/rules/donnees-personnelles.md
 - Base de données (Neon) : .claude/rules/base-de-donnees.md et .claude/rules/database.md
+- UI / design : DESIGN.md (référence opposable), .claude/rules/design-ui.md et .claude/rules/frontend-ux.md
 - Miroirs OpenCode : .opencode/rules/README.md
 
 ## Workflow git
@@ -364,7 +370,7 @@ retire a top base que tu as creer sur la page sign et sgin up la top bar doit tr
 il faut modifier le designer pour qui soit plus moderne et utilise ce token design 
 
 color.primary
-#2F66DB
+#7C3AED
 color.accent
 #12A594
 color.surface
