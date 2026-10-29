@@ -26,10 +26,10 @@
 - [x] **Déclaration `neon.ts`** : buckets `asset`, `post`, `profile`, `projet`,
   `videos` + `preview.realtime` avec les deux origines. Ne pas lancer
   `neon config apply` avant que l'état live et le fichier soient alignés.
-- [ ] **Render dev — variables Realtime** : `NEON_REALTIME_URL`,
-  `NEXT_PUBLIC_NEON_REALTIME_URL` (même valeur) et `NEON_REALTIME_SECRET` sur le
-  service `reseau` (`srv-db4ek92jnfac73b4uij0`). Redéployer : les variables
-  `NEXT_PUBLIC_*` sont figées au build.
+- [x] **Render dev — variables Realtime** (2026-10-29) : `NEON_REALTIME_URL`,
+  `NEXT_PUBLIC_NEON_REALTIME_URL` (même valeur) et `NEON_REALTIME_SECRET` posées sur
+  le service `reseau` (`srv-db4ek92jnfac73b4uij0`). Redéploiement `229ee12` live,
+  health `200`.
 - [x] **Client Realtime** (2026-10-29) : `NEXT_PUBLIC_NEON_REALTIME_URL` dans
   `.env.local`, `.env.example` et `render.yaml`.
 - [x] **Saisie et présence** (2026-10-29) : tables `conversation_typing` et
