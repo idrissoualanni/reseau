@@ -364,7 +364,7 @@ function ThreadHeader({
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold">{other.displayName}</p>
         <p className="text-muted-foreground flex items-center gap-1 text-[11px]">
-          <ShieldCheck className="size-3 text-[#2E9E5B]" />
+          <ShieldCheck className="size-3 text-success" />
           Chiffré de bout en bout
         </p>
       </div>
@@ -610,7 +610,7 @@ function ThreadView({
       />
 
       {liveError ? (
-        <div className="border-b bg-[#F6F8FC] px-4 py-2 text-xs text-[#10203F] dark:bg-muted">
+        <div className="border-b bg-background px-4 py-2 text-xs text-foreground dark:bg-muted">
           Temps réel indisponible : {liveError}. Les messages restent consultables.
         </div>
       ) : null}
@@ -689,7 +689,7 @@ function ThreadView({
                               <BubbleContent
                                 className={cn(
                                   "rounded-[14px] px-3.5 py-2",
-                                  isOwn && "bg-[#2F66DB] text-white",
+                                  isOwn && "bg-primary text-primary-foreground",
                                 )}
                               >
                                 {message.text ?? (
