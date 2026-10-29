@@ -861,7 +861,7 @@ export function ThreadPlaceholder() {
         <ShieldCheck className="text-muted-foreground size-6" />
       </span>
       <div>
-        <p className="font-medium">Choisis une conversation</p>
+        <p className="font-medium">Choisis un contact</p>
         <p className="text-muted-foreground mt-1 text-sm">
           Les messages sont chiffrés de bout en bout. Seuls les participants peuvent les lire.
         </p>
