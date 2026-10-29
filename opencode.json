@@ -3,6 +3,10 @@
   "instructions": [".claude/rules/*.md"],
   "mcp": {
     "servers": {
+      "agentation": {
+        "type": "local",
+        "command": ["npx", "-y", "agentation-mcp", "server"]
+      },
       "neon": {
         "type": "remote",
         "url": "https://mcp.neon.tech/mcp"

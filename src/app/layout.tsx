@@ -40,7 +40,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           {children}
         </ThemeProvider>
-        {process.env.NODE_ENV === "development" ? <Agentation /> : null}
+        {process.env.NODE_ENV === "development" ? (
+          <Agentation endpoint="http://localhost:4747" />
+        ) : null}
       </body>
     </html>
   );
