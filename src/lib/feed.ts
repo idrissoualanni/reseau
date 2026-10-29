@@ -2,7 +2,12 @@ import { galleryUrls, getPublicUrl } from "@/lib/storage";
 import type { ViewerContext } from "@/lib/context";
 import { listProjects } from "@/lib/projects";
 import { findProfileSummariesByIds } from "@/lib/repositories/profiles";
-import { listProjectSkillsForProjects } from "@/lib/repositories/projects";
+import {
+  countProjectCommentsForProjects,
+  countProjectFollowersForProjects,
+  countProjectReactionsForProjects,
+  listProjectSkillsForProjects,
+} from "@/lib/repositories/projects";
 import { toAuthorSummary, type AuthorSummary } from "@/lib/api/mappers/profile";
 import type { Project, Skill } from "@/lib/types";
 
@@ -19,6 +24,9 @@ export type FeedProject = {
   imageUrls: string[];
   publishedAt: string | null;
   authorId: string;
+  reactionCount: number;
+  commentCount: number;
+  followerCount: number;
 };
 
 export type FeedEdge = {
@@ -47,7 +55,10 @@ function excerptOf(body: string, max = 160): string {
   return `${trimmed.slice(0, max).trimEnd()}…`;
 }
 
-function toFeedProject(project: Project): FeedProject {
+function toFeedProject(
+  project: Project,
+  counts?: { reactions: number; comments: number; followers: number },
+): FeedProject {
   return {
     id: project.id,
     title: project.title,
@@ -57,6 +68,24 @@ function toFeedProject(project: Project): FeedProject {
     imageUrls: galleryUrls(project.coverKey, project.imageKeys),
     publishedAt: project.publishedAt?.toISOString() ?? null,
     authorId: project.authorId,
+    reactionCount: counts?.reactions ?? 0,
+    commentCount: counts?.comments ?? 0,
+    followerCount: counts?.followers ?? 0,
+  };
+}
+
+export function projectCountsOf(
+  projectId: string,
+  maps: {
+    reactions: Map<string, number>;
+    comments: Map<string, number>;
+    followers: Map<string, number>;
+  },
+) {
+  return {
+    reactions: maps.reactions.get(projectId) ?? 0,
+    comments: maps.comments.get(projectId) ?? 0,
+    followers: maps.followers.get(projectId) ?? 0,
   };
 }
 
@@ -71,10 +100,14 @@ export async function loadProjectsFeed(
     return { edges: [], hasNextPage: false, endCursor: null };
   }
 
-  const [skillRows, authorRows] = await Promise.all([
-    listProjectSkillsForProjects(projectIds),
-    findProfileSummariesByIds(page.edges.map((edge) => edge.node.authorId)),
-  ]);
+  const [skillRows, authorRows, reactionCounts, commentCounts, followerCounts] =
+    await Promise.all([
+      listProjectSkillsForProjects(projectIds),
+      findProfileSummariesByIds(page.edges.map((edge) => edge.node.authorId)),
+      countProjectReactionsForProjects(projectIds),
+      countProjectCommentsForProjects(projectIds),
+      countProjectFollowersForProjects(projectIds),
+    ]);
 
   const skillsByProject = new Map<string, Skill[]>();
   for (const row of skillRows) {
@@ -86,7 +119,14 @@ export async function loadProjectsFeed(
 
   const edges = page.edges.map((edge) => ({
     cursor: edge.cursor,
-    project: toFeedProject(edge.node),
+    project: toFeedProject(
+      edge.node,
+      projectCountsOf(edge.node.id, {
+        reactions: reactionCounts,
+        comments: commentCounts,
+        followers: followerCounts,
+      }),
+    ),
     skills: skillsByProject.get(edge.node.id) ?? [],
     author: toAuthorSummary(authorById.get(edge.node.authorId) ?? null),
   }));

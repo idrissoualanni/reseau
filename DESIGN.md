@@ -423,8 +423,8 @@ Mapping shadcn : `--background` = page, `--card` = surface blanche, `--accent` =
 | Écran / route | Fiche UX | Référence (structure, pas copie) | Points clés |
 |---|---|---|---|
 | Connexion `/sign-in`, inscription `/sign-up`, code `/verify-email` | `docs/ux/sign-in.md`, `sign-up.md`, `verify-email.md` | Clerk, Linear auth | **Aucune sidebar** ; carte centrée ≤ 400 px ; un CTA pleine largeur ; un seul `h1` |
-| Fil `/` | `docs/ux/projects-feed.md` | Instagram (rythme), Linear (typographie) | Colonne 640 px ; cartes aérées ; actions discrètes ; squelette par carte |
-| Posts `/posts`, `/posts/[id]` | `docs/ux/posts.md` | Instagram, Read.cv | Auteur + date + contenu ; images 4:5 ; commentaires 3 niveaux ; pas de densité excessive |
+| Fil `/` | `docs/ux/projects-feed.md` | Instagram (rythme), Linear (typographie) | Colonne 640 px ; média plein cadre, texte en surimpression ; compteurs réactions/commentaires/abonnés ; squelette par carte |
+| Posts `/posts`, `/posts/[id]` | `docs/ux/posts.md` | Instagram, Read.cv | Flux continu sans séparateur de jour ; image 4:5 plein cadre ; aperçu de 2 commentaires ; compteurs |
 | Catalogue `/projects` | `docs/ux/projects-catalog.md` | Linear, Vercel | Filtres en barre haute ; grille 1/2/3 ; badge de type + statut |
 | Détail `/projects/[id]` | `docs/ux/project-detail.md`, `project-detail-tabs.md` | Linear, GitHub | Onglets 44 px ; galerie 16:9 ; une action primaire (suivre/commenter) |
 | Profil `/u/[username]`, `/me/profile` | `docs/ux/profile.md`, `profile-edit.md` | Read.cv, LinkedIn sobre | Preuve d'abord : projets et compétences avant la bio ; avatar 96 px |

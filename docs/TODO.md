@@ -346,3 +346,14 @@
   des identifiants et la suppression de compte (F17).
 - **OTP admin (proposé)** : permettre à l'admin de voir les codes OTP envoyés aux
   utilisateurs — à cadrer (voir `docs/backlog.md`).
+
+## UI — fil et posts (2026-10-29)
+- [x] **Accueil** : bouton « Créer un projet » en icône, recherche de compétence avec
+  pastille active, cartes média d'abord (texte en surimpression, compteurs
+  réactions/commentaires/abonnés chargés par lot).
+- [x] **Posts** : bouton « Publier » en icône, flux continu sans séparateurs de jour,
+  image 4:5 plein cadre, aperçu des 2 derniers commentaires.
+- [ ] **Vérification navigateur** des deux fils (compteurs exacts, pastille de filtre,
+  aperçu des commentaires) — **intervention utilisateur**.
+- [ ] **`src/lib/posts-grouping.ts`** n'est plus utilisé par le fil ; le garder (tests)
+  ou le retirer — **décision utilisateur**.

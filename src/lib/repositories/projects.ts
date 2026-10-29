@@ -560,6 +560,43 @@ export async function countProjectFollowersByProjectId(projectId: string): Promi
   return row?.count ?? 0;
 }
 
+// Compteurs par lot pour le fil : une requête par type, jamais une par carte.
+export async function countProjectReactionsForProjects(
+  projectIds: string[],
+): Promise<Map<string, number>> {
+  if (projectIds.length === 0) return new Map();
+  const rows = await db
+    .select({ projectId: projectReactions.projectId, count: sql<number>`count(*)` })
+    .from(projectReactions)
+    .where(inArray(projectReactions.projectId, projectIds))
+    .groupBy(projectReactions.projectId);
+  return new Map(rows.map((row) => [row.projectId, Number(row.count)]));
+}
+
+export async function countProjectCommentsForProjects(
+  projectIds: string[],
+): Promise<Map<string, number>> {
+  if (projectIds.length === 0) return new Map();
+  const rows = await db
+    .select({ projectId: projectComments.projectId, count: sql<number>`count(*)` })
+    .from(projectComments)
+    .where(inArray(projectComments.projectId, projectIds))
+    .groupBy(projectComments.projectId);
+  return new Map(rows.map((row) => [row.projectId, Number(row.count)]));
+}
+
+export async function countProjectFollowersForProjects(
+  projectIds: string[],
+): Promise<Map<string, number>> {
+  if (projectIds.length === 0) return new Map();
+  const rows = await db
+    .select({ projectId: projectFollowers.projectId, count: sql<number>`count(*)` })
+    .from(projectFollowers)
+    .where(inArray(projectFollowers.projectId, projectIds))
+    .groupBy(projectFollowers.projectId);
+  return new Map(rows.map((row) => [row.projectId, Number(row.count)]));
+}
+
 export async function isProjectFollowedByProfile(projectId: string, profileId: string): Promise<boolean> {
   const [row] = await db
     .select({ projectId: projectFollowers.projectId })

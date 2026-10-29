@@ -5,12 +5,12 @@
 - **Action principale** : ouvrir un projet (aller au détail).
 
 ## Parcours
-1. Arrivée depuis la sidebar (« Projets ») → 2. lecture de la liste → 3. filtre facultatif par compétence → 4. « Voir plus » pour charger la suite → 5. clic sur une carte → détail du projet → 6. clic sur l'auteur → profil public (F08).
+1. Arrivée depuis la sidebar (« Projets ») → 2. lecture de la liste → 3. filtre facultatif par compétence (barre de recherche + pastille active) → 4. « Voir plus » pour charger la suite → 5. clic sur une carte → détail du projet → 6. clic sur l'auteur → profil public (F08).
 
 ## Contenu et hiérarchie
-1. **Titre** : « Projets » (h1).
-2. **Filtre par compétence** : champ texte + bouton « Filtrer » (facultatif, soumet `?skill=`).
-3. **Cartes de projets** (les plus récents d'abord) : visuel de couverture ou image par défaut, titre (lien), extrait du texte (3 lignes), auteur (avatar + nom, lien vers `/u/[username]`), compétences (max 3 + « +n »), date de publication.
+1. **Titre** : « Projets » (h1) + bouton-icône « Créer un projet » (44 px, `aria-label`).
+2. **Filtre par compétence** : barre de recherche avec icône, soumission par bouton-icône (`?skill=`), et pastille « Compétence : … » avec croix pour retirer le filtre.
+3. **Cartes de projets** (les plus récents d'abord) : visuel plein cadre (16:9) avec **titre et extrait en surimpression** sur un dégradé, auteur (avatar + nom, lien vers `/u/[username]`), date, **compteurs** (réactions, commentaires, abonnés) puis compétences (max 3 + « +n »). Sans image : bloc neutre, titre et extrait sous le visuel.
 4. **« Voir plus »** : charge la page suivante au curseur, sans doublon.
 
 ## États
@@ -35,6 +35,7 @@ l'image par défaut porte `alt=""` (décorative).
 
 ## Textes (français)
 - Titre : « Projets »
-- Filtre : « Filtrer par compétence » / bouton « Filtrer »
+- Filtre : « Filtrer par compétence (ex. react) » / bouton-icône « Filtrer par compétence » / pastille « Compétence : … »
+- Bouton-icône : « Créer un projet »
 - Vide : « Aucun projet publié. » / « Crée le premier projet pour prouver ce que tu sais faire. »
 - « Voir plus » · erreur : « Impossible de charger les projets. » · hors connexion : « Pas de connexion, réessaie. »
