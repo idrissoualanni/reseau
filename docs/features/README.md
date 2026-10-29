@@ -5,7 +5,7 @@
 > Processus : **fiche feature + fiche UX avant le code** (skill `feature-spec`), puis
 > migration additive sur Neon **dev**, `lint`/`test`/`build` verts, merge sur `dev`.
 
-Statuts : ✅ livré · 🔜 à développer · ⏳ reporté.
+Statuts : ✅ livré · 🟡 code livré, vérification en attente · 🔜 à développer · ⏳ reporté.
 
 ## Vue d'ensemble
 
@@ -25,7 +25,7 @@ Statuts : ✅ livré · 🔜 à développer · ⏳ reporté.
 | F12 | Images sur les posts | V1 | F11 | ✅ |
 | F13 | Avatar de profil | V1 | F12 | ✅ |
 | F14 | Espaces (socle) | V1.5 | F03 | ✅ |
-| F15 | Rejoindre un espace (accès) | V1.5 | F14 | 🔜 (code écrit, à vérifier) |
+| F15 | Rejoindre un espace (accès) | V1.5 | F14 | ✅ (vérifié 2026-10-21) |
 | F16 | Rôles et appartenances | V1.5 | F14 | ✅ |
 | F17 | Administration d'espace | V1.5 | F15, F16 | 🔜 (plateforme ✅, code écrit, à vérifier) |
 | F18 | Catalogue de projets (type, filtres) | V1.5 | F05 | ✅ |
@@ -34,7 +34,7 @@ Statuts : ✅ livré · 🔜 à développer · ⏳ reporté.
 | F21 | Confidentialité par champ | V1.5 | F03, F18 | 🔜 |
 | F22 | Suppression de compte | V1.5 | F01 | 🔜 |
 | F23 | Recherche élargie | V1.5 | F09 | 🔜 |
-| F24 | Réactions sur les posts | V1.5 | F11 | 🔜 |
+| F24 | Réactions sur les posts | V1.5 | F11 | ✅ (`post_likes`, 2026-10-26) |
 | F25 | Mentions dans les commentaires | V1.5 | F11 | 🔜 |
 | F26 | Filtres et tri du fil | V1.5 | F11 | 🔜 |
 | F27 | Brouillon local et recadrage d'image | V1.5 | F12 | 🔜 |
@@ -44,7 +44,7 @@ Statuts : ✅ livré · 🔜 à développer · ⏳ reporté.
 | F31 | CV généré et modifiable | V2 | F05, F08 | ⏳ |
 | F32 | Portfolio public | V2 | F31 | ⏳ |
 | F33 | Connexions | V2 | F03 | ⏳ |
-| F34 | Messagerie chiffrée de bout en bout | V2 | F03 | 🔜 |
+| F34 | Messagerie chiffrée de bout en bout | V2 | F03 | 🟡 (code livré : demandes + UX ; vérif. navigateur + Neon Functions) |
 | F35 | Appels audio / vidéo (WebRTC) | V3 | F34 | ⏳ |
 | F36 | Niveau de preuve `verifiable` | V3 | F05, F18, F32 | ⏳ |
 | F37 | Espace recruteur | V3 | F08, F36 | ⏳ |

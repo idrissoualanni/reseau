@@ -276,12 +276,26 @@ Aucune clé privée, aucun secret.
 
 PK : `(conversation_id, profile_id, key_id)`. Le serveur ne peut pas déballer ces clés.
 
+### `conversation_requests`
+
+| Colonne | Type | Règle |
+|---|---|---|
+| id | uuid | PK |
+| requester_id | uuid FK → profiles | cascade |
+| recipient_id | uuid FK → profiles | cascade, `<> requester_id` |
+| status | enum `conversation_request_status` | `pending` / `accepted` / `declined` |
+| created_at | timestamptz | défaut `now()` |
+| responded_at | timestamptz, null | date de décision |
+
+Index unique partiel `conversation_requests_pending_uq (requester_id, recipient_id)
+WHERE status = 'pending'` ; index par destinataire et par expéditeur sur
+`(id, status, created_at DESC)`. **Aucun texte** : une demande ne transporte aucun
+message.
+
 ### Galerie d'images (posts et projets)
 
-- `post_images` : `id`, `post_id` FK cascade, `key`, `position` smallint `0..4`,
-  `alt` null, `created_at`. Unique `(post_id, position)`.
-- `project_images` : même forme avec `project_id`.
-- `position = 0` est la **couverture** ; maximum 5 images. Les anciennes colonnes
-  `image_key` / `cover_key` restent lisibles pendant la transition, puis sont
-  ignorées par les nouveaux parcours.
+- Couverture : `posts.image_key` / `projects.cover_key` (clé de stockage).
+- Images 2 à 5 : `posts.image_keys` / `projects.image_keys`, `text[]`,
+  cardinalité `0..4`.
+- Maximum 5 images par publication ; buckets `post` / `projet`.
 

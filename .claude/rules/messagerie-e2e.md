@@ -3,7 +3,10 @@ description: Chiffrement de bout en bout de la messagerie V2 — clés, envelopp
 paths:
   - src/modules/messaging/**
   - src/lib/crypto/**
+  - src/lib/messaging.ts
+  - src/components/messages/**
   - src/app/api/conversations/**
+  - src/app/api/conversation-requests/**
   - src/app/api/keys/**
 ---
 
@@ -80,3 +83,20 @@ Il stocke des enveloppes opaques, les clés publiques et les métadonnées minim
 - Tests : round-trip, AAD falsifiée, IV réutilisé refusé, clé non exportable,
   non-membre refusé, bundle sans secret.
 - En cas de doute sur un point cryptographique : s'arrêter et poser la question.
+
+## 10. Demandes de contact
+
+- Une conversation 1-1 n'existe **qu'après acceptation** d'une demande par le
+  destinataire. `POST /api/conversations` ouvre l'existante, sinon `409`.
+- `conversation_requests` ne stocke **aucun texte** : expéditeur, destinataire,
+  état (`pending` / `accepted` / `declined`), dates. Le serveur ne peut pas
+  transporter de message dans une demande.
+- Un seul `pending` par paire ordonnée (index unique partiel) ; la demande est
+  idempotente.
+- Seul le destinataire peut accepter ou refuser. Un autre profil reçoit `404`,
+  jamais `403` : on ne révèle pas l'existence d'une demande.
+- L'acceptation crée la conversation avec `createdBy = destinataire` ; c'est lui
+  qui configure les clés enveloppées à la première ouverture.
+- Un refus ne supprime rien et ne révèle rien ; une nouvelle demande reste
+  possible sous réserve du rate limit.
+- Les notifications de demande (e-mail, push) sont hors V2 : badge dans le menu.

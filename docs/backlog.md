@@ -28,6 +28,10 @@
 - [ ] **Blocage et signalement** : nécessaires avant d'ouvrir la messagerie à tous ;
   policy de modération à définir.
 - [ ] **Notifications** : push natif, e-mail de nouveau message, préférences.
+- [ ] **Notification de demande de contact** : V2 se limite au badge dans le menu ;
+  e-mail/push à cadrer (aucun contenu de message dans la notification).
+- [ ] **Message d'introduction dans une demande de contact** : interdit en V2 (le
+  serveur ne doit transporter aucun texte non chiffré) ; à concevoir chiffré.
 - [ ] **Multi-appareils E2E** : synchronisation des clés, appareils de confiance,
   révocation.
 - [ ] **Recherche locale** dans les conversations : uniquement côté client, jamais

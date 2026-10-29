@@ -46,6 +46,20 @@
   Manque : indicateur de saisie/présence (ligne ci-dessus).
 - [x] **Aperçu déchiffré dans la liste des conversations** (2026-10-27) :
   `GET /api/conversations/previews` (lot de clés) + déchiffrement client.
+- [x] **UX messagerie pleine largeur + emoji dans le texte** (2026-10-29) : fil
+  centré `max-w-3xl`, sélecteur de conversation en `Popover` (recherche, aperçus,
+  badge non lu, `aria-current`), bouton emoji insérant **au curseur**, picker de
+  réactions séparé.
+- [x] **Demandes de contact (F34)** (2026-10-29) : `conversation_requests`
+  (migration additive `0013` appliquée sur Neon dev et vérifiée), routes
+  `GET/POST /api/conversation-requests`, `accept`, `decline` ; `POST
+  /api/conversations` ouvre l'existante et répond `409` sinon. Aucun texte stocké.
+  15 tests ajoutés (318 au total, 4 ignorés).
+- [ ] **Vérification navigateur des demandes de contact** (deux comptes : envoyer,
+  accepter, refuser) — **intervention utilisateur**.
+- [ ] **Déploiement dev de cette version** : pousser `dev`, vérifier le build Render
+  puis tester `https://reseau-3tuk.onrender.com/messages` — **intervention
+  utilisateur** (ou accord explicite pour déployer).
 - [ ] **Vérification navigateur de la messagerie** (session réelle, deux comptes) —
   **intervention utilisateur**.
 - [x] **Galerie de 5 images (posts et projets)** (2026-10-27) : `image_keys`
@@ -151,10 +165,14 @@
   `/sign-in` et `/sign-up` 200. Pages protégées sans session → page de connexion.
   Tests/lint locaux non exécutés (disque plein, `node_modules` absent) : le build
   Render et les sondes sont les seules preuves.
-- [ ] **Disque `C:` saturé** (2026-10-26 : ~200 Mo libres, `node_modules` absent) —
-  `~/.local/share/opencode/opencode.db` pèse 2,5 Go. **Intervention utilisateur** :
-  libérer de l'espace, puis `npm ci` pour exécuter `npm test` et `npm run lint`
-  localement. Le script `.opencode/scripts/cleanup-disk.sh` ne nettoie que caches/temp.
+- [ ] **Disque `C:` très serré** — **2026-10-29** : ~750 Mo libres sur 238 Go.
+  `.opencode/scripts/cleanup-disk.sh` + vidage de `%LOCALAPPDATA%\Temp` exécutés ;
+  `node_modules` (835 Mo) réinstallé dans le dépôt principal. `npm test` (318
+  passés / 4 ignorés), `npm run lint`, `npm run typecheck` et `npm run build`
+  passent. Marge insuffisante pour un `npm ci` complet + builds répétés.
+  **Intervention utilisateur** : libérer ~2 Go (gros postes mesurés : `Documents`
+  5,0 Go, `~/.local` 3,4 Go, `Downloads` 2,7 Go). Le script ne nettoie que
+  caches/temp, conformément à `AGENTS.md`.
 
 ## Profil (F03/F04/F10) — reporté du Lot 2
 - [x] **Avatar** : **fait (2026-10-10)** — upload présigné (bucket `profile`, clé
@@ -293,9 +311,11 @@
   **Intervention utilisateur** : fournir la clé serveur.
 
 ## À faire par l'utilisateur (nécessite son intervention)
-- ⚠️ **Sécurité — cookie de session exposé** : le cookie `__Secure-neon-auth.*` a été collé en
-  clair dans `AGENTS.md` (WIP non commité). À retirer du fichier ; considérer la session comme
-  compromise (se déconnecter/reconnecter). Ne jamais committer `AGENTS.md` avec ce contenu.
+- ✅ **Cookie de session — vérifié le 2026-10-28** : plus aucun fichier suivi ne contient le
+  motif (`git grep -l` sur `__Secure-neon-auth`, `neon-auth.session` et un JWT) ; seul
+  `docs/TODO.md` le mentionnait, comme description du problème. `.env.local` n'est pas suivi
+  et `.gitignore` couvre `.env*`. Reste à faire côté utilisateur : se déconnecter/reconnecter
+  si la session collée est encore active.
 - **Render** : `srv-db46e4btqb8s73e8bsd0` déjà supprimé ; le dev utilise
   `srv-db4ek92jnfac73b4uij0`.
 - **Turnstile** : **en attente** (retiré, ne doit pas bloquer l'app) ; à réactiver

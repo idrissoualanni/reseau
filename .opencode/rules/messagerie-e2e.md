@@ -11,6 +11,8 @@ description: Miroir OpenCode de `.claude/rules/messagerie-e2e.md` — chiffremen
 - Réactions chiffrées comme les messages.
 - Aucun clair, aucune clé, aucun ciphertext dans les logs.
 - Perte de la clé privée = historique illisible ; aucun recouvrement en V2.
+- Demande de contact : aucun texte stocké ; conversation créée seulement par
+  acceptation du destinataire (`409` sinon). Non-destinataire → `404`.
 - Revue `securite` obligatoire avant fusion.
 
 Détails : `.claude/rules/messagerie-e2e.md`.
